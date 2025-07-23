@@ -1,0 +1,6 @@
+@TranzrMoves.Api_HostAddress = http://localhost:5247
+
+GET {{TranzrMoves.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

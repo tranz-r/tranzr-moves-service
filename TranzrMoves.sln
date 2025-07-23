@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Src", "Src", "{477DB0CC-C38A-4420-BBB5-9F1767C648A1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{FE37C392-E704-4139-8321-444C126C1614}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranzrMoves.Api", "Src\TranzrMoves.Api\TranzrMoves.Api.csproj", "{6420DD2F-6CDB-4DEB-B475-72BF29E6E537}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{6420DD2F-6CDB-4DEB-B475-72BF29E6E537} = {477DB0CC-C38A-4420-BBB5-9F1767C648A1}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6420DD2F-6CDB-4DEB-B475-72BF29E6E537}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6420DD2F-6CDB-4DEB-B475-72BF29E6E537}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6420DD2F-6CDB-4DEB-B475-72BF29E6E537}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6420DD2F-6CDB-4DEB-B475-72BF29E6E537}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
