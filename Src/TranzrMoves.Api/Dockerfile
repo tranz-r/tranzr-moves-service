@@ -10,7 +10,7 @@ WORKDIR /src
 COPY ["Src/TranzrMoves.Api/TranzrMoves.Api.csproj", "Src/TranzrMoves.Api/"]
 RUN dotnet restore "Src/TranzrMoves.Api/TranzrMoves.Api.csproj"
 COPY . .
-WORKDIR "/src/Src/TranzrMoves.Api"
+WORKDIR "Src/TranzrMoves.Api"
 RUN dotnet build "./TranzrMoves.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
