@@ -43,7 +43,7 @@ try
 
     app.UseHttpLogging();
     app.UseHttpsRedirection();
-    app.MapHealthChecks("/health");
+    app.MapHealthChecks("/healthz");
     app.UseAuthorization();
 
     app.MapControllers();
