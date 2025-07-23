@@ -16,6 +16,8 @@ try
     builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
     builder.Services.AddOpenApi();
+    builder.Services.AddHttpLogging();
+    builder.Services.AddHealthChecks();
     builder.Services.AddSingleton(new StripeClient(Environment.GetEnvironmentVariable("STRIPE_API_KEY")));
     
     builder.Services.AddSingleton(provider =>

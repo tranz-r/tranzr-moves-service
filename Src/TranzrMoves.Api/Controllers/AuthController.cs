@@ -7,8 +7,8 @@ namespace TranzrMoves.Api.Controllers;
 [Route("api/v1/[controller]")]
 public class AuthController : ControllerBase
 {
-    [HttpPost("role", Name = "CreateStripeIntent")]
-    public async Task<ActionResult<PaymentSheetCreateResponse>> CreatePaymentSheet([FromBody] PaymentSheetRequest paymentSheetRequest)
+    [HttpPost("role")]
+    public async Task<ActionResult<PaymentSheetCreateResponse>> CreateUserRoleAsync([FromBody] PaymentSheetRequest paymentSheetRequest)
     {
         throw new NotImplementedException();
     }
