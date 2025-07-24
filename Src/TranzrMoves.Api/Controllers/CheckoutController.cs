@@ -6,22 +6,24 @@ namespace TranzrMoves.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class CheckoutController(StripeClient stripeClient) : ControllerBase
+public class CheckoutController(StripeClient stripeClient, ILogger<CheckoutController> logger) : ControllerBase
 {
     [HttpPost("payment-sheet", Name = "CreateStripeIntent")]
     public async Task<ActionResult<PaymentSheetCreateResponse>> CreatePaymentSheet([FromBody] PaymentSheetRequest paymentSheetRequest)
     {
 
         // Use an existing Customer ID if this is a returning customer.
+        logger.LogInformation("Creating payment sheet");
         var customerSearchResult = await stripeClient.V1.Customers.SearchAsync(new CustomerSearchOptions
         {
             Query = $"email:'{paymentSheetRequest.Email}'",
         });
-
+        
         var customer = customerSearchResult.Data.FirstOrDefault();
         
         if (customer is null)
         { 
+            logger.LogInformation("Customer does not exist. Creating customer with {email}",  paymentSheetRequest.Email);
             var customerOptions = new CustomerCreateOptions
             {
                 Email = paymentSheetRequest.Email,
@@ -53,6 +55,8 @@ public class CheckoutController(StripeClient stripeClient) : ControllerBase
                 AllowRedirects = "always", // This allows redirect-based payment methods
             },
         };
+        
+        logger.LogInformation("Payment intent created");
         
         var paymentIntent = await stripeClient.V1.PaymentIntents.CreateAsync(paymentIntentOptions);
 

@@ -10,15 +10,21 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseSerilog();
 
 // Add services to the container.
 
     builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
     builder.Services.AddOpenApi();
-    builder.Services.AddHttpLogging();
+    builder.Services.AddHttpLogging(o => o.CombineLogs = true);
     builder.Services.AddHealthChecks();
     builder.Services.AddSingleton(new StripeClient(builder.Configuration["STRIPE_API_KEY"]));
+    
+    builder.Services.AddSingleton(s => new GetAddress.ApiKeys(builder.Configuration["ADDRESS_API_KEY"], 
+        builder.Configuration["ADDRESS_ADMINISTRATION_KEY"]));
+    builder.Services.AddHttpClient<GetAddress.Api>();
+
     
     builder.Services.AddSingleton( _ =>
     {
