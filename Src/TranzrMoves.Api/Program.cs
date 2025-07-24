@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using Stripe;
 using Supabase;
@@ -19,12 +18,14 @@ try
     builder.Services.AddOpenApi();
     builder.Services.AddHttpLogging();
     builder.Services.AddHealthChecks();
-    builder.Services.AddSingleton(new StripeClient(Environment.GetEnvironmentVariable("STRIPE_API_KEY")));
+    builder.Services.AddSingleton(new StripeClient(builder.Configuration["STRIPE_API_KEY"]));
     
-    builder.Services.AddSingleton(provider =>
+    builder.Services.AddSingleton( _ =>
     {
-        var url = Environment.GetEnvironmentVariable("SUPABASE_URL");
-        var key = Environment.GetEnvironmentVariable("SUPABASE_KEY");
+        var url = builder.Configuration["SUPABASE_URL"];
+        var key = builder.Configuration["SUPABASE_KEY"];
+
+        
         var options = new SupabaseOptions
         {
             AutoRefreshToken = true,
