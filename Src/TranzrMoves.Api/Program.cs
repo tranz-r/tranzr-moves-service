@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 using Stripe;
 using Supabase;
@@ -44,6 +45,7 @@ try
     app.UseHttpLogging();
     app.UseHttpsRedirection();
     app.MapHealthChecks("/healthz");
+    app.MapHealthChecks("/ready");
     app.UseAuthorization();
 
     app.MapControllers();
