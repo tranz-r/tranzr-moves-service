@@ -57,6 +57,7 @@ public class CheckoutController(StripeClient stripeClient, IConfiguration config
                 Enabled = true,
                 AllowRedirects = "always", // This allows redirect-based payment methods
             },
+            PaymentMethodTypes = ["google_pay"],
         };
         
         logger.LogInformation("Payment intent created");
