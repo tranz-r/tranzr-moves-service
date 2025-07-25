@@ -6,7 +6,7 @@ namespace TranzrMoves.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class CheckoutController(StripeClient stripeClient, ILogger<CheckoutController> logger) : ControllerBase
+public class CheckoutController(StripeClient stripeClient, IConfiguration configuration, ILogger<CheckoutController> logger) : ControllerBase
 {
     [HttpPost("payment-sheet", Name = "CreateStripeIntent")]
     public async Task<ActionResult<PaymentSheetCreateResponse>> CreatePaymentSheet([FromBody] PaymentSheetRequest paymentSheetRequest)
@@ -47,6 +47,9 @@ public class CheckoutController(StripeClient stripeClient, ILogger<CheckoutContr
             Amount = paymentSheetRequest.Amount * 100, // Convert to pence
             Currency = "gbp",
             Customer = customer.Id,
+            Description = "Your Tranzr Moves payment",
+            ReceiptEmail = paymentSheetRequest.Email,
+            
             // In the latest version of the API, specifying the `automatic_payment_methods` parameter
             // is optional because Stripe enables its functionality by default.
             AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
@@ -67,5 +70,50 @@ public class CheckoutController(StripeClient stripeClient, ILogger<CheckoutContr
             Customer = customer.Id,
             PublishableKey = StripeConfiguration.ClientId,
         };
+    }
+    
+    [HttpPost("webhook")]
+    public async Task<IActionResult> ProcessPaymentWebhook()
+    {
+        var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+        string? endpointSecret = configuration["TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET"];
+        
+        try
+        {
+            var stripeEvent = EventUtility.ParseEvent(json);
+            var signatureHeader = Request.Headers["Stripe-Signature"];
+
+            stripeEvent = EventUtility.ConstructEvent(json,
+                signatureHeader, endpointSecret);
+
+            // If on SDK version < 46, use class Events instead of EventTypes
+            if (stripeEvent.Type == EventTypes.PaymentIntentSucceeded)
+            {
+                var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
+                logger.LogInformation("A successful payment for {paymanetAmount} GBP was made.", paymentIntent.Amount);
+                // Then define and call a method to handle the successful payment intent.
+                // handlePaymentIntentSucceeded(paymentIntent);
+            }
+            else if (stripeEvent.Type == EventTypes.PaymentMethodAttached)
+            {
+                var paymentMethod = stripeEvent.Data.Object as PaymentMethod;
+                // Then define and call a method to handle the successful attachment of a PaymentMethod.
+                // handlePaymentMethodAttached(paymentMethod);
+            }
+            else
+            {
+                logger.LogWarning("Unhandled event type: {0}", stripeEvent.Type);
+            }
+            return Ok();
+        }
+        catch (StripeException e)
+        {
+            logger.LogError("Error: {0}", e.Message);
+            return BadRequest();
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500);
+        }
     }
 }
