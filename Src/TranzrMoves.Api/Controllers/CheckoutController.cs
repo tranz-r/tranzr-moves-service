@@ -53,22 +53,11 @@ public class CheckoutController(StripeClient stripeClient, IConfiguration config
             // In the latest version of the API, specifying the `automatic_payment_methods` parameter
             // is optional because Stripe enables its functionality by default.
             
-            // AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
-            // {
-            //     Enabled = true,
-            //     AllowRedirects = "always", // This allows redirect-based payment methods
-            // },
-            
-            PaymentMethodTypes = [
-                "card",
-                "google_pay",
-                "afterpay_clearpay",
-                "klarna", 
-                "amazon_pay",
-                "paypal",
-                "revolut_pay",
-                "apple_pay",
-            ],
+            AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+            {
+                Enabled = true,
+                AllowRedirects = "always", // This allows redirect-based payment methods
+            }
         };
         
         logger.LogInformation("Payment intent created");
