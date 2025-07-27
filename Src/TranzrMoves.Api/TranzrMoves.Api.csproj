@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="getAddress.Sdk" Version="3.5.1" />
+        <PackageReference Include="MailKit" Version="4.13.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7"/>
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Stripe.net" Version="48.3.0" />

@@ -1,6 +1,7 @@
 using Serilog;
 using Stripe;
 using Supabase;
+using TranzrMoves.Api.Services;
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
@@ -24,6 +25,9 @@ try
     builder.Services.AddSingleton(s => new GetAddress.ApiKeys(builder.Configuration["ADDRESS_API_KEY"], 
         builder.Configuration["ADDRESS_ADMINISTRATION_KEY"]));
     builder.Services.AddHttpClient<GetAddress.Api>();
+    
+    // Register email service
+    builder.Services.AddScoped<IEmailService, EmailService>();
 
     
     builder.Services.AddSingleton( _ =>

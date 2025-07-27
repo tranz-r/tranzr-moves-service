@@ -1,12 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using TranzrMoves.Api.Dtos;
+using TranzrMoves.Api.Services;
 
 namespace TranzrMoves.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-public class CheckoutController(StripeClient stripeClient, IConfiguration configuration, ILogger<CheckoutController> logger) : ControllerBase
+public class CheckoutController(StripeClient stripeClient, 
+    IConfiguration configuration, 
+    ILogger<CheckoutController> logger, 
+    IEmailService emailService) : ControllerBase
 {
     [HttpPost("payment-sheet", Name = "CreateStripeIntent")]
     public async Task<ActionResult<PaymentSheetCreateResponse>> CreatePaymentSheet([FromBody] PaymentSheetRequest paymentSheetRequest)
@@ -91,9 +95,10 @@ public class CheckoutController(StripeClient stripeClient, IConfiguration config
             if (stripeEvent.Type == EventTypes.PaymentIntentSucceeded)
             {
                 var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
-                logger.LogInformation("A successful payment for {paymanetAmount} GBP was made.", paymentIntent.Amount);
-                // Then define and call a method to handle the successful payment intent.
-                // handlePaymentIntentSucceeded(paymentIntent);
+                logger.LogInformation("A successful payment for {paymentAmount} GBP was made.", paymentIntent.Amount);
+                
+                // Send order confirmation email
+                await HandlePaymentIntentSucceeded(paymentIntent);
             }
             else if (stripeEvent.Type == EventTypes.PaymentMethodAttached)
             {
@@ -115,6 +120,42 @@ public class CheckoutController(StripeClient stripeClient, IConfiguration config
         catch (Exception e)
         {
             return StatusCode(500);
+        }
+    }
+    
+    private async Task HandlePaymentIntentSucceeded(PaymentIntent paymentIntent)
+    {
+        try
+        {
+            // Get customer details from Stripe
+            var customer = await stripeClient.V1.Customers.GetAsync(paymentIntent.CustomerId);
+            
+            if (customer != null && !string.IsNullOrEmpty(customer.Email))
+            {
+                var orderId = paymentIntent.Id;
+                var orderDate = DateTime.UtcNow;
+                var customerName = customer.Name ?? customer.Email.Split('@')[0];
+                
+                // Send order confirmation email
+                await emailService.SendOrderConfirmationEmailAsync(
+                    customer.Email,
+                    customerName,
+                    paymentIntent.Amount,
+                    orderId,
+                    orderDate
+                );
+                
+                logger.LogInformation("Order confirmation email sent for payment intent {PaymentIntentId}", paymentIntent.Id);
+            }
+            else
+            {
+                logger.LogWarning("Could not send order confirmation email - customer email not found for payment intent {PaymentIntentId}", paymentIntent.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send order confirmation email for payment intent {PaymentIntentId}", paymentIntent.Id);
+            // Don't throw here to avoid failing the webhook
         }
     }
 }
