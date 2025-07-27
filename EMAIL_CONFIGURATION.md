@@ -38,10 +38,13 @@ The email service will automatically send order confirmation emails when:
 
 The order confirmation email includes:
 - Rich HTML styling with responsive design
+- Plain text fallback for better deliverability
+- Professional branding and company information
 - Order details (ID, date, amount, service)
-- Professional branding
-- Contact information
+- Contact information with business hours
 - Mobile-friendly layout
+- Anti-spam headers and proper email structure
+- Company registration details for legitimacy
 
 ## Testing
 
@@ -56,4 +59,6 @@ To test the email functionality:
 - Check logs for email service errors
 - Verify AWS SES credentials are correct
 - Ensure the FROM_EMAIL domain is verified in AWS SES
-- Check that the SMTP port (587) is not blocked by your network 
+- Check that the SMTP port (587) is not blocked by your network
+- If emails are going to spam, verify your domain's SPF, DKIM, and DMARC records
+- Ensure your AWS SES account is out of sandbox mode for production use 
