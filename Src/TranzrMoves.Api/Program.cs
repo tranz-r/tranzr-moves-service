@@ -1,7 +1,9 @@
 using Serilog;
 using Stripe;
 using Supabase;
+using TranzrMoves.Api.Configuration;
 using TranzrMoves.Api.Services;
+using TranzrMoves.Infrastructure.DependencyInjection;
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
@@ -28,6 +30,9 @@ try
     
     // Register email service
     builder.Services.AddScoped<IEmailService, EmailService>();
+    
+    builder.Services.ConfigureTranzrMovesServices(builder.Configuration);
+    builder.Services.AddInfrastructure(builder.Configuration);
 
     
     builder.Services.AddSingleton( _ =>

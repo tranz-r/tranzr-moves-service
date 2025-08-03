@@ -2,6 +2,7 @@
 using Stripe;
 using TranzrMoves.Api.Dtos;
 using TranzrMoves.Api.Services;
+using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Api.Controllers;
 
@@ -10,12 +11,12 @@ namespace TranzrMoves.Api.Controllers;
 public class CheckoutController(StripeClient stripeClient, 
     IConfiguration configuration, 
     ILogger<CheckoutController> logger, 
+    IAwsEmailService awsEmailService,
     IEmailService emailService) : ControllerBase
 {
     [HttpPost("payment-sheet", Name = "CreateStripeIntent")]
     public async Task<ActionResult<PaymentSheetCreateResponse>> CreatePaymentSheet([FromBody] PaymentSheetRequest paymentSheetRequest)
     {
-
         // Use an existing Customer ID if this is a returning customer.
         logger.LogInformation("Creating payment sheet");
         var customerSearchResult = await stripeClient.V1.Customers.SearchAsync(new CustomerSearchOptions
@@ -137,7 +138,7 @@ public class CheckoutController(StripeClient stripeClient,
                 var customerName = customer.Name ?? customer.Email.Split('@')[0];
                 
                 // Send order confirmation email
-                await emailService.SendOrderConfirmationEmailAsync(
+                await awsEmailService.SendOrderConfirmationEmailAsync(
                     customer.Email,
                     customerName,
                     paymentIntent.Amount,

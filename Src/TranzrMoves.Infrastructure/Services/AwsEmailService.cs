@@ -1,72 +1,63 @@
-using MailKit.Net.Smtp;
-using MailKit.Security;
-using MimeKit;
+using Amazon.SimpleEmailV2;
+using Amazon.SimpleEmailV2.Model;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using TranzrMoves.Domain.Interfaces;
 
-namespace TranzrMoves.Api.Services;
+namespace TranzrMoves.Infrastructure.Services;
 
-public class EmailService : IEmailService
+public class AwsEmailService : IAwsEmailService
 {
     private readonly IConfiguration _configuration;
-    private readonly ILogger<EmailService> _logger;
-    private readonly string _smtpHost;
-    private readonly int _smtpPort;
-    private readonly string _smtpUsername;
-    private readonly string _smtpPassword;
+    private readonly ILogger<AwsEmailService> _logger;
+    IAmazonSimpleEmailServiceV2 _ses;
     private readonly string _fromEmail;
-    private readonly string _fromName;
 
-    public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+    public AwsEmailService(
+        IConfiguration configuration, 
+        ILogger<AwsEmailService> logger, IAmazonSimpleEmailServiceV2 ses)
     {
         _configuration = configuration;
         _logger = logger;
-        
-        // AWS SES SMTP Configuration
-        _smtpHost = _configuration["AWS_SES_SMTP_HOST"] ?? "email-smtp.eu-west-2.amazonaws.com";
-        _smtpPort = int.Parse(_configuration["AWS_SES_SMTP_PORT"] ?? "587");
-        _smtpUsername = _configuration["AWS_SES_SMTP_USERNAME"] ?? throw new InvalidOperationException("AWS_SES_SMTP_USERNAME is required");
-        _smtpPassword = _configuration["AWS_SES_SMTP_PASSWORD"] ?? throw new InvalidOperationException("AWS_SES_SMTP_PASSWORD is required");
+        _ses = ses;
         _fromEmail = _configuration["FROM_EMAIL"] ?? "noreply@tranzrmoves.com";
-        _fromName = _configuration["FROM_NAME"] ?? "Tranzr Moves";
     }
 
     public async Task SendOrderConfirmationEmailAsync(string customerEmail, string customerName, long amount, string orderId, DateTime orderDate)
     {
+        var emailRequest = new SendEmailRequest
+        {
+            FromEmailAddress = _fromEmail,
+            Destination = new Destination
+            {
+                ToAddresses = [customerEmail],
+            },
+            Content = new EmailContent
+            {
+                Simple = new Message
+                {
+                    Subject = new Content { Data = $"Your Tranzr Moves Order Confirmation - #{orderId}" },
+                    Body = new Body
+                    {
+                        Html = new Content { Data = GenerateOrderConfirmationHtml(customerName, amount, orderId, orderDate) },
+                        Text = new Content { Data = GenerateOrderConfirmationText(customerName, amount, orderId, orderDate) }
+                    }
+                }
+            }
+        };
+        
         try
         {
-            var email = new MimeMessage();
-            email.From.Add(new MailboxAddress(_fromName, _fromEmail));
-            email.To.Add(new MailboxAddress(customerName, customerEmail));
-            email.Subject = $"Your Tranzr Moves Order Confirmation - #{orderId}";
-            
-            // Add proper headers to reduce spam flags
-            email.Headers.Add("X-Mailer", "TranzrMoves-API/1.0");
-            email.Headers.Add("X-Priority", "3");
-            email.Headers.Add("X-MSMail-Priority", "Normal");
-            email.Headers.Add("Importance", "Normal");
-            email.Headers.Add("X-Report-Abuse", "Please report abuse here: abuse@tranzrmoves.com");
-            email.Headers.Add("List-Unsubscribe", "<mailto:unsubscribe@tranzrmoves.com>");
-            email.Headers.Add("Precedence", "bulk");
-
-            var bodyBuilder = new BodyBuilder
-            {
-                HtmlBody = GenerateOrderConfirmationHtml(customerName, amount, orderId, orderDate),
-                TextBody = GenerateOrderConfirmationText(customerName, amount, orderId, orderDate)
-            };
-
-            email.Body = bodyBuilder.ToMessageBody();
-
-            using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(_smtpHost, _smtpPort, SecureSocketOptions.StartTls);
-            await smtp.AuthenticateAsync(_smtpUsername, _smtpPassword);
-            await smtp.SendAsync(email);
-            await smtp.DisconnectAsync(true);
-
-            _logger.LogInformation("Order confirmation email sent successfully to {Email} for order {OrderId}", customerEmail, orderId);
+            _logger.LogInformation("Sending email using Amazon SES...");
+            var response = await _ses.SendEmailAsync(emailRequest);
+            _logger.LogInformation("The email was sent successfully.");
         }
         catch (Exception ex)
         {
+            _logger.LogError("The email was not sent.");
+            _logger.LogError("Error message: " + ex.Message);
             _logger.LogError(ex, "Failed to send order confirmation email to {Email} for order {OrderId}", customerEmail, orderId);
-            throw;
+
         }
     }
 

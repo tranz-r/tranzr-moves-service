@@ -43,13 +43,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and Push Image to GHCR
+      - name: Build and Push Images to GHCR
         run: |
           VERSION=${{ needs.release.outputs.next_version }}
-          IMAGE=ghcr.io/${{ github.repository_owner }}/tranzr-moves-services 
-
-          docker build -f Src/TranzrMoves.Api/Dockerfile -t $IMAGE:$VERSION .
-          docker tag $IMAGE:$VERSION $IMAGE:latest
-
-          docker push $IMAGE:$VERSION
-          docker push $IMAGE:latest
+          
+          # Build and push API service image
+          API_IMAGE=ghcr.io/${{ github.repository_owner }}/tranzr-moves-services
+          docker build -f Src/TranzrMoves.Api/Dockerfile -t $API_IMAGE:$VERSION .
+          docker tag $API_IMAGE:$VERSION $API_IMAGE:latest
+          docker push $API_IMAGE:$VERSION
+          docker push $API_IMAGE:latest
+          
+          # Build and push database migrator image
+          MIGRATOR_IMAGE=ghcr.io/${{ github.repository_owner }}/tranzr-moves-db-migrator
+          docker build -f Src/DbMigrator.Dockerfile -t $MIGRATOR_IMAGE:$VERSION .
+          docker tag $MIGRATOR_IMAGE:$VERSION $MIGRATOR_IMAGE:latest
+          docker push $MIGRATOR_IMAGE:$VERSION
+          docker push $MIGRATOR_IMAGE:latest
