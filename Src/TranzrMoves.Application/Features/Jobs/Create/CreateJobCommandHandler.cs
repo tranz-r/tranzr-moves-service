@@ -3,6 +3,7 @@ using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
 using TranzrMoves.Application.Contracts;
+using TranzrMoves.Application.Helpers;
 using TranzrMoves.Application.Mapper;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
@@ -18,42 +19,6 @@ public class CreateJobCommandHandler(
 {
     public async ValueTask<ErrorOr<JobDto>> Handle(CreateJobCommand command, CancellationToken cancellationToken)
     {
-        // Store user
-        
-        // var job = new Job
-        // {
-        //     QuoteId = BookingNumberGenerator.Generate(),
-        //     VanType = command.JobDto.VanType,
-        //     Destination = new Address
-        //     {
-        //         AddressLine1 = command.JobDto.Destination.AddressLine1,
-        //         AddressLine2 = command.JobDto.Destination.AddressLine2,
-        //         City = command.JobDto.Destination.City,
-        //         Country = command.JobDto.Destination.Country,
-        //         PostCode = command.JobDto.Destination.PostCode
-        //     },
-        //     Origin = new Address
-        //     {
-        //         AddressLine1 = command.JobDto.Origin.AddressLine1,
-        //         AddressLine2 = command.JobDto.Origin.AddressLine2,
-        //         City = command.JobDto.Origin.City,
-        //         Country = command.JobDto.Origin.Country,
-        //         PostCode = command.JobDto.Origin.PostCode
-        //     },
-        //     PaymentStatus = command.JobDto.PaymentStatus,
-        //     PricingTier = command.JobDto.PricingTier,
-        //     InventoryItems = command.JobDto.InventoryItems.Select(x => new InventoryItem
-        //     {
-        //         Name = x.Name,
-        //         Quantity = x.Quantity,
-        //         Depth = x.Depth,
-        //         Height = x.Height,
-        //         Width = x.Width,
-        //         Description = x.Description,
-        //     }).ToList(),
-        //     CollectionDate = command.JobDto.CollectionDate
-        // };
-        
         var userMapper = new UserMapper();
         logger.LogInformation("Handling CreateJobCommand for QuoteId: {QuoteId}, User Email: {Email}", command.JobDto?.QuoteId, command.JobDto?.User?.Email);
 
@@ -99,6 +64,8 @@ public class CreateJobCommandHandler(
         var jobMapper = new JobMapper();
         var job = jobMapper.MapToJob(command.JobDto);
         logger.LogInformation("Creating job for QuoteId: {QuoteId}", command.JobDto?.QuoteId);
+
+        job.QuoteId = BookingNumberGenerator.Generate();
         var addJobResponse = await jobRepository.AddJobAsync(job, cancellationToken);
 
         if (addJobResponse.IsError && addJobResponse.FirstError.Type == CustomErrorType.UnprocessableEntity)

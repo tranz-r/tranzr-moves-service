@@ -41,6 +41,10 @@ public class JobRepository(TranzrMovesDbContext dbContext, ILogger<JobRepository
         => await dbContext.Set<Job>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == jobId, cancellationToken);
 
+    public async Task<Job?> GetJobByQuoteIdAsync(string quoteId, CancellationToken cancellationToken)
+        => await dbContext.Set<Job>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.QuoteId == quoteId, cancellationToken);
+
 
     public async Task<ErrorOr<Job>> UpdateJobAsync(Job job,
         CancellationToken cancellationToken)
