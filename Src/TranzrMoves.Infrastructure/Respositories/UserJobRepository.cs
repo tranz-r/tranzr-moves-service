@@ -11,10 +11,10 @@ namespace TranzrMoves.Infrastructure.Respositories;
 
 public class UserJobRepository(TranzrMovesDbContext dbContext, ILogger<UserJobRepository> logger) : IUserJobRepository
 {
-    public async Task<ErrorOr<UserJob>> AddUserJobAsync(UserJob userJob,
+    public async Task<ErrorOr<CustomerJob>> AddUserJobAsync(CustomerJob customerJob,
         CancellationToken cancellationToken)
     {
-        dbContext.Set<UserJob>().Add(userJob);
+        dbContext.Set<CustomerJob>().Add(customerJob);
 
         try
         {
@@ -35,26 +35,26 @@ public class UserJobRepository(TranzrMovesDbContext dbContext, ILogger<UserJobRe
             return Error.Conflict();
         }
 
-        return userJob;
+        return customerJob;
     }
 
-    public async Task<UserJob?> GetUserJobAsync(Guid userJobId, CancellationToken cancellationToken)
-        => await dbContext.Set<UserJob>().AsNoTracking()
+    public async Task<CustomerJob?> GetUserJobAsync(Guid userJobId, CancellationToken cancellationToken)
+        => await dbContext.Set<CustomerJob>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == userJobId, cancellationToken);
 
-    public async Task<ImmutableList<UserJob>> GetUserJobsAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<ImmutableList<CustomerJob>> GetUserJobsAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var userJob = await dbContext.Set<UserJob>().AsNoTracking()
+        var userJob = await dbContext.Set<CustomerJob>().AsNoTracking()
             .Where(x => x.UserId == userId).ToListAsync(cancellationToken);
         
         return userJob.ToImmutableList();
     }
 
 
-    public async Task<ErrorOr<UserJob>> UpdateUserJobAsync(UserJob userJob,
+    public async Task<ErrorOr<CustomerJob>> UpdateUserJobAsync(CustomerJob customerJob,
         CancellationToken cancellationToken)
     {
-        dbContext.Set<UserJob>().Update(userJob);
+        dbContext.Set<CustomerJob>().Update(customerJob);
 
         try
         {
@@ -63,15 +63,15 @@ public class UserJobRepository(TranzrMovesDbContext dbContext, ILogger<UserJobRe
         catch (DbUpdateConcurrencyException ex)
         {
             logger.LogError(ex, "Concurrency exception occurred while updating UserJob with UserJobId {UserJobId}",
-                userJob.Id);
+                customerJob.Id);
             return Error.Conflict();
         }
 
-        return userJob;
+        return customerJob;
     }
 
-    public async Task DeleteUserJobAsync(UserJob userJob, CancellationToken cancellationToken)
-        => await dbContext.Set<UserJob>()
-            .Where(ac => ac.Id == userJob.Id)
+    public async Task DeleteUserJobAsync(CustomerJob customerJob, CancellationToken cancellationToken)
+        => await dbContext.Set<CustomerJob>()
+            .Where(ac => ac.Id == customerJob.Id)
             .ExecuteDeleteAsync(cancellationToken);
 }

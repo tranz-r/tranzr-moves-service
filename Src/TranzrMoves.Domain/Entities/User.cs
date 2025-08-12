@@ -2,7 +2,7 @@ using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Domain.Entities;
 
-public class Customer : IAuditable
+public class User : IAuditable
 {
     public Guid Id { get; set; }
     public Guid? SupabaseId { get; set; }
@@ -13,8 +13,8 @@ public class Customer : IAuditable
     public string? PhoneNumber { get; set; }
     public Role? Role { get; set; }
     public Address? BillingAddress { get; set; }
-    public List<CustomerJob>? UserJobs { get; set; } = [];
-    public ICollection<CustomerJob>? Jobs { get; set; } = [];
+    public ICollection<CustomerJob>? CustomerJobs { get; set; } = [];
+    public ICollection<DriverJob>? DriverJobs { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public string CreatedBy { get; set; }
     public DateTime ModifiedAt { get; set; }

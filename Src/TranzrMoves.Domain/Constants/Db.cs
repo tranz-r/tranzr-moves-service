@@ -8,9 +8,8 @@ public static class Db
     {
         public const string Users = nameof(Users);
         public const string Jobs = nameof(Jobs);
-        public const string UserJobs = nameof(UserJobs);
-        public const string Addresses = nameof(Addresses);
+        public const string CustomerJobs = nameof(CustomerJobs);
         public const string InventoryItems = nameof(InventoryItems);
-        public const string PricingTiers = nameof(PricingTiers);
+        public const string DriverJobs = nameof(DriverJobs);
     }
 }

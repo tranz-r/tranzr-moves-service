@@ -16,3 +16,19 @@ public enum PaymentStatus
     Succeeded,
     Cancelled
 }
+
+public enum PricingTier
+{
+    eco = 1,
+    ecoPlus,
+    standard,
+    premium
+}
+
+public enum VanType
+{
+    largeVan = 1,
+    SmallVan,
+    mediumVan,
+    xlLuton
+}

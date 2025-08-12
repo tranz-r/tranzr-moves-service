@@ -14,17 +14,21 @@ namespace TranzrMoves.Infrastructure.Configurations
 
             builder.Property(x => x.Role).IsRequired(false)
                 .HasConversion(
-                    v => v.ToString(),
-                    v => (Role?)Enum.Parse(typeof(Role), v));
+                    v => v == null ? null : v.ToString(),
+                    v => string.IsNullOrEmpty(v) ? null : (Role?)Enum.Parse(typeof(Role), v));
             
-            builder.HasOne(x => x.Address)
-                .WithOne(x => x.User)
-                .HasForeignKey<Address>(a => a.UserId)
-                .IsRequired();
+            builder.OwnsOne(x => x.BillingAddress);
+            builder.Navigation(x => x.BillingAddress).IsRequired();
 
-            builder.HasMany(x => x.Jobs)
+            builder.HasMany(x => x.CustomerJobs)
                 .WithOne(x => x.User)
-                .HasForeignKey(x => x.UserId).IsRequired();
+                .HasForeignKey(x => x.UserId)
+                .IsRequired(false);
+            
+            builder.HasMany(x => x.DriverJobs)
+                .WithOne(x => x.User)
+                .HasForeignKey(x => x.UserId)
+                .IsRequired(false);
         }
     }
 }

@@ -4,9 +4,8 @@ using TranzrMoves.Api.Entities;
 
 namespace TranzrMoves.Api.Controllers;
 
-[ApiController]
 [Route("api/v1/[controller]")]
-public class AuthController(ILogger<AuthController> logger, IConfiguration configuration, Supabase.Client client) : ControllerBase
+public class AuthController(ILogger<AuthController> logger, IConfiguration configuration, Supabase.Client client) : ApiControllerBase
 {
     [HttpPost("role")]
     public async Task<ActionResult<UserRoleResponse>> CreateUserRoleAsync([FromBody] UserRoleRequest userRoleRequest)

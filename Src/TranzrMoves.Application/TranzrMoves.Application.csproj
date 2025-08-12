@@ -7,25 +7,24 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\TranzrMoves.Domain\TranzrMoves.Domain.csproj" />
+        <ProjectReference Include="..\TranzrMoves.Domain\TranzrMoves.Domain.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Common\Utilities\" />
-      <Folder Include="Contracts\" />
-      <Folder Include="Features\" />
+        <Folder Include="Common\Utilities\"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="ErrorOr" Version="2.0.1" />
-      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
-      <PackageReference Include="Mediator.Abstractions" Version="3.0.0-preview.65" />
-      <PackageReference Include="Mediator.SourceGenerator" Version="3.0.0-preview.65">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.7" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.7" />
+        <PackageReference Include="ErrorOr" Version="2.0.1"/>
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0"/>
+        <PackageReference Include="Mediator.SourceGenerator" Version="3.0.*">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Mediator.Abstractions" Version="3.0.*" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.7"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.7"/>
+        <PackageReference Include="Riok.Mapperly" Version="4.2.1" ExcludeAssets="runtime" PrivateAssets="all"/>
     </ItemGroup>
 
 </Project>

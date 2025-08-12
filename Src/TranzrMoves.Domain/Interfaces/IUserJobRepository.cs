@@ -6,14 +6,14 @@ namespace TranzrMoves.Domain.Interfaces;
 
 public interface IUserJobRepository
 {
-    Task<ErrorOr<UserJob>> AddUserJobAsync(UserJob userJob,
+    Task<ErrorOr<CustomerJob>> AddUserJobAsync(CustomerJob customerJob,
         CancellationToken cancellationToken);
 
-    Task<UserJob?> GetUserJobAsync(Guid userJobId, CancellationToken cancellationToken);
-    Task<ImmutableList<UserJob>> GetUserJobsAsync(Guid userJobId, CancellationToken cancellationToken);
+    Task<CustomerJob?> GetUserJobAsync(Guid userJobId, CancellationToken cancellationToken);
+    Task<ImmutableList<CustomerJob>> GetUserJobsAsync(Guid userJobId, CancellationToken cancellationToken);
 
-    Task<ErrorOr<UserJob>> UpdateUserJobAsync(UserJob userJob,
+    Task<ErrorOr<CustomerJob>> UpdateUserJobAsync(CustomerJob customerJob,
         CancellationToken cancellationToken);
 
-    Task DeleteUserJobAsync(UserJob userJob, CancellationToken cancellationToken);
+    Task DeleteUserJobAsync(CustomerJob customerJob, CancellationToken cancellationToken);
 }

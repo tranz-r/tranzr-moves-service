@@ -2,10 +2,10 @@ using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Domain.Entities;
 
-public class CustomerJob : IAuditable
+public class DriverJob : IAuditable
 {
     public Guid Id { get; set; }
-    public Guid UserId { get; set; }
+    public Guid UserId { get; set; } 
     public User User { get; set; }
     public Guid JobId { get; set; }
     public Job Job { get; set; }

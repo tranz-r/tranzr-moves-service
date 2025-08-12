@@ -2,17 +2,17 @@
 using Stripe;
 using TranzrMoves.Api.Dtos;
 using TranzrMoves.Api.Services;
+using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Api.Controllers;
 
-[ApiController]
 [Route("api/v1/[controller]")]
 public class CheckoutController(StripeClient stripeClient, 
     IConfiguration configuration, 
     ILogger<CheckoutController> logger, 
     IAwsEmailService awsEmailService,
-    IEmailService emailService) : ControllerBase
+    IEmailService emailService) : ApiControllerBase
 {
     [HttpPost("payment-sheet", Name = "CreateStripeIntent")]
     public async Task<ActionResult<PaymentSheetCreateResponse>> CreatePaymentSheet([FromBody] PaymentSheetRequest paymentSheetRequest)
@@ -21,18 +21,29 @@ public class CheckoutController(StripeClient stripeClient,
         logger.LogInformation("Creating payment sheet");
         var customerSearchResult = await stripeClient.V1.Customers.SearchAsync(new CustomerSearchOptions
         {
-            Query = $"email:'{paymentSheetRequest.Email}'",
+            Query = $"email:'{paymentSheetRequest.Customer.Email}'",
         });
         
         var customer = customerSearchResult.Data.FirstOrDefault();
         
         if (customer is null)
         { 
-            logger.LogInformation("Customer does not exist. Creating customer with {email}",  paymentSheetRequest.Email);
+            logger.LogInformation("Customer does not exist. Creating customer with {email}",  paymentSheetRequest.Customer.Email);
+
+            var splitAddress = paymentSheetRequest.Customer.BillingAddress.Line1.Split(',');
+            var city = splitAddress[^2].Trim();
             var customerOptions = new CustomerCreateOptions
             {
-                Email = paymentSheetRequest.Email,
-                Name = paymentSheetRequest.Name
+                Email = paymentSheetRequest.Customer.Email,
+                Name = paymentSheetRequest.Customer.FullName,
+                Address = new AddressOptions
+                {
+                    Line1 = splitAddress.FirstOrDefault()?.Trim(),
+                    Line2 = splitAddress.Length == 4 ? splitAddress[2].Trim() : string.Empty,
+                    City = city,
+                    PostalCode = splitAddress.LastOrDefault()?.Trim(),
+                    Country = "United Kingdom"
+                }
             };
             
             customer = await stripeClient.V1.Customers.CreateAsync(customerOptions);
@@ -49,11 +60,12 @@ public class CheckoutController(StripeClient stripeClient,
 
         var paymentIntentOptions = new PaymentIntentCreateOptions
         {
-            Amount = paymentSheetRequest.Amount * 100, // Convert to pence
+            Amount = (long)Math.Round(paymentSheetRequest.Cost.Total * 100, 0, MidpointRounding.AwayFromZero), // Convert to pence
             Currency = "gbp",
             Customer = customer.Id,
             Description = "Your Tranzr Moves payment",
-            ReceiptEmail = paymentSheetRequest.Email,
+            ReceiptEmail = paymentSheetRequest.Customer.Email,
+            
             
             // In the latest version of the API, specifying the `automatic_payment_methods` parameter
             // is optional because Stripe enables its functionality by default.

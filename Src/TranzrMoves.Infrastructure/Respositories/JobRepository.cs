@@ -25,7 +25,7 @@ public class JobRepository(TranzrMovesDbContext dbContext, ILogger<JobRepository
             return Error.Custom(
                 type: (int)CustomErrorType.BadRequest,
                 code: "Null.Value",
-                description: "Cannot insert null value");
+                description: e.Message);
         }
         catch (UniqueConstraintException e)
         {

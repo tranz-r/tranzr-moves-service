@@ -15,6 +15,11 @@
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Stripe.net" Version="48.3.0" />
         <PackageReference Include="Supabase" Version="1.1.1" />
+        <PackageReference Include="Mediator.SourceGenerator" Version="3.0.*">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Mediator.Abstractions" Version="3.0.*" />
     </ItemGroup>
 
     <ItemGroup>
@@ -26,6 +31,10 @@
     <ItemGroup>
       <ProjectReference Include="..\TranzrMoves.Application\TranzrMoves.Application.csproj" />
       <ProjectReference Include="..\TranzrMoves.Infrastructure\TranzrMoves.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Common\" />
     </ItemGroup>
 
 </Project>

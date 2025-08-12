@@ -1,4 +1,5 @@
-﻿using Amazon.SimpleEmailV2;
+﻿using Amazon.Runtime;
+using Amazon.SimpleEmailV2;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TranzrMoves.Domain.Interfaces;
@@ -11,10 +12,18 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        var awsOption = configuration.GetAWSOptions();
+        awsOption.Credentials = new BasicAWSCredentials(configuration["AWS_ACCESS_KEY_ID"], configuration["AWS_SECRET_ACCESS_KEY"]);
+        services.AddDefaultAWSOptions(awsOption);
+        
+        
+        // services.AddDefaultAWSOptions(configuration.GetAWSOptions());
         services.AddAWSService<IAmazonSimpleEmailServiceV2>();
         services.AddSingleton<IAwsEmailService, AwsEmailService>();
         
         services.AddTransient<IUserRepository, UserRepository>();
+        services.AddTransient<IJobRepository, JobRepository>();
+        services.AddTransient<IUserJobRepository, UserJobRepository>();
 
         return services;
     }

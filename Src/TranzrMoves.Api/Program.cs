@@ -3,7 +3,10 @@ using Stripe;
 using Supabase;
 using TranzrMoves.Api.Configuration;
 using TranzrMoves.Api.Services;
+using TranzrMoves.Application.DependencyInjection;
+using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.DependencyInjection;
+using TranzrMoves.Infrastructure.Services;
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
@@ -16,7 +19,18 @@ try
     builder.Host.UseSerilog();
 
 // Add services to the container.
-
+    var  MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(name: MyAllowSpecificOrigins,
+            policy  =>
+            {
+                policy.WithOrigins("http://localhost:3000")
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+    });
+    
     builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
     builder.Services.AddOpenApi();
@@ -31,8 +45,15 @@ try
     // Register email service
     builder.Services.AddScoped<IEmailService, EmailService>();
     
+    builder.Services.AddHttpClient<IMapBoxService, MapBoxService>(
+        client =>
+        {
+            client.BaseAddress = new Uri(builder.Configuration["MAPBOX_BASE_URL"]);
+        });
+    
     builder.Services.ConfigureTranzrMovesServices(builder.Configuration);
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddApplication();
 
     
     builder.Services.AddSingleton( _ =>
@@ -62,6 +83,7 @@ try
     app.UseHttpsRedirection();
     app.MapHealthChecks("/healthz");
     app.MapHealthChecks("/ready");
+    app.UseCors(MyAllowSpecificOrigins);
     app.UseAuthorization();
 
     app.MapControllers();
