@@ -20,7 +20,7 @@ public class Job : IAuditable
     public List<CustomerJob>? CustomerJobs { get; set; } = [];
     public List<DriverJob>? DriverJobs { get; set; } = [];
     public DateTime CreatedAt { get; set; }
-    public string CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = "System";
     public DateTime ModifiedAt { get; set; }
     public string ModifiedBy { get; set; } = "System";
 }
