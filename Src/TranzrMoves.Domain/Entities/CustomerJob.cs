@@ -6,7 +6,7 @@ public class UserJob : IAuditable
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
-    public User User { get; set; }
+    public Customer Customer { get; set; }
     public Guid JobId { get; set; }
     public Job Job { get; set; }
     public DateTime CreatedAt { get; set; }
