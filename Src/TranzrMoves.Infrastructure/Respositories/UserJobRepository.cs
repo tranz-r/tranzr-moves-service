@@ -50,6 +50,22 @@ public class UserJobRepository(TranzrMovesDbContext dbContext, ILogger<UserJobRe
         return userJob.ToImmutableList();
     }
 
+    public async Task<ImmutableList<Job>> GetJobsForCustomerAsync(Guid userId, IEnumerable<PaymentStatus>? statuses, CancellationToken cancellationToken)
+    {
+        var query = dbContext.Set<CustomerJob>().AsNoTracking()
+            .Where(cj => cj.UserId == userId)
+            .Select(cj => cj.Job)
+            .AsQueryable();
+
+        if (statuses is not null && statuses.Any())
+        {
+            query = query.Where(j => statuses.Contains(j.PaymentStatus));
+        }
+
+        var jobs = await query.ToListAsync(cancellationToken);
+        return jobs.ToImmutableList();
+    }
+
 
     public async Task<ErrorOr<CustomerJob>> UpdateUserJobAsync(CustomerJob customerJob,
         CancellationToken cancellationToken)

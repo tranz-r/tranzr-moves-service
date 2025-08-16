@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Mediator;
+using Microsoft.AspNetCore.Mvc;
 using TranzrMoves.Api.Dtos;
 using TranzrMoves.Api.Entities;
 
 namespace TranzrMoves.Api.Controllers;
 
 [Route("api/v1/[controller]")]
-public class AuthController(ILogger<AuthController> logger, IConfiguration configuration, Supabase.Client client) : ApiControllerBase
+public class AuthController(ILogger<AuthController> logger, IConfiguration configuration, Supabase.Client client, IMediator mediator) : ApiControllerBase
 {
     [HttpPost("role")]
     public async Task<ActionResult<UserRoleResponse>> CreateUserRoleAsync([FromBody] UserRoleRequest userRoleRequest)

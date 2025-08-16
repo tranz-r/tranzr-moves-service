@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IJobRepository, JobRepository>();
         services.AddTransient<IUserJobRepository, UserJobRepository>();
+        services.AddTransient<IDriverJobRepository, DriverJobRepository>();
 
         return services;
     }

@@ -1,4 +1,5 @@
 using EntityFramework.Exceptions.Common;
+using System.Collections.Immutable;
 using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -44,6 +45,12 @@ public class JobRepository(TranzrMovesDbContext dbContext, ILogger<JobRepository
     public async Task<Job?> GetJobByQuoteIdAsync(string quoteId, CancellationToken cancellationToken)
         => await dbContext.Set<Job>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.QuoteId == quoteId, cancellationToken);
+
+    public async Task<ImmutableList<Job>> GetJobsAsync(CancellationToken cancellationToken)
+    {
+        var jobs = await dbContext.Set<Job>().AsNoTracking().ToListAsync(cancellationToken);
+        return jobs.ToImmutableList();
+    }
 
 
     public async Task<ErrorOr<Job>> UpdateJobAsync(Job job,

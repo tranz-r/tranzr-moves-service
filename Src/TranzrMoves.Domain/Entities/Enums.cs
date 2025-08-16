@@ -6,7 +6,7 @@ public enum Role
     customer = 1,
     admin,
     driver,
-    commercial
+    commercial_client
 }
 
 public enum PaymentStatus

@@ -1,11 +1,11 @@
 ﻿using GetAddress;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
-using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Api.Controllers;
 
 [Route("api/v1/[controller]")]
-public class AddressController(GetAddress.Api api, ILogger<AddressController> logger, IMapBoxService mapBoxService) : ApiControllerBase
+public class AddressController(IMediator mediator, ILogger<AddressController> logger, GetAddress.Api api) : ApiControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<SuccessfulAutocomplete>> GetAddressesAsync([FromQuery] string postCode)
@@ -25,10 +25,9 @@ public class AddressController(GetAddress.Api api, ILogger<AddressController> lo
     }
     
     [HttpGet("distance")]
-    public async Task<double> GetDrivingDistanceAsync([FromQuery] string originAddress, [FromQuery] string destinationAddress)
+    public async Task<double> GetDrivingDistanceAsync([FromQuery] string originAddress, [FromQuery] string destinationAddress, CancellationToken cancellationToken)
     {
-        var result = await mapBoxService.GetDrivingDistanceAsync(originAddress, destinationAddress);
-
+        var result = await mediator.Send(new TranzrMoves.Application.Features.Addresses.GetDrivingDistance.GetDrivingDistanceQuery(originAddress, destinationAddress), cancellationToken);
         return result.miles;
     }
 }

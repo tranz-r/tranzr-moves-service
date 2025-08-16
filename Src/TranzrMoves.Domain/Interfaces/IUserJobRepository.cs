@@ -12,6 +12,8 @@ public interface IUserJobRepository
     Task<CustomerJob?> GetUserJobAsync(Guid userJobId, CancellationToken cancellationToken);
     Task<ImmutableList<CustomerJob>> GetUserJobsAsync(Guid userJobId, CancellationToken cancellationToken);
 
+    Task<ImmutableList<Job>> GetJobsForCustomerAsync(Guid userId, IEnumerable<PaymentStatus>? statuses, CancellationToken cancellationToken);
+
     Task<ErrorOr<CustomerJob>> UpdateUserJobAsync(CustomerJob customerJob,
         CancellationToken cancellationToken);
 
