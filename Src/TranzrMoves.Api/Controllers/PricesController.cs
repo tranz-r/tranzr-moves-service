@@ -230,47 +230,38 @@ public class PricesController(IMediator mediator) : ApiControllerBase
         var reasons = new List<string>();
         int movers = 1;
 
+        // Simple rule: Recommend 2 movers if any of these conditions are met
+        // This covers the majority of moves safely and efficiently
+        
         if (veryBulkyCount > 0)
         {
-            movers = Math.Max(movers, 2);
-            reasons.Add("Very bulky item present (≥1.2 m³)");
+            movers = 2;
+            reasons.Add("Very bulky items present (≥1.2 m³) - 2 movers recommended for safety");
         }
-
-        if (req.StairsFloors >= 2 && bulkyCount > 0)
+        else if (req.StairsFloors >= 2 && bulkyCount > 0)
         {
-            movers = Math.Max(movers, 2);
-            reasons.Add("≥2 floors with bulky items");
+            movers = 2;
+            reasons.Add("Multiple floors with bulky items - 2 movers recommended for stairs");
         }
-
-        if (req.LongCarry && bulkyCount > 0)
+        else if (req.LongCarry && bulkyCount > 0)
         {
-            movers = Math.Max(movers, 2);
-            reasons.Add("Long carry with bulky items");
+            movers = 2;
+            reasons.Add("Long carry with bulky items - 2 movers recommended for distance");
         }
-
-        if (totalVol >= cfg.ForceHelperAtTotalVolumeM3)
+        else if (totalVol >= cfg.ForceHelperAtTotalVolumeM3)
         {
-            movers = Math.Max(movers, 2);
-            reasons.Add($">= {cfg.ForceHelperAtTotalVolumeM3} m³ total volume");
+            movers = 2;
+            reasons.Add($"High volume move (≥{cfg.ForceHelperAtTotalVolumeM3} m³) - 2 movers recommended");
         }
-
-        if (veryBulkyCount >= 2 || totalVol >= cfg.ConsiderThreeManAtVolumeM3)
+        else if (bulkyCount >= 3)
         {
-            movers = Math.Max(movers, 3);
-            if (veryBulkyCount >= 2 && totalVol >= cfg.ConsiderThreeManAtVolumeM3)
-            {
-                reasons.Add($"Multiple very bulky items ({veryBulkyCount}) + high volume (≥{cfg.ConsiderThreeManAtVolumeM3} m³) - consider 3 movers");
-            }
-            else if (veryBulkyCount >= 2)
-            {
-                reasons.Add($"Multiple very bulky items ({veryBulkyCount}) - consider 3 movers");
-            }
-            else
-            {
-                reasons.Add($"High total volume (≥{cfg.ConsiderThreeManAtVolumeM3} m³) - consider 3 movers");
-            }
+            movers = 2;
+            reasons.Add("Multiple bulky items - 2 movers recommended for efficiency");
         }
 
+        // Note: Customers can optionally add a 3rd mover if they want extra help
+        // The system will charge appropriately for the additional mover
+        
         return (movers, reasons);
     }
 
@@ -475,7 +466,6 @@ public class PricingConfig
 
     // Crew enforcement thresholds
     public double ForceHelperAtTotalVolumeM3 { get; init; } = 8.0;
-    public double ConsiderThreeManAtVolumeM3 { get; init; } = 14.0;
 }
 
 // -------------------- Response --------------------
