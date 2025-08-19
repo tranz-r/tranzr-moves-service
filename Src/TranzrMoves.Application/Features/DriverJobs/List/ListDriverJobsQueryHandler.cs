@@ -2,7 +2,6 @@ using System.Collections.Immutable;
 using Mediator;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Mapper;
-using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Application.Features.DriverJobs.List;

@@ -1,7 +1,5 @@
-using System.Collections.Immutable;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
-using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Contracts.DriverJobs;
 using TranzrMoves.Application.Features.DriverJobs.Assign;
 using TranzrMoves.Application.Features.DriverJobs.List;
