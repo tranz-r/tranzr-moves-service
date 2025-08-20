@@ -84,8 +84,22 @@ public class CheckoutController(StripeClient stripeClient,
         return new PaymentSheetCreateResponse
         {
             PaymentIntent = paymentIntent.ClientSecret,
+            PaymentIntentId = paymentIntent.Id,
             EphemeralKey = ephemeralKey.Secret,
             Customer = customer.Id,
+            PublishableKey = StripeConfiguration.ClientId,
+        };
+    }
+    
+    [HttpGet("payment-intent", Name = "GetPaymentIntent")]
+    public async Task<ActionResult<PaymentIntentResponse>> GetPaymentIntent([FromQuery] string paymentIntentId)
+    {
+        var paymentIntent = await stripeClient.V1.PaymentIntents.GetAsync(paymentIntentId);
+
+        return new PaymentIntentResponse
+        {
+            ClientSecret = paymentIntent.ClientSecret,
+            PaymentIntentId = paymentIntent.Id,
             PublishableKey = StripeConfiguration.ClientId,
         };
     }
