@@ -3,6 +3,13 @@ using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Application.Contracts;
 
+public enum PaymentType
+{
+    Full,
+    Deposit,
+    Later
+}
+
 // public class PaymentSheetRequest
 // {
 //     public required string Email { get; set; }
@@ -52,8 +59,22 @@ public class PaymentSheetRequest
     public string PricingTier { get; set; }
     public DateTime CollectionDate { get; set; }
     public Customer Customer { get; set; }
-    // public string Email { get; set; }
-    // public string Name { get; set; }
-    // public double Amount { get; set; }
     public Cost Cost { get; set; }
+    
+    // New properties for payment options
+    public PaymentType PaymentType { get; set; } = PaymentType.Full; // Default to full payment
+    public decimal? DepositPercentage { get; set; } // e.g., 25 for 25%
+    public DateTime? DueDate { get; set; } // When full payment is due
+    public string? BookingId { get; set; } // For tracking the booking
+}
+
+public class FuturePaymentRequest
+{
+    public string CustomerId { get; set; }
+    public decimal RemainingAmount { get; set; }
+    public string BookingId { get; set; }
+    public string CustomerEmail { get; set; }
+    public string CustomerName { get; set; }
+    public decimal OriginalTotalCost { get; set; }
+    public decimal OriginalDepositAmount { get; set; }
 }
