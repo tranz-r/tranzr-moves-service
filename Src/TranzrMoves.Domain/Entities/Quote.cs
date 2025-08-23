@@ -9,13 +9,13 @@ public class Job : IAuditable
     public long DriverCount { get; set; }
     public long DistanceMiles { get; set; }
     public required string QuoteId { get; set; }
-    public required Address Origin { get; set; }
-    public required Address Destination { get; set; }
-    public required PaymentStatus PaymentStatus { get; set; }
+    public Address? Origin { get; set; }
+    public Address? Destination { get; set; }
+    public PaymentStatus? PaymentStatus { get; set; }
     public string? ReceiptUrl { get; set; }
-    public required PricingTier PricingTier { get; set; }
-    public required DateTime CollectionDate  { get; set; }
-    public Cost Cost { get; set; }
+    public PricingTier? PricingTier { get; set; }
+    public DateTime? CollectionDate  { get; set; }
+    public Cost? Cost { get; set; }
     public List<InventoryItem> InventoryItems { get; set; } = [];
     public List<CustomerJob>? CustomerJobs { get; set; } = [];
     public List<DriverJob>? DriverJobs { get; set; } = [];

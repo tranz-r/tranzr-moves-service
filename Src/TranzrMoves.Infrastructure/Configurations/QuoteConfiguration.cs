@@ -5,9 +5,9 @@ using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Infrastructure.Configurations;
 
-public class JobConfiguration : IEntityTypeConfiguration<Job>
+public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
 {
-    public void Configure(EntityTypeBuilder<Job> builder)
+    public void Configure(EntityTypeBuilder<Quote> builder)
     {
         builder.ToTable(Db.Tables.Jobs);
         builder.HasKey(x => x.Id);

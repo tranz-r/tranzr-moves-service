@@ -8,13 +8,13 @@ using TranzrMoves.Domain.Interfaces;
 namespace TranzrMoves.Application.Features.DriverJobs.Assign;
 
 public class AssignDriverJobCommandHandler(
-    IDriverJobRepository driverJobRepository,
-    IJobRepository jobRepository,
+    IDriverQuoteRepository driverQuoteRepository,
+    IQuoteRepository quoteRepository,
     IUserRepository userRepository,
     ILogger<AssignDriverJobCommandHandler> logger
-) : ICommandHandler<AssignDriverJobCommand, ErrorOr<bool>>
+) : ICommandHandler<AssignDriverQuoteCommand, ErrorOr<bool>>
 {
-    public async ValueTask<ErrorOr<bool>> Handle(AssignDriverJobCommand command, CancellationToken cancellationToken)
+    public async ValueTask<ErrorOr<bool>> Handle(AssignDriverQuoteCommand command, CancellationToken cancellationToken)
     {
         var (driverId, jobId) = (command.Request.DriverId, command.Request.JobId);
 
@@ -24,22 +24,22 @@ public class AssignDriverJobCommandHandler(
             return Error.Custom((int)CustomErrorType.NotFound, "User.NotFound", "Driver not found");
         }
 
-        var job = await jobRepository.GetJobAsync(jobId, cancellationToken);
+        var job = await driverQuoteRepository.GetJobAsync(jobId, cancellationToken);
         if (job is null)
         {
             return Error.Custom((int)CustomErrorType.NotFound, "Job.NotFound", "Job not found");
         }
 
-        var existing = await driverJobRepository.GetDriverJobAsync(driverId, jobId, cancellationToken);
+        var existing = await driverQuoteRepository.GetDriverJobAsync(driverId, jobId, cancellationToken);
         if (existing is not null)
         {
             return Error.Conflict(description: "Driver already assigned to this job");
         }
 
-        var result = await driverJobRepository.AddDriverJobAsync(new DriverJob
+        var result = await driverQuoteRepository.AddDriverJobAsync(new DriverQuote
         {
             UserId = driverId,
-            JobId = jobId
+            QuoteId = jobId
         }, cancellationToken);
 
         if (result.IsError)
