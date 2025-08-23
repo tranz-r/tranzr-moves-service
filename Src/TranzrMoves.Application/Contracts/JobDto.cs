@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Application.Contracts;
@@ -7,14 +6,11 @@ public record JobDto
 {
     public Guid Id { get; set; }
     public required string QuoteId { get; set; }
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     public VanType VanType { get; set; }
     public required AddressDto Origin { get; set; }
     public required AddressDto Destination { get; set; }
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     public required PaymentStatus PaymentStatus { get; set; }
     public string? ReceiptUrl { get; set; }
-    [JsonConverter(typeof(JsonStringEnumConverter))]
     public required PricingTier PricingTier { get; set; }
     public DateTime CollectionDate { get; set; }
     public long DriverCount { get; set; }
@@ -26,7 +22,7 @@ public record JobDto
 
 public class UserDto
 {
-    public Guid Id { get; set; }
+    // public Guid Id { get; set; }
     public Guid? SupabaseId { get; set; }
     public string? FullName { get; set; }
     public string? FirstName => FullName?.Split(' ').FirstOrDefault();
@@ -39,8 +35,8 @@ public class UserDto
 
 public class InventoryItemDto
 {
-    public Guid Id { get; set; }
-    public Guid JobId { get; set; }
+    // public Guid Id { get; set; }
+    // public Guid JobId { get; set; }
     public required string Name { get; set; }
     public string? Description { get; set; }
     public int? Width { get; set; }
@@ -51,15 +47,14 @@ public class InventoryItemDto
 
 public class AddressDto
 {
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
+    // public Guid Id { get; set; }
+    // public Guid UserId { get; set; }
     public required string Line1 { get; set; }
     public string? Line2 { get; set; }
     public string? City { get; set; }
     public string? County { get; set; }
     public required string PostCode { get; set; }
     public string? Country { get; set; }
-    
     public bool HasElevator { get; set; }
     public int Floor { get; set; }
 }

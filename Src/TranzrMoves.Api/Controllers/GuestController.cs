@@ -6,6 +6,7 @@ using TranzrMoves.Application.Features.Quote.Create;
 using TranzrMoves.Application.Features.Quote.SelectQuoteType;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
+using TranzrMoves.Application.Mapper;
 
 namespace TranzrMoves.Api.Controllers;
 
@@ -157,18 +158,33 @@ public class GuestController(IQuoteRepository quoteRepository,
         // Handle new entity-based save
         if (body.Quote is not null)
         {
-            var success = await quoteRepository.UpsertQuoteAsync(guestId, body.Quote, body.ETag, ct);
-            if (!success)
+            try
             {
-                logger.LogInformation("ETag mismatch for guest {GuestId}", guestId);
-                return StatusCode(StatusCodes.Status412PreconditionFailed);
-            }
+                // Map QuoteDto to Quote entity using Mapperly
+                var quoteMapper = new QuoteMapper();
+                var quoteEntity = quoteMapper.ToEntity(body.Quote);
+                
+                // Set the session ID from the guest ID
+                quoteEntity.SessionId = guestId;
+                
+                var success = await quoteRepository.UpsertQuoteAsync(guestId, quoteEntity, body.ETag, ct);
+                if (!success)
+                {
+                    logger.LogInformation("ETag mismatch for guest {GuestId}", guestId);
+                    return StatusCode(StatusCodes.Status412PreconditionFailed);
+                }
 
-            // Get the session to retrieve the updated ETag
-            var updatedSession = await quoteRepository.GetSessionAsync(guestId, ct);
-            var newEtag = updatedSession?.ETag;
-            if (!string.IsNullOrEmpty(newEtag)) Response.Headers.ETag = newEtag;
-            return Ok(new { etag = newEtag });
+                // Get the session to retrieve the updated ETag
+                var updatedSession = await quoteRepository.GetSessionAsync(guestId, ct);
+                var newEtag = updatedSession?.ETag;
+                if (!string.IsNullOrEmpty(newEtag)) Response.Headers.ETag = newEtag;
+                return Ok(new { etag = newEtag });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error mapping QuoteDto to Quote entity for guest {GuestId}", guestId);
+                return BadRequest("Invalid quote data format");
+            }
         }
 
         return BadRequest("Quote must be provided");
@@ -290,11 +306,7 @@ public class GuestController(IQuoteRepository quoteRepository,
     }
 }
 
-public record SaveQuoteRequest
-{
-    public Quote Quote { get; set; } = null!;
-    public string? ETag { get; set; }
-}
+
 
 public record SelectQuoteTypeRequest
 {
