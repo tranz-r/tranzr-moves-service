@@ -3,13 +3,6 @@ using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Application.Contracts;
 
-public enum PaymentType
-{
-    Full,
-    Deposit,
-    Later
-}
-
 // public class PaymentSheetRequest
 // {
 //     public required string Email { get; set; }

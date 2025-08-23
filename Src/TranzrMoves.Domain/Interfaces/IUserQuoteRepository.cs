@@ -4,9 +4,12 @@ using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Domain.Interfaces;
 
-public interface IUserJobRepository
+public interface IUserQuoteRepository
 {
     Task<ErrorOr<CustomerQuote>> AddUserJobAsync(CustomerQuote customerQuote,
+        CancellationToken cancellationToken);
+
+    Task<ErrorOr<List<CustomerQuote>>> AddUserQuotesAsync(List<CustomerQuote> customerQuotes,
         CancellationToken cancellationToken);
 
     Task<CustomerQuote?> GetUserJobAsync(Guid userJobId, CancellationToken cancellationToken);

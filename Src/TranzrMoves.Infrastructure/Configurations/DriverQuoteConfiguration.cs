@@ -9,20 +9,20 @@ public class DriverQuoteConfiguration : IEntityTypeConfiguration<DriverQuote>
 {
     public void Configure(EntityTypeBuilder<DriverQuote> builder)
     {
-        builder.ToTable(Db.Tables.DriverJobs);
+        builder.ToTable(Db.Tables.DriverQuotes);
         builder.HasKey(x => x.Id);
 
-        builder.HasIndex(x => new { x.UserId, x.JobId }).IsUnique();
+        builder.HasIndex(x => new { x.UserId, JobId = x.QuoteId }).IsUnique();
 
         builder.HasOne(uj => uj.User)
-            .WithMany(u => u.DriverJobs)
+            .WithMany(u => u.DriverQuotes)
             .HasForeignKey(uj => uj.UserId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
 
         builder.HasOne(uj => uj.Quote)
-            .WithMany(j => j.DriverJobs)
-            .HasForeignKey(uj => uj.JobId)
+            .WithMany(j => j.DriverQuotes)
+            .HasForeignKey(uj => uj.QuoteId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
     }

@@ -7,16 +7,16 @@ using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Application.Features.DriverJobs.Assign;
 
-public class AssignDriverJobCommandHandler(
+public class AssignDriverQuoteCommandHandler(
     IDriverQuoteRepository driverQuoteRepository,
     IQuoteRepository quoteRepository,
     IUserRepository userRepository,
-    ILogger<AssignDriverJobCommandHandler> logger
+    ILogger<AssignDriverQuoteCommandHandler> logger
 ) : ICommandHandler<AssignDriverQuoteCommand, ErrorOr<bool>>
 {
     public async ValueTask<ErrorOr<bool>> Handle(AssignDriverQuoteCommand command, CancellationToken cancellationToken)
     {
-        var (driverId, jobId) = (command.Request.DriverId, command.Request.JobId);
+        var (driverId, quoteId) = (command.Request.DriverId, command.Request.JobId);
 
         var user = await userRepository.GetUserAsync(driverId, cancellationToken);
         if (user is null)
@@ -24,22 +24,22 @@ public class AssignDriverJobCommandHandler(
             return Error.Custom((int)CustomErrorType.NotFound, "User.NotFound", "Driver not found");
         }
 
-        var job = await driverQuoteRepository.GetJobAsync(jobId, cancellationToken);
+        var job = await driverQuoteRepository.GetDriverQuoteAsync(quoteId, cancellationToken);
         if (job is null)
         {
             return Error.Custom((int)CustomErrorType.NotFound, "Job.NotFound", "Job not found");
         }
 
-        var existing = await driverQuoteRepository.GetDriverJobAsync(driverId, jobId, cancellationToken);
+        var existing = await driverQuoteRepository.GetDriverQuoteAsync(driverId, quoteId, cancellationToken);
         if (existing is not null)
         {
             return Error.Conflict(description: "Driver already assigned to this job");
         }
 
-        var result = await driverQuoteRepository.AddDriverJobAsync(new DriverQuote
+        var result = await driverQuoteRepository.AddDriverQuoteAsync(new DriverQuote
         {
             UserId = driverId,
-            QuoteId = jobId
+            QuoteId = quoteId
         }, cancellationToken);
 
         if (result.IsError)

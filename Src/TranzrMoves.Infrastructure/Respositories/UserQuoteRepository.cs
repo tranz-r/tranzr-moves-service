@@ -9,7 +9,7 @@ using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Infrastructure.Respositories;
 
-public class UserJobRepository(TranzrMovesDbContext dbContext, ILogger<UserJobRepository> logger) : IUserJobRepository
+public class UserQuoteRepository(TranzrMovesDbContext dbContext, ILogger<UserQuoteRepository> logger) : IUserQuoteRepository
 {
     public async Task<ErrorOr<CustomerQuote>> AddUserJobAsync(CustomerQuote customerQuote,
         CancellationToken cancellationToken)
@@ -36,6 +36,33 @@ public class UserJobRepository(TranzrMovesDbContext dbContext, ILogger<UserJobRe
         }
 
         return customerQuote;
+    }
+    
+    public async Task<ErrorOr<List<CustomerQuote>>> AddUserQuotesAsync(List<CustomerQuote> customerQuotes,
+        CancellationToken cancellationToken)
+    {
+        await dbContext.Set<CustomerQuote>().AddRangeAsync(customerQuotes, cancellationToken);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (CannotInsertNullException e)
+        {
+            logger.LogError("Cannot insert null value for {property}", e.Source);
+            return Error.Custom(
+                type: (int)CustomErrorType.BadRequest,
+                code: "Null.Value",
+                description: "Cannot insert null value");
+        }
+        catch (UniqueConstraintException e)
+        {
+            logger.LogError("Unique constraint {constraintName} violated. Duplicate value for {constraintProperty}",
+                e.ConstraintName, e.ConstraintProperties[0]);
+            return Error.Conflict();
+        }
+
+        return customerQuotes;
     }
 
     public async Task<CustomerQuote?> GetUserJobAsync(Guid userJobId, CancellationToken cancellationToken)

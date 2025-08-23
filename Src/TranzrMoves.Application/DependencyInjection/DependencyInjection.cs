@@ -3,7 +3,7 @@ using FluentValidation;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using TranzrMoves.Application.Common.Behaviors;
-using TranzrMoves.Application.Features.Jobs.Create;
+using TranzrMoves.Application.Features.Quote.Create;
 
 namespace TranzrMoves.Application.DependencyInjection;
 
@@ -14,7 +14,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly()); 
         services.AddMediator( options =>
             {
-                options.Assemblies = [typeof(CreateJobCommand)];
+                options.Assemblies = [typeof(CreateQuotesCommand).Assembly];
                 options.ServiceLifetime = ServiceLifetime.Scoped;
             }
         );
@@ -24,17 +24,5 @@ public static class DependencyInjection
             .AddSingleton(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
     
         return services;
-    }
-}
-
-public sealed record Ping(Guid Id) : IRequest<Pong>;
-
-public sealed record Pong(Guid Id);
-
-public sealed class PingHandler : IRequestHandler<Ping, Pong>
-{
-    public ValueTask<Pong> Handle(Ping request, CancellationToken cancellationToken)
-    {
-        return new ValueTask<Pong>(new Pong(request.Id));
     }
 }

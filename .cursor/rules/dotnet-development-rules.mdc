@@ -1,0 +1,25 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+
+# Development
+Mediator: Always use Mediator.NET CQRS pattern for API endpoints
+Error: Use ErrorOr for returning appropriate errors
+
+# Integration tests
+
+Favour integration tests over unit tests where ever possible, but unit test if fine if worth it.
+
+Always use Microsoft WebApplicationFactory for integration tests
+
+WireMock: Use WireMock .NET for mocking APIs when needed
+
+NSubstitute: Use NSubstitute for mocking object wherever needed
+
+AutoBogus: Use Bogus/Auto Bogus for generating test data
+
+FluentAssertions: Use FluentAssertions for assertions
+
+TestContainers: Use TestContainers for setting up database during integration tests

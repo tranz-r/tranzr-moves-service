@@ -22,7 +22,7 @@ namespace TranzrMoves.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.CustomerJob", b =>
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.CustomerQuote", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -34,9 +34,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<Guid>("JobId")
-                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
@@ -45,20 +42,23 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("JobId");
+                    b.HasIndex("QuoteId");
 
-                    b.HasIndex("UserId", "JobId")
+                    b.HasIndex("UserId", "QuoteId")
                         .IsUnique();
 
-                    b.ToTable("CustomerJobs", (string)null);
+                    b.ToTable("CustomerQuotes", (string)null);
                 });
 
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.DriverJob", b =>
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.DriverQuote", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -70,9 +70,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<Guid>("JobId")
-                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
@@ -81,27 +78,30 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("JobId");
+                    b.HasIndex("QuoteId");
 
-                    b.HasIndex("UserId", "JobId")
+                    b.HasIndex("UserId", "QuoteId")
                         .IsUnique();
 
-                    b.ToTable("DriverJobs", (string)null);
+                    b.ToTable("DriverQuotes", (string)null);
                 });
 
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.Job", b =>
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.Quote", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("CollectionDate")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateOnly?>("CollectionDate")
+                        .HasColumnType("date");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -110,12 +110,24 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long>("DistanceMiles")
-                        .HasColumnType("bigint");
+                    b.Property<DateOnly?>("DeliveryDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal?>("DepositAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("DistanceMiles")
+                        .HasColumnType("numeric");
 
                     b.Property<long>("DriverCount")
                         .HasColumnType("bigint");
 
+                    b.Property<bool?>("FlexibleTime")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("Hours")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("ModifiedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -123,25 +135,80 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("PaymentStatus")
+                    b.Property<int>("NumberOfItemsToAssemble")
                         .HasColumnType("integer");
 
-                    b.Property<int>("PricingTier")
+                    b.Property<int>("NumberOfItemsToDismantle")
                         .HasColumnType("integer");
 
-                    b.Property<string>("QuoteId")
+                    b.Property<int?>("PaymentStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PaymentType")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("PricingTier")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("QuoteReference")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("ReceiptUrl")
                         .HasColumnType("text");
 
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("TimeSlot")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("TotalCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
                     b.Property<int>("VanType")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Jobs", (string)null);
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("Quotes", (string)null);
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteSession", b =>
+                {
+                    b.Property<string>("SessionId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ETag")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("ExpiresUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("SessionId");
+
+                    b.ToTable("QuoteSessions", (string)null);
                 });
 
             modelBuilder.Entity("TranzrMoves.Domain.Entities.User", b =>
@@ -184,77 +251,49 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.CustomerJob", b =>
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.CustomerQuote", b =>
                 {
-                    b.HasOne("TranzrMoves.Domain.Entities.Job", "Job")
-                        .WithMany("CustomerJobs")
-                        .HasForeignKey("JobId")
+                    b.HasOne("TranzrMoves.Domain.Entities.Quote", "Quote")
+                        .WithMany("CustomerQuotes")
+                        .HasForeignKey("QuoteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("TranzrMoves.Domain.Entities.User", "User")
-                        .WithMany("CustomerJobs")
+                        .WithMany("CustomerQuotes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.Navigation("Job");
+                    b.Navigation("Quote");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.DriverJob", b =>
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.DriverQuote", b =>
                 {
-                    b.HasOne("TranzrMoves.Domain.Entities.Job", "Job")
-                        .WithMany("DriverJobs")
-                        .HasForeignKey("JobId")
+                    b.HasOne("TranzrMoves.Domain.Entities.Quote", "Quote")
+                        .WithMany("DriverQuotes")
+                        .HasForeignKey("QuoteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("TranzrMoves.Domain.Entities.User", "User")
-                        .WithMany("DriverJobs")
+                        .WithMany("DriverQuotes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.Navigation("Job");
+                    b.Navigation("Quote");
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.Job", b =>
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.Quote", b =>
                 {
-                    b.OwnsOne("TranzrMoves.Domain.Entities.Cost", "Cost", b1 =>
-                        {
-                            b1.Property<Guid>("JobId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<long>("BaseVan")
-                                .HasColumnType("bigint");
-
-                            b1.Property<double>("Distance")
-                                .HasColumnType("double precision");
-
-                            b1.Property<long>("Driver")
-                                .HasColumnType("bigint");
-
-                            b1.Property<long>("ElevatorAdjustment")
-                                .HasColumnType("bigint");
-
-                            b1.Property<long>("Floor")
-                                .HasColumnType("bigint");
-
-                            b1.Property<double>("TierAdjustment")
-                                .HasColumnType("double precision");
-
-                            b1.Property<double>("Total")
-                                .HasColumnType("double precision");
-
-                            b1.HasKey("JobId");
-
-                            b1.ToTable("Jobs");
-
-                            b1.WithOwner()
-                                .HasForeignKey("JobId");
-                        });
+                    b.HasOne("TranzrMoves.Domain.Entities.QuoteSession", null)
+                        .WithMany("Quotes")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.OwnsMany("TranzrMoves.Domain.Entities.InventoryItem", "InventoryItems", b1 =>
                         {
@@ -294,91 +333,109 @@ namespace TranzrMoves.Infrastructure.Migrations
 
                     b.OwnsOne("TranzrMoves.Domain.Entities.Address", "Destination", b1 =>
                         {
-                            b1.Property<Guid>("JobId")
+                            b1.Property<Guid>("QuoteId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("AddressLine1")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("AddressLine2")
-                                .HasColumnType("text");
-
                             b1.Property<string>("City")
-                                .HasColumnType("text");
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
 
                             b1.Property<string>("Country")
-                                .HasColumnType("text");
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
 
                             b1.Property<string>("County")
                                 .HasColumnType("text");
 
+                            b1.Property<int>("Floor")
+                                .HasColumnType("integer");
+
+                            b1.Property<bool>("HasElevator")
+                                .HasColumnType("boolean");
+
                             b1.Property<Guid>("Id")
                                 .HasColumnType("uuid");
 
+                            b1.Property<string>("Line1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
+                            b1.Property<string>("Line2")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
                             b1.Property<string>("PostCode")
                                 .IsRequired()
-                                .HasColumnType("text");
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)");
 
                             b1.Property<Guid>("UserId")
                                 .HasColumnType("uuid");
 
-                            b1.HasKey("JobId");
+                            b1.HasKey("QuoteId");
 
-                            b1.ToTable("Jobs");
+                            b1.ToTable("Quotes");
 
                             b1.WithOwner()
-                                .HasForeignKey("JobId");
+                                .HasForeignKey("QuoteId");
                         });
 
                     b.OwnsOne("TranzrMoves.Domain.Entities.Address", "Origin", b1 =>
                         {
-                            b1.Property<Guid>("JobId")
+                            b1.Property<Guid>("QuoteId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("AddressLine1")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("AddressLine2")
-                                .HasColumnType("text");
-
                             b1.Property<string>("City")
-                                .HasColumnType("text");
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
 
                             b1.Property<string>("Country")
-                                .HasColumnType("text");
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
 
                             b1.Property<string>("County")
                                 .HasColumnType("text");
 
+                            b1.Property<int>("Floor")
+                                .HasColumnType("integer");
+
+                            b1.Property<bool>("HasElevator")
+                                .HasColumnType("boolean");
+
                             b1.Property<Guid>("Id")
                                 .HasColumnType("uuid");
 
+                            b1.Property<string>("Line1")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
+                            b1.Property<string>("Line2")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
                             b1.Property<string>("PostCode")
                                 .IsRequired()
-                                .HasColumnType("text");
+                                .HasMaxLength(10)
+                                .HasColumnType("character varying(10)");
 
                             b1.Property<Guid>("UserId")
                                 .HasColumnType("uuid");
 
-                            b1.HasKey("JobId");
+                            b1.HasKey("QuoteId");
 
-                            b1.ToTable("Jobs");
+                            b1.ToTable("Quotes");
 
                             b1.WithOwner()
-                                .HasForeignKey("JobId");
+                                .HasForeignKey("QuoteId");
                         });
 
-                    b.Navigation("Cost");
-
-                    b.Navigation("Destination")
-                        .IsRequired();
+                    b.Navigation("Destination");
 
                     b.Navigation("InventoryItems");
 
-                    b.Navigation("Origin")
-                        .IsRequired();
+                    b.Navigation("Origin");
                 });
 
             modelBuilder.Entity("TranzrMoves.Domain.Entities.User", b =>
@@ -388,13 +445,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<Guid>("UserId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("AddressLine1")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("AddressLine2")
-                                .HasColumnType("text");
-
                             b1.Property<string>("City")
                                 .HasColumnType("text");
 
@@ -404,8 +454,21 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<string>("County")
                                 .HasColumnType("text");
 
+                            b1.Property<int>("Floor")
+                                .HasColumnType("integer");
+
+                            b1.Property<bool>("HasElevator")
+                                .HasColumnType("boolean");
+
                             b1.Property<Guid>("Id")
                                 .HasColumnType("uuid");
+
+                            b1.Property<string>("Line1")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Line2")
+                                .HasColumnType("text");
 
                             b1.Property<string>("PostCode")
                                 .IsRequired()
@@ -423,18 +486,23 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.Job", b =>
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.Quote", b =>
                 {
-                    b.Navigation("CustomerJobs");
+                    b.Navigation("CustomerQuotes");
 
-                    b.Navigation("DriverJobs");
+                    b.Navigation("DriverQuotes");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteSession", b =>
+                {
+                    b.Navigation("Quotes");
                 });
 
             modelBuilder.Entity("TranzrMoves.Domain.Entities.User", b =>
                 {
-                    b.Navigation("CustomerJobs");
+                    b.Navigation("CustomerQuotes");
 
-                    b.Navigation("DriverJobs");
+                    b.Navigation("DriverQuotes");
                 });
 #pragma warning restore 612, 618
         }

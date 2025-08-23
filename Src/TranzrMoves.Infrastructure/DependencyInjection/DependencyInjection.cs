@@ -22,9 +22,9 @@ public static class DependencyInjection
         services.AddSingleton<IAwsEmailService, AwsEmailService>();
         
         services.AddTransient<IUserRepository, UserRepository>();
-        services.AddTransient<IJobRepository, JobRepository>();
-        services.AddTransient<IUserJobRepository, UserJobRepository>();
-        services.AddTransient<IDriverJobRepository, DriverJobRepository>();
+        services.AddTransient<IUserQuoteRepository, UserQuoteRepository>();
+        services.AddTransient<IDriverQuoteRepository, DriverQuoteRepository>();
+        services.AddTransient<IQuoteRepository, QuoteRepository>();
 
         return services;
     }

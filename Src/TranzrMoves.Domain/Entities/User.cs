@@ -13,8 +13,8 @@ public class User : IAuditable
     public string? PhoneNumber { get; set; }
     public Role? Role { get; set; }
     public Address? BillingAddress { get; set; }
-    public ICollection<CustomerJob>? CustomerJobs { get; set; } = [];
-    public ICollection<DriverJob>? DriverJobs { get; set; } = [];
+    public ICollection<CustomerQuote>? CustomerQuotes { get; set; } = [];
+    public ICollection<DriverQuote>? DriverQuotes { get; set; } = [];
     public DateTime CreatedAt { get; set; }
     public string CreatedBy { get; set; } = "System";
     public DateTime ModifiedAt { get; set; }

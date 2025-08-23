@@ -4,4 +4,4 @@ using TranzrMoves.Application.Contracts.DriverJobs;
 
 namespace TranzrMoves.Application.Features.DriverJobs.Assign;
 
-public record AssignDriverJobCommand(AssignDriverJobRequest Request) : ICommand<ErrorOr<bool>>;
+public record AssignDriverQuoteCommand(AssignDriverQuoteRequest Request) : ICommand<ErrorOr<bool>>;

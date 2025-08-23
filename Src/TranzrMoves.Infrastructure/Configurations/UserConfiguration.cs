@@ -20,12 +20,12 @@ namespace TranzrMoves.Infrastructure.Configurations
             builder.OwnsOne(x => x.BillingAddress);
             builder.Navigation(x => x.BillingAddress).IsRequired();
 
-            builder.HasMany(x => x.CustomerJobs)
+            builder.HasMany(x => x.CustomerQuotes)
                 .WithOne(x => x.User)
                 .HasForeignKey(x => x.UserId)
                 .IsRequired(false);
             
-            builder.HasMany(x => x.DriverJobs)
+            builder.HasMany(x => x.DriverQuotes)
                 .WithOne(x => x.User)
                 .HasForeignKey(x => x.UserId)
                 .IsRequired(false);

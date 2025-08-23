@@ -32,3 +32,17 @@ public enum VanType
     mediumVan,
     xlLuton
 }
+
+public enum PaymentType
+{
+    Full,
+    Deposit,
+    Later
+}
+
+public enum TimeSlot
+{
+    morning = 1,
+    afternoon,
+    evening
+}

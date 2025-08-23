@@ -3,6 +3,7 @@ using Stripe;
 using TranzrMoves.Api.Dtos;
 using TranzrMoves.Api.Services;
 using TranzrMoves.Application.Contracts;
+using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Api.Controllers;
@@ -10,7 +11,7 @@ namespace TranzrMoves.Api.Controllers;
 [Route("api/v1/[controller]")]
 public class CheckoutController(StripeClient stripeClient, 
     IConfiguration configuration, 
-    ILogger<CheckoutController> logger, 
+    ILogger<CheckoutController> logger,  
     IAwsEmailService awsEmailService,
     IEmailService emailService) : ApiControllerBase
 {
