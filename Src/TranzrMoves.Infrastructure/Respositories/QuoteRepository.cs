@@ -169,7 +169,7 @@ public class QuoteRepository(TranzrMovesDbContext db) : IQuoteRepository
             Id = Guid.NewGuid(),
             SessionId = guestId,
             Type = quoteType,
-            QuoteReference = TranzrMoves.Application.Helpers.BookingNumberGenerator.Generate(),
+            QuoteReference = Application.Helpers.BookingNumberGenerator.Generate(),
             // All other properties remain null/empty to be filled in later
             VanType = default,
             DriverCount = 1,
@@ -209,7 +209,7 @@ public class QuoteRepository(TranzrMovesDbContext db) : IQuoteRepository
             .ToListAsync(ct);
     }
 
-    public async Task<bool> UpsertQuoteAsync(string guestId, Quote quote, string? providedEtag, CancellationToken ct = default)
+    public async Task<Quote?> UpsertQuoteAsync(string guestId, Quote quote, string? providedEtag, CancellationToken ct = default)
     {
         // Set session ID
         quote.SessionId = guestId;
@@ -224,39 +224,42 @@ public class QuoteRepository(TranzrMovesDbContext db) : IQuoteRepository
             quote.CreatedAt = DateTime.UtcNow;
             quote.ModifiedAt = DateTime.UtcNow;
             db.Set<Quote>().Add(quote);
-        }
-        else
-        {
-            //TODO: Do something here
-            // Update existing quote
-            existing.VanType = quote.VanType;
-            existing.DriverCount = quote.DriverCount;
-            existing.DistanceMiles = quote.DistanceMiles;
-            existing.NumberOfItemsToDismantle = quote.NumberOfItemsToDismantle;
-            existing.NumberOfItemsToAssemble = quote.NumberOfItemsToAssemble;
-            existing.Origin = quote.Origin;
-            existing.Destination = quote.Destination;
-            existing.CollectionDate = quote.CollectionDate;
-            existing.DeliveryDate = quote.DeliveryDate;
-            existing.Hours = quote.Hours;
-            existing.FlexibleTime = quote.FlexibleTime;
-            existing.TimeSlot = quote.TimeSlot;
-            existing.PricingTier = quote.PricingTier;
-            existing.TotalCost = quote.TotalCost;
-            existing.PaymentStatus = quote.PaymentStatus;
-            existing.ReceiptUrl = quote.ReceiptUrl;
-            existing.ModifiedAt = DateTime.UtcNow;
             
-            // Update inventory items
-            existing.InventoryItems.Clear();
-            foreach (var item in quote.InventoryItems)
-            {
-                existing.InventoryItems.Add(item);
-            }
+            await db.SaveChangesAsync(ct);
+
+            return quote;
         }
-        
+
+        //TODO: Do something here
+        // Update existing quote
+        existing.VanType = quote.VanType;
+        existing.DriverCount = quote.DriverCount;
+        existing.DistanceMiles = quote.DistanceMiles;
+        existing.NumberOfItemsToDismantle = quote.NumberOfItemsToDismantle;
+        existing.NumberOfItemsToAssemble = quote.NumberOfItemsToAssemble;
+        existing.Origin = quote.Origin;
+        existing.Destination = quote.Destination;
+        existing.CollectionDate = quote.CollectionDate;
+        existing.DeliveryDate = quote.DeliveryDate;
+        existing.Hours = quote.Hours;
+        existing.FlexibleTime = quote.FlexibleTime;
+        existing.TimeSlot = quote.TimeSlot;
+        existing.PricingTier = quote.PricingTier;
+        existing.TotalCost = quote.TotalCost;
+        existing.PaymentStatus = quote.PaymentStatus;
+        existing.ReceiptUrl = quote.ReceiptUrl;
+        existing.ModifiedAt = DateTime.UtcNow;
+            
+        // Update inventory items
+        existing.InventoryItems.Clear();
+        foreach (var item in quote.InventoryItems)
+        {
+            existing.InventoryItems.Add(item);
+        }
+            
         await db.SaveChangesAsync(ct);
-        return true;
+
+        return existing;
     }
 
     public async Task<bool> DeleteQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default)

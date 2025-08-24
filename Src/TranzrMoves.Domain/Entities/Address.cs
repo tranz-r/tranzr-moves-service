@@ -11,6 +11,6 @@ public class Address
     public required string PostCode { get; set; }
     public string? Country { get; set; }
     
-    public bool HasElevator { get; set; }
-    public int Floor { get; set; }
+    public bool? HasElevator { get; set; }
+    public int? Floor { get; set; }
 }

@@ -18,12 +18,13 @@ public class QuoteDto
     public PricingDto? Pricing { get; set; }
     public List<InventoryItemDto>? Items { get; set; } = [];
     public PaymentDto? Payment { get; set; }
+    // Note: Customer information is stored in UserDto, not directly in QuoteDto
 }
 
 public class ScheduleDto
 {
-    public DateOnly? DateISO { get; set; }
-    public DateOnly? DeliveryDateISO { get; set; }
+    public DateTime? DateISO { get; set; }
+    public DateTime? DeliveryDateISO { get; set; }
     public int? Hours { get; set; }
     public bool? FlexibleTime { get; set; }
     public TimeSlot? TimeSlot { get; set; }

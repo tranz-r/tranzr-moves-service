@@ -36,6 +36,8 @@ public class SelectQuoteTypeCommandHandler(
                     "Failed to create or retrieve quote");
             }
 
+            // Note: Customer data is handled when saving quotes, not when selecting quote type
+
             logger.LogInformation("Successfully selected quote type {QuoteType} for guest {GuestId} with reference {QuoteReference}", 
                 command.QuoteType, command.GuestId, quote.QuoteReference);
 

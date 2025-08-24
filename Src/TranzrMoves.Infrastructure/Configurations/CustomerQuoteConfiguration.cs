@@ -12,7 +12,7 @@ public class CustomerQuoteConfiguration : IEntityTypeConfiguration<CustomerQuote
         builder.ToTable(Db.Tables.CustomerQuotes);
         builder.HasKey(x => x.Id);
 
-        builder.HasIndex(x => new { x.UserId, JobId = x.QuoteId }).IsUnique();
+        builder.HasIndex(x => new { x.UserId, x.QuoteId }).IsUnique();
 
         builder.HasOne(uj => uj.User)
             .WithMany(u => u.CustomerQuotes)

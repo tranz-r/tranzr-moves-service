@@ -11,9 +11,21 @@ namespace TranzrMoves.Infrastructure.Respositories;
 
 public class UserQuoteRepository(TranzrMovesDbContext dbContext, ILogger<UserQuoteRepository> logger) : IUserQuoteRepository
 {
-    public async Task<ErrorOr<CustomerQuote>> AddUserJobAsync(CustomerQuote customerQuote,
+    public async Task<ErrorOr<CustomerQuote>> AddUserQuoteAsync(CustomerQuote customerQuote,
         CancellationToken cancellationToken)
     {
+        //Check if this customer quote already exists for this user and quote
+        var existing = await dbContext.Set<CustomerQuote>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cc => cc.UserId == customerQuote.UserId 
+                                       && cc.QuoteId == customerQuote.QuoteId, cancellationToken);
+        
+        if (existing is not null)
+        {
+            return Error.Conflict("CustomerQuote.AlreadyExists", "A customer quote already exists for this user and quote");
+        }
+        
+        
         dbContext.Set<CustomerQuote>().Add(customerQuote);
 
         try
@@ -65,36 +77,23 @@ public class UserQuoteRepository(TranzrMovesDbContext dbContext, ILogger<UserQuo
         return customerQuotes;
     }
 
-    public async Task<CustomerQuote?> GetUserJobAsync(Guid userJobId, CancellationToken cancellationToken)
+    public async Task<CustomerQuote?> GetUserQuoteAsync(Guid userQuoteId, CancellationToken cancellationToken)
         => await dbContext.Set<CustomerQuote>().AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == userJobId, cancellationToken);
+            .FirstOrDefaultAsync(x => x.Id == userQuoteId, cancellationToken);
 
-    public async Task<ImmutableList<CustomerQuote>> GetUserJobsAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<ImmutableList<CustomerQuote>> GetUserQuotesAsync(Guid userId, CancellationToken cancellationToken)
     {
-        var userJob = await dbContext.Set<CustomerQuote>().AsNoTracking()
+        var userQuotes = await dbContext.Set<CustomerQuote>().AsNoTracking()
             .Where(x => x.UserId == userId).ToListAsync(cancellationToken);
         
-        return userJob.ToImmutableList();
+        return userQuotes.ToImmutableList();
     }
 
-    // public async Task<ImmutableList<Quote>> GetJobsForCustomerAsync(Guid userId, IEnumerable<PaymentStatus>? statuses, CancellationToken cancellationToken)
-    // {
-    //     var query = dbContext.Set<CustomerJob>().AsNoTracking()
-    //         .Where(cj => cj.UserId == userId)
-    //         .Select(cj => cj.Quote)
-    //         .AsQueryable();
-    //
-    //     if (statuses is not null && statuses.Any())
-    //     {
-    //         query = query.Where(j => statuses.Contains(j.PaymentStatus));
-    //     }
-    //
-    //     var jobs = await query.ToListAsync(cancellationToken);
-    //     return jobs.ToImmutableList();
-    // }
+    public async Task<CustomerQuote?> GetUserQuoteByQuoteIdAsync(Guid quoteId, CancellationToken cancellationToken)
+        => await dbContext.Set<CustomerQuote>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.QuoteId == quoteId, cancellationToken);
 
-
-    public async Task<ErrorOr<CustomerQuote>> UpdateUserJobAsync(CustomerQuote customerQuote,
+    public async Task<ErrorOr<CustomerQuote>> UpdateUserQuoteAsync(CustomerQuote customerQuote,
         CancellationToken cancellationToken)
     {
         dbContext.Set<CustomerQuote>().Update(customerQuote);
@@ -105,7 +104,7 @@ public class UserQuoteRepository(TranzrMovesDbContext dbContext, ILogger<UserQuo
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            logger.LogError(ex, "Concurrency exception occurred while updating UserJob with UserJobId {UserJobId}",
+            logger.LogError(ex, "Concurrency exception occurred while updating UserQuote with UserQuoteId {UserQuoteId}",
                 customerQuote.Id);
             return Error.Conflict();
         }
@@ -113,7 +112,7 @@ public class UserQuoteRepository(TranzrMovesDbContext dbContext, ILogger<UserQuo
         return customerQuote;
     }
 
-    public async Task DeleteUserJobAsync(CustomerQuote customerQuote, CancellationToken cancellationToken)
+    public async Task DeleteUserQuoteAsync(CustomerQuote customerQuote, CancellationToken cancellationToken)
         => await dbContext.Set<CustomerQuote>()
             .Where(ac => ac.Id == customerQuote.Id)
             .ExecuteDeleteAsync(cancellationToken);

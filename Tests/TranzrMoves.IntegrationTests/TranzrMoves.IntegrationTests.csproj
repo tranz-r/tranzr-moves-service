@@ -35,4 +35,10 @@
         <ProjectReference Include="..\..\Src\TranzrMoves.Api\TranzrMoves.Api.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="xunit.core">
+        <HintPath>..\..\..\..\..\..\..\..\home\vavy\.nuget\packages\xunit.extensibility.core\2.9.2\lib\netstandard1.1\xunit.core.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

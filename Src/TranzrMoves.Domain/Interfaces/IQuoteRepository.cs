@@ -18,7 +18,7 @@ public interface IQuoteRepository
     Task<Quote?> GetQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
     Task<Quote?> GetOrCreateQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
     Task<List<Quote>> GetQuotesForSessionAsync(string guestId, CancellationToken ct = default);
-    Task<bool> UpsertQuoteAsync(string guestId, Quote quote, string? providedEtag, CancellationToken ct = default);
+    Task<Quote?> UpsertQuoteAsync(string guestId, Quote quote, string? providedEtag, CancellationToken ct = default);
     Task<bool> DeleteQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
 }
 

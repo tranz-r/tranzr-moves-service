@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TranzrMoves.Infrastructure;
@@ -11,9 +12,11 @@ using TranzrMoves.Infrastructure;
 namespace TranzrMoves.Infrastructure.Migrations
 {
     [DbContext(typeof(TranzrMovesDbContext))]
-    partial class TranzrMovesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250823211740_ChangeDateOnlyToDateTime")]
+    partial class ChangeDateOnlyToDateTime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -225,7 +228,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("FullName")
@@ -248,9 +250,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
 
                     b.ToTable("Users", (string)null);
                 });
@@ -351,10 +350,10 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<string>("County")
                                 .HasColumnType("text");
 
-                            b1.Property<int?>("Floor")
+                            b1.Property<int>("Floor")
                                 .HasColumnType("integer");
 
-                            b1.Property<bool?>("HasElevator")
+                            b1.Property<bool>("HasElevator")
                                 .HasColumnType("boolean");
 
                             b1.Property<Guid>("Id")
@@ -401,10 +400,10 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<string>("County")
                                 .HasColumnType("text");
 
-                            b1.Property<int?>("Floor")
+                            b1.Property<int>("Floor")
                                 .HasColumnType("integer");
 
-                            b1.Property<bool?>("HasElevator")
+                            b1.Property<bool>("HasElevator")
                                 .HasColumnType("boolean");
 
                             b1.Property<Guid>("Id")
@@ -458,10 +457,10 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<string>("County")
                                 .HasColumnType("text");
 
-                            b1.Property<int?>("Floor")
+                            b1.Property<int>("Floor")
                                 .HasColumnType("integer");
 
-                            b1.Property<bool?>("HasElevator")
+                            b1.Property<bool>("HasElevator")
                                 .HasColumnType("boolean");
 
                             b1.Property<Guid>("Id")

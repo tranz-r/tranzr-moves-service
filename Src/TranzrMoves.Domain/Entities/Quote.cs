@@ -31,8 +31,8 @@ public class Quote : IAuditable
     public string QuoteReference { get; set; } = string.Empty;
     
     // Schedule
-    public DateOnly? CollectionDate { get; set; }
-    public DateOnly? DeliveryDate { get; set; }
+    public DateTime? CollectionDate { get; set; }
+    public DateTime? DeliveryDate { get; set; }
     public int? Hours { get; set; }
     public bool? FlexibleTime { get; set; }
     public TimeSlot? TimeSlot { get; set; } // morning, afternoon, evening
@@ -49,6 +49,8 @@ public class Quote : IAuditable
     public PaymentType PaymentType { get; set; }
     public decimal? DepositAmount { get; set; }
     public string? ReceiptUrl { get; set; }
+    
+    // Note: Customer information is stored in User entity, not directly in Quote
     
     // Relationships
     public List<CustomerQuote>? CustomerQuotes { get; set; } = [];

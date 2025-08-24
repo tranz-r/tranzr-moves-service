@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -37,7 +38,7 @@ try
     builder.Services.Configure<JsonOptions>(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        // options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         // options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         // options.JsonSerializerOptions.Converters.Add(new JsonConverterFactoryForDateTimeUtc());
     });

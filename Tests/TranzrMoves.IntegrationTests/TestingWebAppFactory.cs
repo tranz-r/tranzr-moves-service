@@ -7,7 +7,7 @@ using TranzrMoves.Infrastructure;
 
 namespace TranzrMoves.IntegrationTests;
 
-public class TestingWebAppFactory : WebApplicationFactory<TranzrMoves.Api.Program>
+public class TestingWebAppFactory : WebApplicationFactory<Api.Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {

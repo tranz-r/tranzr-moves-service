@@ -19,6 +19,8 @@ namespace TranzrMoves.Infrastructure.Configurations
             
             builder.OwnsOne(x => x.BillingAddress);
             builder.Navigation(x => x.BillingAddress).IsRequired();
+            
+            builder.Property(x => x.Email).IsRequired();
 
             builder.HasMany(x => x.CustomerQuotes)
                 .WithOne(x => x.User)
@@ -29,6 +31,8 @@ namespace TranzrMoves.Infrastructure.Configurations
                 .WithOne(x => x.User)
                 .HasForeignKey(x => x.UserId)
                 .IsRequired(false);
+            
+            builder.HasIndex(x => new { x.Email }).IsUnique();
         }
     }
 }

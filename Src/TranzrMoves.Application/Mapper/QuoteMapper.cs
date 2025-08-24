@@ -20,6 +20,7 @@ public partial class QuoteMapper
     [MapProperty(nameof(Quote.PaymentStatus), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.Status))]
     [MapProperty(nameof(Quote.PaymentType),   nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.PaymentType))]
     [MapProperty(nameof(Quote.DepositAmount), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.DepositAmount))]
+    // Note: Customer properties are not part of Quote entity
     public partial QuoteDto ToDto(Quote src);
     
     public partial List<QuoteDto> ToDtoList(List<Quote> src);
@@ -37,6 +38,7 @@ public partial class QuoteMapper
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.Status),            nameof(Quote.PaymentStatus))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentType),       nameof(Quote.PaymentType))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.DepositAmount),     nameof(Quote.DepositAmount))]
+    // Note: Customer properties are not part of Quote entity
     public partial Quote ToEntity(QuoteDto src);
     
     public partial List<Quote> ToEntityList(List<QuoteDto> src);
