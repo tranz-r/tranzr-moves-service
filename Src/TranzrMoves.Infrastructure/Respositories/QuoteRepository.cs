@@ -87,37 +87,35 @@ public class QuoteRepository(TranzrMovesDbContext db) : IQuoteRepository
         }
         
         // Update existing quote
-        quote.Id = existing.Id;
-        
-        // existing.VanType = quote.VanType;
-        // existing.DriverCount = quote.DriverCount;
-        // existing.DistanceMiles = quote.DistanceMiles;
-        // existing.NumberOfItemsToDismantle = quote.NumberOfItemsToDismantle;
-        // existing.NumberOfItemsToAssemble = quote.NumberOfItemsToAssemble;
-        // existing.Origin = quote.Origin;
-        // existing.Destination = quote.Destination;
-        // existing.CollectionDate = quote.CollectionDate;
-        // existing.DeliveryDate = quote.DeliveryDate;
-        // existing.Hours = quote.Hours;
-        // existing.FlexibleTime = quote.FlexibleTime;
-        // existing.TimeSlot = quote.TimeSlot;
-        // existing.PricingTier = quote.PricingTier;
-        // existing.TotalCost = quote.TotalCost;
-        // existing.PaymentStatus = quote.PaymentStatus;
-        // existing.ReceiptUrl = quote.ReceiptUrl;
-        // existing.ModifiedAt = DateTime.UtcNow;
-        //     
-        // // Update inventory items
-        // existing.InventoryItems.Clear();
-        // foreach (var item in quote.InventoryItems)
-        // {
-        //     existing.InventoryItems.Add(item);
-        // }
+        existing.VanType = quote.VanType;
+        existing.DriverCount = quote.DriverCount;
+        existing.DistanceMiles = quote.DistanceMiles;
+        existing.NumberOfItemsToDismantle = quote.NumberOfItemsToDismantle;
+        existing.NumberOfItemsToAssemble = quote.NumberOfItemsToAssemble;
+        existing.Origin = quote.Origin;
+        existing.Destination = quote.Destination;
+        existing.CollectionDate = quote.CollectionDate;
+        existing.DeliveryDate = quote.DeliveryDate;
+        existing.Hours = quote.Hours;
+        existing.FlexibleTime = quote.FlexibleTime;
+        existing.TimeSlot = quote.TimeSlot;
+        existing.PricingTier = quote.PricingTier;
+        existing.TotalCost = quote.TotalCost;
+        existing.PaymentStatus = quote.PaymentStatus;
+        existing.ReceiptUrl = quote.ReceiptUrl;
+        existing.ModifiedAt = DateTime.UtcNow;
+            
+        // Update inventory items
+        existing.InventoryItems.Clear();
+        foreach (var item in quote.InventoryItems)
+        {
+            existing.InventoryItems.Add(item);
+        }
 
-        db.Set<Quote>().Update(quote);
+        db.Set<Quote>().Update(existing);
             
         await db.SaveChangesAsync(ct);
-        return quote;
+        return existing;
     }
 
     public async Task<bool> DeleteQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default)
