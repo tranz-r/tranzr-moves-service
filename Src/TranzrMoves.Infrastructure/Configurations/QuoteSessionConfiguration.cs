@@ -14,7 +14,6 @@ public class QuoteSessionConfiguration : IEntityTypeConfiguration<QuoteSession>
         
         // Session Management
         builder.Property(x => x.SessionId).IsRequired();
-        builder.Property(x => x.ETag).IsRequired();
         builder.Property(x => x.ExpiresUtc);
         
         // Customer Info is now stored per quote, not in session

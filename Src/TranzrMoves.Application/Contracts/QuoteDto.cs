@@ -18,7 +18,8 @@ public class QuoteDto
     public PricingDto? Pricing { get; set; }
     public List<InventoryItemDto>? Items { get; set; } = [];
     public PaymentDto? Payment { get; set; }
-    // Note: Customer information is stored in UserDto, not directly in QuoteDto
+    // Concurrency control using PostgreSQL xmin system column
+    public uint Version { get; set; }
 }
 
 public class ScheduleDto
@@ -34,7 +35,7 @@ public class PricingDto
 {
     public PricingTier? PricingTier { get; set; }
     public decimal? TotalCost { get; set; }
-    public decimal? PickUpDropOffPrice { get; set; }
+    // public decimal? PickUpDropOffPrice { get; set; }
 }
 
 public class PaymentDto

@@ -3,7 +3,6 @@ using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TranzrMoves.Application.Contracts;
-using TranzrMoves.Application.Features.Quote.Create;
 using TranzrMoves.Application.Features.Quote.SelectQuoteType;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
@@ -11,6 +10,16 @@ using TranzrMoves.Application.Mapper;
 
 namespace TranzrMoves.Api.Controllers;
 
+/// <summary>
+/// Guest Controller for quote management operations.
+/// 
+/// ETag Pattern:
+/// - All endpoints that return quote data include ETag headers for consistency
+/// - ETags are derived from the quote's Version property (PostgreSQL xmin)
+/// - GET endpoints use ETags for HTTP caching (If-None-Match → 304)
+/// - POST endpoints use ETags for concurrency control (If-Match → 412)
+/// - Response body ETags are maintained for backward compatibility
+/// </summary>
 [ApiController]
 [Route("api/guest")]
 public class GuestController(
@@ -50,51 +59,8 @@ public class GuestController(
         return Ok(new { guestId });
     }
 
-    [HttpGet("session")]
-    public async Task<IActionResult> GetSession(CancellationToken ct)
-    {
-        var guestId = Request.Cookies[CookieName];
-        if (string.IsNullOrWhiteSpace(guestId))
-        {
-            return Ok(new { state = (QuoteContextDto?)null, etag = (string?)null });
-        }
-
-        var state = await quoteRepository.GetQuoteContextStateAsync(guestId, ct);
-        if (state is null)
-        {
-            return Ok(new { state = (QuoteContextDto?)null, etag = (string?)null });
-        }
-
-        var session = await quoteRepository.GetSessionAsync(guestId, ct);
-        var etag = session?.ETag ?? string.Empty;
-
-        // Check If-None-Match
-        var ifNoneMatch = Request.Headers["If-None-Match"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(ifNoneMatch) && string.Equals(ifNoneMatch, etag, StringComparison.Ordinal))
-        {
-            Response.Headers.ETag = etag;
-            return StatusCode(StatusCodes.Status304NotModified);
-        }
-
-        Response.Headers.ETag = etag;
-        RefreshCookie(guestId);
-        return Ok(new { state, etag });
-    }
-
-    [HttpPost("session")]
-    public async Task<IActionResult> SaveSession([FromBody] QuoteContextDto dto, [FromHeader(Name = "If-Match")] string? etag, CancellationToken ct)
-    {
-        var guestId = Request.Cookies[CookieName];
-        
-        var response = await mediator.Send(new CreateQuotesCommand(dto, guestId, etag), ct);
-        if (!string.IsNullOrEmpty(response.Value.Etag)) Response.Headers.ETag = response.Value.Etag;
-        
-        RefreshCookie(guestId);
-        return Ok(new { etag = response.Value.Etag });
-    }
-
     [HttpGet("quote")]
-    public async Task<IActionResult> GetQuote([FromQuery] string? type, CancellationToken ct)
+    public async Task<IActionResult> GetQuote([FromQuery(Name = "quoteType")] QuoteType quoteType, CancellationToken ct)
     {
         var guestId = Request.Cookies[CookieName];
         if (string.IsNullOrWhiteSpace(guestId))
@@ -102,57 +68,40 @@ public class GuestController(
             return Ok(new { quote = (object?)null, etag = (string?)null });
         }
 
-        // If type is specified, get specific quote
-        if (!string.IsNullOrEmpty(type) && Enum.TryParse<QuoteType>(type, true, out var quoteType))
+        var quote = await quoteRepository.GetQuoteAsync(guestId, quoteType, ct);
+        if (quote is null)
         {
-            var quote = await quoteRepository.GetQuoteAsync(guestId, quoteType, ct);
-            if (quote is null)
-            {
-                return Ok(new { quote = (object?)null, etag = (string?)null });
-            }
+            return Ok(new { quote = (object?)null, etag = (string?)null });
+        }
 
-            var quoteSession = await quoteRepository.GetSessionAsync(guestId, ct);
-            var quoteEtag = quoteSession?.ETag ?? string.Empty;
+        // Use the quote's Version (xmin) as the ETag for concurrency control
+        var quoteEtag = quote.Version.ToString();
 
-            // Check If-None-Match
-            var ifNoneMatch = Request.Headers["If-None-Match"].FirstOrDefault();
-            if (!string.IsNullOrEmpty(ifNoneMatch) && string.Equals(ifNoneMatch, quoteEtag, StringComparison.Ordinal))
-            {
-                Response.Headers.ETag = quoteEtag;
-                return StatusCode(StatusCodes.Status304NotModified);
-            }
-
+        // Check If-None-Match
+        var ifNoneMatch = Request.Headers["If-None-Match"].FirstOrDefault();
+        if (!string.IsNullOrEmpty(ifNoneMatch) && string.Equals(ifNoneMatch, quoteEtag, StringComparison.Ordinal))
+        {
             Response.Headers.ETag = quoteEtag;
-            RefreshCookie(guestId);
-            return Ok(new { quote, etag = quoteEtag });
-        }
-
-        // Get all quotes for session
-        var quotes = await quoteRepository.GetQuotesForSessionAsync(guestId, ct);
-        var session = await quoteRepository.GetSessionAsync(guestId, ct);
-        
-        if (quotes.Count == 0)
-        {
-            return Ok(new { quotes = Array.Empty<object>(), etag = (string?)null });
-        }
-
-        var etag = session?.ETag ?? string.Empty;
-
-        // Check If-None-Match using session ETag
-        var ifNoneMatchSession = Request.Headers["If-None-Match"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(ifNoneMatchSession) && string.Equals(ifNoneMatchSession, etag, StringComparison.Ordinal))
-        {
-            Response.Headers.ETag = etag;
             return StatusCode(StatusCodes.Status304NotModified);
         }
 
-        Response.Headers.ETag = etag;
+        Response.Headers.ETag = quoteEtag;
         RefreshCookie(guestId);
-        return Ok(new { quotes, etag });
+        
+        var mapper = new QuoteMapper();
+        var quoteDto = mapper.ToDto(quote);
+        
+        var quoteTypeDto =  new QuoteTypeDto
+        {
+            Quote = quoteDto,
+            Etag = quoteEtag
+        };
+        
+        return Ok(quoteTypeDto);
     }
 
     [HttpPost("quote")]
-    public async Task<IActionResult> SaveQuote([FromBody] SaveQuoteRequest body, CancellationToken ct)
+    public async Task<IActionResult> SaveQuote([FromBody] SaveQuoteRequest? body, CancellationToken ct)
     {
         var guestId = Request.Cookies[CookieName];
         if (string.IsNullOrWhiteSpace(guestId)) return Unauthorized();
@@ -160,151 +109,152 @@ public class GuestController(
         if (body is null) return BadRequest("Request body is required");
 
         // Handle new entity-based save
-        if (body.Quote is not null)
+        try
         {
-            try
+            // Map QuoteDto to Quote entity using Mapperly
+            var quoteMapper = new QuoteMapper();
+            var quoteEntity = quoteMapper.ToEntity(body.Quote);
+                
+            // Set the session ID from the guest ID
+            quoteEntity.SessionId = guestId;
+                
+            // Extract Version from the request body for concurrency control
+            uint? providedVersion = null;
+            if (body.Quote?.Version > 0)
             {
-                // Map QuoteDto to Quote entity using Mapperly
-                var quoteMapper = new QuoteMapper();
-                var quoteEntity = quoteMapper.ToEntity(body.Quote);
-                
-                // Set the session ID from the guest ID
-                quoteEntity.SessionId = guestId;
-                
-                var updatedQuote = await quoteRepository.UpsertQuoteAsync(guestId, quoteEntity, body.ETag, ct);
-                if (updatedQuote is null)
-                {
-                    logger.LogInformation("ETag mismatch for guest {GuestId}", guestId);
-                    return StatusCode(StatusCodes.Status412PreconditionFailed);
-                }
+                providedVersion = body.Quote.Version;
+            }
+            
+            var updatedQuote = await quoteRepository.UpsertQuoteAsync(guestId, quoteEntity, providedVersion, ct);
+            if (updatedQuote is null)
+            {
+                logger.LogInformation("ETag mismatch for guest {GuestId}", guestId);
+                return StatusCode(StatusCodes.Status412PreconditionFailed);
+            }
 
-                // Handle customer data if provided
-                if (body.Customer != null)
+            // Handle customer data if provided
+            if (body.Customer != null)
+            {
+                try
                 {
-                    try
-                    {
-                        User? existingUser = null;
-                        User? userToSave = null;
+                    User? existingUser = null;
+                    User? userToSave = null;
                         
-                        // Check if user already exists by email
-                        if (!string.IsNullOrEmpty(body.Customer.Email))
-                        {
-                            existingUser = await userRepository.GetUserByEmailAsync(body.Customer.Email, ct);
-                        }
+                    // Check if user already exists by email
+                    if (!string.IsNullOrEmpty(body.Customer.Email))
+                    {
+                        existingUser = await userRepository.GetUserByEmailAsync(body.Customer.Email, ct);
+                    }
 
-                        if (existingUser != null)
+                    if (existingUser != null)
+                    {
+                        // Update existing user
+                        existingUser.FullName = body.Customer.FullName ?? existingUser.FullName;
+                        existingUser.PhoneNumber = body.Customer.PhoneNumber ?? existingUser.PhoneNumber;
+                            
+                        // Update billing address if provided
+                        if (body.Customer.BillingAddress != null)
                         {
-                            // Update existing user
-                            existingUser.FullName = body.Customer.FullName ?? existingUser.FullName;
-                            existingUser.PhoneNumber = body.Customer.PhoneNumber ?? existingUser.PhoneNumber;
-                            
-                            // Update billing address if provided
-                            if (body.Customer.BillingAddress != null)
+                            if (existingUser.BillingAddress == null)
                             {
-                                if (existingUser.BillingAddress == null)
+                                existingUser.BillingAddress = new Address
                                 {
-                                    existingUser.BillingAddress = new Address
-                                    {
-                                        Line1 = body.Customer.BillingAddress.Line1,
-                                        PostCode = body.Customer.BillingAddress.PostCode
-                                    };
-                                }
+                                    Line1 = body.Customer.BillingAddress.Line1,
+                                    PostCode = body.Customer.BillingAddress.PostCode
+                                };
+                            }
                                 
-                                existingUser.BillingAddress.Line1 = body.Customer.BillingAddress.Line1;
-                                existingUser.BillingAddress.Line2 = body.Customer.BillingAddress.Line2;
-                                existingUser.BillingAddress.City = body.Customer.BillingAddress.City;
-                                existingUser.BillingAddress.County = body.Customer.BillingAddress.County;
-                                existingUser.BillingAddress.PostCode = body.Customer.BillingAddress.PostCode;
-                                existingUser.BillingAddress.Country = body.Customer.BillingAddress.Country;
-                                existingUser.BillingAddress.HasElevator = body.Customer.BillingAddress.HasElevator;
-                                existingUser.BillingAddress.Floor = body.Customer.BillingAddress.Floor;
-                            }
+                            existingUser.BillingAddress.Line1 = body.Customer.BillingAddress.Line1;
+                            existingUser.BillingAddress.Line2 = body.Customer.BillingAddress.Line2;
+                            existingUser.BillingAddress.City = body.Customer.BillingAddress.City;
+                            existingUser.BillingAddress.County = body.Customer.BillingAddress.County;
+                            existingUser.BillingAddress.PostCode = body.Customer.BillingAddress.PostCode;
+                            existingUser.BillingAddress.Country = body.Customer.BillingAddress.Country;
+                            existingUser.BillingAddress.HasElevator = body.Customer.BillingAddress.HasElevator;
+                            existingUser.BillingAddress.Floor = body.Customer.BillingAddress.Floor;
+                        }
                             
-                            var updateResult = await userRepository.UpdateUserAsync(existingUser, ct);
-                            if (updateResult.IsError)
-                            {
-                                logger.LogWarning("Failed to update existing user {UserId}: {Error}", 
-                                    existingUser.Id, updateResult.FirstError.Description);
-                            }
-                            else
-                            {
-                                userToSave = updateResult.Value;
-                            }
+                        var updateResult = await userRepository.UpdateUserAsync(existingUser, ct);
+                        if (updateResult.IsError)
+                        {
+                            logger.LogWarning("Failed to update existing user {UserId}: {Error}", 
+                                existingUser.Id, updateResult.FirstError.Description);
                         }
                         else
                         {
-                            // Create new user
-                            var newUser = new User
-                            {
-                                FullName = body.Customer.FullName,
-                                Email = body.Customer.Email,
-                                PhoneNumber = body.Customer.PhoneNumber,
-                                BillingAddress = body.Customer.BillingAddress != null ? new Address
-                                {
-                                    Line1 = body.Customer.BillingAddress.Line1,
-                                    Line2 = body.Customer.BillingAddress.Line2,
-                                    City = body.Customer.BillingAddress.City,
-                                    County = body.Customer.BillingAddress.County,
-                                    PostCode = body.Customer.BillingAddress.PostCode,
-                                    Country = body.Customer.BillingAddress.Country,
-                                    HasElevator = body.Customer.BillingAddress.HasElevator,
-                                    Floor = body.Customer.BillingAddress.Floor
-                                } : null
-                            };
-                            
-                            var createResult = await userRepository.AddUserAsync(newUser, ct);
-                            if (createResult.IsError)
-                            {
-                                logger.LogWarning("Failed to create new user: {Error}", createResult.FirstError.Description);
-                            }
-                            else
-                            {
-                                userToSave = createResult.Value;
-                            }
-                        }
-
-                        // Create CustomerQuote relationship if user was successfully saved
-                        if (userToSave != null)
-                        {
-                            var customerQuote = new CustomerQuote
-                            {
-                                UserId = userToSave.Id,
-                                QuoteId = updatedQuote.Id
-                            };
-                            
-                            var relationshipResult = await userQuoteRepository.AddUserQuoteAsync(customerQuote, ct);
-                            if (relationshipResult.IsError && relationshipResult.FirstError.Type == ErrorType.Conflict)
-                            {
-                                logger.LogWarning("User quote relationship already exists: {Error}", 
-                                    relationshipResult.FirstError.Description);
-                            }
-                            else
-                            {
-                                logger.LogInformation("Successfully created CustomerQuote relationship for user {UserId} and quote {QuoteId}", 
-                                    userToSave.Id, quoteEntity.Id);
-                            }
+                            userToSave = updateResult.Value;
                         }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        logger.LogWarning(ex, "Error handling customer data for quote {QuoteId}, continuing without customer data", quoteEntity.Id);
+                        // Create new user
+                        var newUser = new User
+                        {
+                            FullName = body.Customer.FullName,
+                            Email = body.Customer.Email,
+                            PhoneNumber = body.Customer.PhoneNumber,
+                            BillingAddress = body.Customer.BillingAddress != null ? new Address
+                            {
+                                Line1 = body.Customer.BillingAddress.Line1,
+                                Line2 = body.Customer.BillingAddress.Line2,
+                                City = body.Customer.BillingAddress.City,
+                                County = body.Customer.BillingAddress.County,
+                                PostCode = body.Customer.BillingAddress.PostCode,
+                                Country = body.Customer.BillingAddress.Country,
+                                HasElevator = body.Customer.BillingAddress.HasElevator,
+                                Floor = body.Customer.BillingAddress.Floor
+                            } : null
+                        };
+                            
+                        var createResult = await userRepository.AddUserAsync(newUser, ct);
+                        if (createResult.IsError)
+                        {
+                            logger.LogWarning("Failed to create new user: {Error}", createResult.FirstError.Description);
+                        }
+                        else
+                        {
+                            userToSave = createResult.Value;
+                        }
+                    }
+
+                    // Create CustomerQuote relationship if user was successfully saved
+                    if (userToSave != null)
+                    {
+                        var customerQuote = new CustomerQuote
+                        {
+                            UserId = userToSave.Id,
+                            QuoteId = updatedQuote.Id
+                        };
+                            
+                        var relationshipResult = await userQuoteRepository.AddUserQuoteAsync(customerQuote, ct);
+                        if (relationshipResult.IsError && relationshipResult.FirstError.Type == ErrorType.Conflict)
+                        {
+                            logger.LogWarning("User quote relationship already exists: {Error}", 
+                                relationshipResult.FirstError.Description);
+                        }
+                        else
+                        {
+                            logger.LogInformation("Successfully created CustomerQuote relationship for user {UserId} and quote {QuoteId}", 
+                                userToSave.Id, quoteEntity.Id);
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Error handling customer data for quote {QuoteId}, continuing without customer data", quoteEntity.Id);
+                }
+            }
 
-                // Get the session to retrieve the updated ETag
-                var updatedSession = await quoteRepository.GetSessionAsync(guestId, ct);
-                var newEtag = updatedSession?.ETag;
-                if (!string.IsNullOrEmpty(newEtag)) Response.Headers.ETag = newEtag;
-                return Ok(new { etag = newEtag });
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error mapping QuoteDto to Quote entity for guest {GuestId}", guestId);
-                return BadRequest("Invalid quote data format");
-            }
+            // Return the updated quote's Version as the new ETag
+            var newEtag = updatedQuote.Version.ToString();
+            Response.Headers.ETag = newEtag;
+            return Ok(new { etag = newEtag });
         }
-
-        return BadRequest("Quote must be provided");
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error mapping QuoteDto to Quote entity for guest {GuestId}", guestId);
+            return BadRequest("Invalid quote data format");
+        }
     }
 
     [HttpDelete("quote")]
@@ -328,17 +278,12 @@ public class GuestController(
     }
 
     [HttpPost("select-quote-type")]
-    public async Task<IActionResult> SelectQuoteType([FromBody] SelectQuoteTypeRequest request, CancellationToken ct)
+    public async Task<IActionResult> SelectQuoteType([FromQuery(Name = "quoteType")] QuoteType quoteType, CancellationToken ct)
     {
         var guestId = Request.Cookies[CookieName];
         if (string.IsNullOrWhiteSpace(guestId))
         {
             return Unauthorized();
-        }
-
-        if (!Enum.TryParse<QuoteType>(request.QuoteType, true, out var quoteType))
-        {
-            return BadRequest("Invalid quote type");
         }
 
         var command = new SelectQuoteTypeCommand(guestId, quoteType);
@@ -349,23 +294,22 @@ public class GuestController(
             logger.LogError("Failed to select quote type: {Error}", result.FirstError.Description);
             return Problem(result.Errors.ToList());
         }
-
-        var response = result.Value;
         
-        // Get updated session for ETag
-        var session = await quoteRepository.GetSessionAsync(guestId, ct);
-        var etag = session?.ETag ?? string.Empty;
+        // Use the quote's Version (xmin) as the ETag for concurrency control
+        var etag = result.Value.Version.ToString();
+        
+        // Add ETag header for consistency with other endpoints
+        Response.Headers.ETag = etag;
         
         RefreshCookie(guestId);
-        return Ok(new { 
-            quote = new {
-                id = response.Id,
-                type = response.Type,
-                quoteReference = response.QuoteReference,
-                sessionId = response.SessionId
-            }, 
-            etag 
-        });
+        
+        var quoteTypeDto =  new QuoteTypeDto
+        {
+            Quote = result.Value,
+            Etag = etag
+        };
+        
+        return Ok(quoteTypeDto);
     }
 
     [HttpGet("customer/{quoteId}")]
@@ -459,11 +403,4 @@ public class GuestController(
             Expires = DateTimeOffset.UtcNow.AddDays(60)
         });
     }
-}
-
-
-
-public record SelectQuoteTypeRequest
-{
-    public string QuoteType { get; set; } = string.Empty;
 }

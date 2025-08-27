@@ -17,7 +17,6 @@ public class Quote : IAuditable
     public string SessionId { get; set; } = string.Empty; // Maps to guestId
     public QuoteType Type { get; set; } // send, receive, removals
     public DateTimeOffset? ExpiresUtc { get; set; }
-    public string ETag { get; set; } = string.Empty;
     
     // Core Quote Data
     public VanType VanType { get; set; }
@@ -54,6 +53,9 @@ public class Quote : IAuditable
     // Relationships
     public List<CustomerJob>? CustomerJobs { get; set; } = [];
     public List<DriverJob>? DriverJobs { get; set; } = [];
+    
+    // Concurrency control using PostgreSQL xmin system column
+    public uint Version { get; set; }
     
     // Audit
     public DateTime CreatedAt { get; set; }

@@ -50,6 +50,8 @@ public class Quote : IAuditable
     public decimal? DepositAmount { get; set; }
     public string? ReceiptUrl { get; set; }
     
+    public uint Version { get; set; }
+    
     // Note: Customer information is stored in User entity, not directly in Quote
     
     // Relationships

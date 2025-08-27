@@ -3,7 +3,7 @@ using FluentValidation;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using TranzrMoves.Application.Common.Behaviors;
-using TranzrMoves.Application.Features.Quote.Create;
+using TranzrMoves.Application.Features.Quote.SelectQuoteType;
 
 namespace TranzrMoves.Application.DependencyInjection;
 
@@ -14,7 +14,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly()); 
         services.AddMediator( options =>
             {
-                options.Assemblies = [typeof(CreateQuotesCommand).Assembly];
+                options.Assemblies = [typeof(SelectQuoteTypeCommand).Assembly];
                 options.ServiceLifetime = ServiceLifetime.Scoped;
             }
         );

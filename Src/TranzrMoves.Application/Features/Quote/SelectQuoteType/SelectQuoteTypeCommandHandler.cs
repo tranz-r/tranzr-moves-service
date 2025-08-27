@@ -2,6 +2,8 @@ using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
+using TranzrMoves.Application.Contracts;
+using TranzrMoves.Application.Mapper;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Application.Features.Quote.SelectQuoteType;
@@ -9,9 +11,9 @@ namespace TranzrMoves.Application.Features.Quote.SelectQuoteType;
 public class SelectQuoteTypeCommandHandler(
     IQuoteRepository quoteRepository,
     ILogger<SelectQuoteTypeCommandHandler> logger) 
-    : ICommandHandler<SelectQuoteTypeCommand, ErrorOr<SelectQuoteTypeResponse>>
+    : ICommandHandler<SelectQuoteTypeCommand, ErrorOr<QuoteDto>>
 {
-    public async ValueTask<ErrorOr<SelectQuoteTypeResponse>> Handle(
+    public async ValueTask<ErrorOr<QuoteDto>> Handle(
         SelectQuoteTypeCommand command, 
         CancellationToken cancellationToken)
     {
@@ -41,11 +43,11 @@ public class SelectQuoteTypeCommandHandler(
             logger.LogInformation("Successfully selected quote type {QuoteType} for guest {GuestId} with reference {QuoteReference}", 
                 command.QuoteType, command.GuestId, quote.QuoteReference);
 
-            return new SelectQuoteTypeResponse(
-                quote.Id,
-                quote.Type.ToString(),
-                quote.QuoteReference,
-                quote.SessionId);
+            var mapper = new QuoteMapper();
+            
+            var quoteDto = mapper.ToDto(quote);
+
+            return quoteDto;
         }
         catch (Exception ex)
         {

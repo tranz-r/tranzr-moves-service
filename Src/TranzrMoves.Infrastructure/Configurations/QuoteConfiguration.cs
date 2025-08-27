@@ -56,5 +56,10 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
             inventoryItem.ToTable(Db.Tables.InventoryItems);
             inventoryItem.WithOwner().HasForeignKey(e => e.JobId);
         });
+        
+        // Concurrency Token
+        builder.Property(b => b.Version)
+            .IsRowVersion()
+            .HasColumnName("xmin"); // Map to PostgreSQL xmin system column
     }
 }
