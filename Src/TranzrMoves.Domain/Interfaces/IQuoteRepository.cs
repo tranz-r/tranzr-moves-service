@@ -1,3 +1,4 @@
+using ErrorOr;
 using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Domain.Interfaces;
@@ -10,7 +11,7 @@ public interface IQuoteRepository
     // Individual Quote Management
     Task<Quote?> GetQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
     Task<Quote?> GetOrCreateQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
-    Task<Quote?> UpsertQuoteAsync(string guestId, Quote quote, uint? providedVersion, CancellationToken ct = default);
+    Task<ErrorOr<Quote>> UpdateQuoteAsync(string guestId, Quote quote, CancellationToken ct = default);
     Task<bool> DeleteQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
 }
 

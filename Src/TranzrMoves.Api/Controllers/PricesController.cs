@@ -1,6 +1,9 @@
 using System.Text.Json.Serialization;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
+using TranzrMoves.Application.Contracts;
+using TranzrMoves.Application.Features.Prices.Removals;
 
 namespace TranzrMoves.Api.Controllers;
 
@@ -136,6 +139,22 @@ public class PricesController(IMediator mediator) : ApiControllerBase
         };
 
         return Ok(result);
+    }
+    
+    [HttpGet("removal-prices")]
+    public async Task<ActionResult<RemovalPricingDto>> GetRemovalPricesAsync(CancellationToken ct)
+    {
+        var response = await mediator.Send(new RemovalPricesRequest(DateTimeOffset.UtcNow), ct);
+        
+        var removalPricing = response.Value;
+        
+        var etag = removalPricing.Version;
+        if (Request.Headers.TryGetValue(HeaderNames.IfMatch, out var inm) && inm.ToString() == etag)
+            return StatusCode(StatusCodes.Status304NotModified);
+
+        Response.Headers.ETag = etag;
+        Response.Headers.CacheControl = "public, max-age=300"; // tune as needed
+        return Ok(removalPricing);
     }
 
     // ---------- Helpers ----------

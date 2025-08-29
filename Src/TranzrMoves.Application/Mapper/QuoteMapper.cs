@@ -45,6 +45,13 @@ public partial class QuoteMapper
 
     // ========== DTO ➜ ENTITY (update existing) ==========
     // Use this for PATCH/PUT so EF keys/audit/navigation stay intact.
+    [MapperIgnoreTarget(nameof(Quote.Version))] // Version is a concurrency token, managed by EF
+    [MapperIgnoreTarget(nameof(Quote.Id))]      // Id should not be changed
+    [MapperIgnoreTarget(nameof(Quote.CreatedAt))] // CreatedAt should not be changed
+    [MapperIgnoreTarget(nameof(Quote.ModifiedAt))] // ModifiedAt is managed by EF
+    [MapperIgnoreTarget(nameof(Quote.CustomerQuotes))] // Navigation properties not handled here
+    [MapperIgnoreTarget(nameof(Quote.DriverQuotes))]   // Navigation properties not handled here
+    // Only specify the asymmetric pieces; everything else maps by name.
     [MapProperty(nameof(QuoteDto.Items), nameof(Quote.InventoryItems))]
     [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.DateISO),         nameof(Quote.CollectionDate))]
     [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.DeliveryDateISO), nameof(Quote.DeliveryDate))]

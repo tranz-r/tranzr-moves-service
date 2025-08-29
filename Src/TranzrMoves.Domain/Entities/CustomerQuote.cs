@@ -9,8 +9,8 @@ public class CustomerQuote : IAuditable
     public User User { get; set; }
     public Guid QuoteId { get; set; }
     public Quote Quote { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
     public string CreatedBy { get; set; } = "System";
-    public DateTime ModifiedAt { get; set; }
+    public DateTimeOffset ModifiedAt { get; set; }
     public string ModifiedBy { get; set; } = "System";
 }

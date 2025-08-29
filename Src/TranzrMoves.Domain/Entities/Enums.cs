@@ -46,3 +46,9 @@ public enum TimeSlot
     afternoon,
     evening
 }
+
+public enum ServiceLevel
+{
+    Standard = 0,
+    Premium  = 1
+}

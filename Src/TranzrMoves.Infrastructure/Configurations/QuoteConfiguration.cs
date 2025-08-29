@@ -14,7 +14,11 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         
         // Session Management
         builder.Property(x => x.SessionId).IsRequired();
-        builder.Property(x => x.Type).IsRequired();
+        
+        builder.Property(x => x.Type).IsRequired()
+            .HasConversion(
+                v => v.ToString(),
+                v => (QuoteType)Enum.Parse(typeof(QuoteType), v));
         
         // Core Properties
         builder.Property(x => x.VanType).IsRequired();

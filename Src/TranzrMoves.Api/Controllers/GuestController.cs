@@ -106,31 +106,40 @@ public class GuestController(
         var guestId = Request.Cookies[CookieName];
         if (string.IsNullOrWhiteSpace(guestId)) return Unauthorized();
 
-        if (body is null) return BadRequest("Request body is required");
+        if (body is null)
+        {
+            return BadRequest("Request body is required");
+        }
+        
+        var existingQuote = await quoteRepository.GetQuoteAsync(guestId, body.Quote.Type.Value, ct);
+        
+        if (existingQuote is null)
+        {
+            logger.LogWarning("No existing quote found for guest {GuestId} and type {QuoteType}", guestId, body.Quote.Type.Value);
+            return NotFound("Quote not found");
+        }
 
         // Handle new entity-based save
         try
         {
-            // Map QuoteDto to Quote entity using Mapperly
-            var quoteMapper = new QuoteMapper();
-            var quoteEntity = quoteMapper.ToEntity(body.Quote);
-                
-            // Set the session ID from the guest ID
-            quoteEntity.SessionId = guestId;
-                
-            // Extract Version from the request body for concurrency control
-            uint? providedVersion = null;
-            if (body.Quote?.Version > 0)
+            var mapper = new QuoteMapper();
+            mapper.UpdateEntity(body.Quote, existingQuote);
+            
+            var result = await quoteRepository.UpdateQuoteAsync(guestId, existingQuote, ct);
+            
+            if (result.IsError)
             {
-                providedVersion = body.Quote.Version;
+                if (result.FirstError.Type == ErrorType.Conflict)
+                {
+                    logger.LogInformation("ETag mismatch for guest {GuestId}", guestId);
+                    return StatusCode(StatusCodes.Status412PreconditionFailed);
+                }
+                
+                logger.LogWarning("Failed to update quote for guest {GuestId}: {Error}", guestId, result.FirstError.Description);
+                return BadRequest(result.Errors.ToList());
             }
             
-            var updatedQuote = await quoteRepository.UpsertQuoteAsync(guestId, quoteEntity, providedVersion, ct);
-            if (updatedQuote is null)
-            {
-                logger.LogInformation("ETag mismatch for guest {GuestId}", guestId);
-                return StatusCode(StatusCodes.Status412PreconditionFailed);
-            }
+            var updatedQuote = result.Value;
 
             // Handle customer data if provided
             if (body.Customer != null)
@@ -235,13 +244,13 @@ public class GuestController(
                         else
                         {
                             logger.LogInformation("Successfully created CustomerQuote relationship for user {UserId} and quote {QuoteId}", 
-                                userToSave.Id, quoteEntity.Id);
+                                userToSave.Id, updatedQuote.Id);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning(ex, "Error handling customer data for quote {QuoteId}, continuing without customer data", quoteEntity.Id);
+                    logger.LogWarning(ex, "Error handling customer data for quote {QuoteId}, continuing without customer data", updatedQuote.Id);
                 }
             }
 
@@ -391,6 +400,74 @@ public class GuestController(
         logger.LogInformation("Cleaned up {SessionCount} expired sessions", expiredSessions);
             
         return Ok(new { expiredSessions });
+    }
+
+    // 🔍 TEST ENDPOINT: Test MapperIgnoreTarget behavior
+    [HttpPost("test-mapper")]
+    public async Task<IActionResult> TestMapper(CancellationToken ct)
+    {
+        var guestId = Request.Cookies[CookieName];
+        if (string.IsNullOrWhiteSpace(guestId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            // Get an existing quote
+            var existingQuote = await quoteRepository.GetQuoteAsync(guestId, QuoteType.Send, ct);
+            if (existingQuote == null)
+            {
+                return NotFound("No quote found to test with");
+            }
+
+            logger.LogInformation("🔍 MAPPER TEST - Original Quote: ID={Id}, Version={Version}, Reference={Reference}", 
+                existingQuote.Id, existingQuote.Version, existingQuote.QuoteReference);
+
+            // Create a test DTO with a different version
+            var testDto = new QuoteDto
+            {
+                Version = 99999, // Different version to test if it gets ignored
+                Type = QuoteType.Send,
+                VanType = Domain.Entities.VanType.mediumVan, // Different value to test mapping
+                DriverCount = 3
+            };
+
+            // Test the mapper
+            var mapper = new QuoteMapper();
+            mapper.UpdateEntity(testDto, existingQuote);
+
+            logger.LogInformation("🔍 MAPPER TEST - After mapping: ID={Id}, Version={Version}, VanType={VanType}, DriverCount={DriverCount}", 
+                existingQuote.Id, existingQuote.Version, existingQuote.VanType, existingQuote.DriverCount);
+
+            // Check if Version was preserved
+            if (existingQuote.Version == 99999)
+            {
+                logger.LogWarning("⚠️ MAPPER TEST FAILED: Version was overwritten! MapperIgnoreTarget not working");
+                return BadRequest(new { 
+                    success = false, 
+                    message = "MapperIgnoreTarget failed - Version was overwritten",
+                    originalVersion = existingQuote.Version,
+                    expectedBehavior = "Version should be preserved"
+                });
+            }
+            else
+            {
+                logger.LogInformation("✅ MAPPER TEST PASSED: Version preserved. MapperIgnoreTarget working correctly");
+                return Ok(new { 
+                    success = true, 
+                    message = "MapperIgnoreTarget working correctly",
+                    originalVersion = existingQuote.Version,
+                    vanTypeUpdated = existingQuote.VanType == Domain.Entities.VanType.mediumVan,
+                    driverCountUpdated = existingQuote.DriverCount == 3
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error testing mapper");
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     private void RefreshCookie(string guestId)

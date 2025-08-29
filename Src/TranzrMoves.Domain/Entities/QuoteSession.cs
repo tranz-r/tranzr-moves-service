@@ -14,9 +14,9 @@ public class QuoteSession : IAuditable
     public DateTimeOffset? ExpiresUtc { get; set; }
     
     // Audit
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
     public string CreatedBy { get; set; } = "System";
-    public DateTime ModifiedAt { get; set; }
+    public DateTimeOffset ModifiedAt { get; set; }
     public string ModifiedBy { get; set; } = "System";
 }
 

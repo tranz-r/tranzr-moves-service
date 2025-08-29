@@ -7,6 +7,6 @@ namespace TranzrMoves.Application.Mapper;
 [Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None)]
 public partial class UserMapper
 {
-    public partial UserDto MapToUserDto(User user);
-    public partial User MapToUser(UserDto userDto);
+    public partial UserDto ToDto(User user);
+    public partial User ToEntity(UserDto userDto);
 }

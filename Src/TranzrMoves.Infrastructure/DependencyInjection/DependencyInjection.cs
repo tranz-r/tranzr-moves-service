@@ -26,6 +26,10 @@ public static class DependencyInjection
         services.AddTransient<IDriverQuoteRepository, DriverQuoteRepository>();
         services.AddTransient<IQuoteRepository, QuoteRepository>();
 
+        services.AddTransient<IRemovalPricingRepository, RemovalPricingRepository>();
+        services.AddTransient<IRateCardRepository, RateCardRepository>();
+        services.AddTransient<IServiceFeatureRepository, ServiceFeatureRepository>();
+
         return services;
     }
 }
