@@ -10,6 +10,7 @@ namespace TranzrMoves.Application.Features.Prices.Removals;
 
 public class RemovalPricesRequestHandler(
     IRemovalPricingRepository removalPricingRepository,
+    IAdditionalPriceRepository additionalPriceRepository,
     ILogger<RemovalPricesRequestHandler> logger)
     : IRequestHandler<RemovalPricesRequest, ErrorOr<RemovalPricingDto>>
 {
@@ -32,8 +33,9 @@ public class RemovalPricesRequestHandler(
                 .FirstOrDefault();
         
         var features = await removalPricingRepository.GetServiceFeatureAsync(request.At, cancellationToken);
+        var additionalPrices = await additionalPriceRepository.GetAdditionalPricesAsync(true, cancellationToken);
 
-        var version = ComputePayloadVersion(rates, features);
+        var version = ComputePayloadVersion(rates, features, additionalPrices);
 
         var standardTexts = features.Where(f => f.ServiceLevel == ServiceLevel.Standard)
             .Select((f, i) => new ServiceTextDto { Id = i + 1, Text = f.Text })
@@ -42,12 +44,37 @@ public class RemovalPricesRequestHandler(
         var premiumTexts = features.Where(f => f.ServiceLevel == ServiceLevel.Premium)
             .Select((f, i) => new ServiceTextDto { Id = i + 1, Text = f.Text })
             .ToList();
+        
+        
+        
+        var extraPrice = new ExtraPricesDto
+        {
+            Dismantle = additionalPrices
+                .Where(p => p.Type == AdditionalPriceType.Dismantle)
+                .Select(p => new AdditionalPriceDto
+                {
+                    Id = p.Id,
+                    Description = p.Description,
+                    Price = p.Price,
+                    CurrencyCode = p.CurrencyCode
+                }).FirstOrDefault(),
+            Assembly = additionalPrices
+                .Where(p => p.Type == AdditionalPriceType.Assembly)
+                .Select(p => new AdditionalPriceDto
+                {
+                    Id = p.Id,
+                    Description = p.Description,
+                    Price = p.Price,
+                    CurrencyCode = p.CurrencyCode
+                }).FirstOrDefault()
+        };
 
         return new RemovalPricingDto
         {
             Version = version,
             Currency = currency,
             GeneratedAt = DateTimeOffset.UtcNow,
+            ExtraPrice = extraPrice,
             Rates = new RatesDto
             {
                 One = new MoversDto
@@ -63,7 +90,7 @@ public class RemovalPricesRequestHandler(
     }
     
     private static string ComputePayloadVersion(
-        IEnumerable<RateCard> rates, IEnumerable<ServiceFeature> features)
+        IEnumerable<RateCard> rates, IEnumerable<ServiceFeature> features, IEnumerable<AdditionalPrice> additionalPrices)
     {
         var sb = new StringBuilder();
 
@@ -92,6 +119,16 @@ public class RemovalPricesRequestHandler(
                 .Append(f.IsActive ? '1' : '0').Append('|')
                 .Append(f.EffectiveFrom.UtcDateTime.ToString("O")).Append('|')
                 .Append(f.EffectiveTo?.UtcDateTime.ToString("O") ?? "null")
+                .Append(';');
+        }
+        
+        foreach (var p in additionalPrices.OrderBy(p => p.Type).ThenBy(p => p.Id))
+        {
+            sb.Append((int)p.Type).Append('|')
+                .Append(p.Description).Append('|')
+                .Append(p.Price.ToString(ci)).Append('|')
+                .Append(p.CurrencyCode).Append('|')
+                .Append(p.IsActive ? '1' : '0')
                 .Append(';');
         }
 

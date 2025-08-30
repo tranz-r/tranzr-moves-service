@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddTransient<IRemovalPricingRepository, RemovalPricingRepository>();
         services.AddTransient<IRateCardRepository, RateCardRepository>();
         services.AddTransient<IServiceFeatureRepository, ServiceFeatureRepository>();
+        services.AddTransient<IAdditionalPriceRepository, AdditionalPriceRepository>();
 
         return services;
     }

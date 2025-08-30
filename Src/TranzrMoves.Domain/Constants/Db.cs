@@ -14,5 +14,6 @@ public static class Db
         public const string DriverQuotes = nameof(DriverQuotes);
         public const string RateCards = nameof(RateCards);
         public const string ServiceFeatures = nameof(ServiceFeatures);
+        public const string AdditionalPrices = nameof(AdditionalPrices);
     }
 }

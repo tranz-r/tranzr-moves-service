@@ -52,3 +52,10 @@ public enum ServiceLevel
     Standard = 0,
     Premium  = 1
 }
+
+public enum AdditionalPriceType
+{
+    Dismantle = 1,
+    Assembly = 2,
+    Storage = 3
+}
