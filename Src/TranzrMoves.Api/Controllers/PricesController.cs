@@ -153,7 +153,7 @@ public class PricesController(IMediator mediator) : ApiControllerBase
             return StatusCode(StatusCodes.Status304NotModified);
 
         Response.Headers.ETag = etag;
-        Response.Headers.CacheControl = "public, max-age=300"; // tune as needed
+        Response.Headers.CacheControl = "public, max-age=21600"; // tune as needed
         return Ok(removalPricing);
     }
 
