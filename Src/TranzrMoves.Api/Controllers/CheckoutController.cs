@@ -351,6 +351,11 @@ public class CheckoutController(StripeClient stripeClient,
                 var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
                 logger.LogInformation("A successful payment for {paymentAmount} GBP was made.", paymentIntent.Amount);
                 
+                // Update payment status in your database if needed
+                // Update receipt URL or other details
+                
+                var charge = await stripeClient.V1.Charges.GetAsync(paymentIntent.LatestChargeId);
+                
                 // Send order confirmation email
                 await HandlePaymentIntentSucceeded(paymentIntent);
             }
