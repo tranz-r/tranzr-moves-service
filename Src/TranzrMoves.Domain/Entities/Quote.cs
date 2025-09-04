@@ -46,6 +46,8 @@ public class Quote : IAuditable
     
     // Payment
     public PaymentStatus? PaymentStatus { get; set; }
+    public string? PaymentMethodId { get; set; }
+    public string? PaymentIntentId { get; set; }
     public PaymentType PaymentType { get; set; }
     public decimal? DepositAmount { get; set; }
     public string? ReceiptUrl { get; set; }

@@ -30,9 +30,18 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
 
     public async Task<Quote?> GetQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default)
     {
+        List<PaymentStatus> listedStatuses = [PaymentStatus.Paid, PaymentStatus.PartiallyPaid];
+        
         return await db.Set<Quote>()
             .Where(q => q.SessionId == guestId && q.Type == quoteType)
             .Include(q => q.InventoryItems)
+            .FirstOrDefaultAsync(ct);
+    }
+    
+    public async Task<Quote?> GetQuoteAsync(Guid quoteId, CancellationToken ct = default)
+    {
+        return await db.Set<Quote>()
+            .Where(q => q.Id == quoteId)
             .FirstOrDefaultAsync(ct);
     }
 
@@ -40,28 +49,27 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
     {
         var quote = await GetQuoteAsync(guestId, quoteType, ct);
 
-        if (quote is null)
+        if (quote is not null && quote.PaymentStatus == PaymentStatus.Pending) return quote;
+        
+        // Create new quote
+        quote = new Quote
         {
-            // Create new quote
-            quote = new Quote
-            {
-                SessionId = guestId,
-                Type = quoteType,
-                QuoteReference = GenerateQuoteReference(),
-                VanType = VanType.largeVan, // Default
-                DriverCount = 1, // Default
-                CreatedAt = DateTime.UtcNow,
-                ModifiedAt = DateTime.UtcNow
-            };
+            SessionId = guestId,
+            Type = quoteType,
+            QuoteReference = GenerateQuoteReference(),
+            VanType = VanType.largeVan, // Default
+            DriverCount = 1, // Default
+            // CreatedAt = DateTime.UtcNow,
+            // ModifiedAt = DateTime.UtcNow
+        };
 
-            db.Set<Quote>().Add(quote);
-            await db.SaveChangesAsync(ct);
-        }
+        db.Set<Quote>().Add(quote);
+        await db.SaveChangesAsync(ct);
 
         return quote;
     }
 
-    public async Task<ErrorOr<Quote>> UpdateQuoteAsync(string guestId, Quote quote, CancellationToken ct = default)
+    public async Task<ErrorOr<Quote>> UpdateQuoteAsync(Quote quote, CancellationToken ct = default)
     {
         try
         {
@@ -98,6 +106,12 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
         db.Set<Quote>().Remove(quote);
         await db.SaveChangesAsync(ct);
         return true;
+    }
+
+    public Task<Quote?> GetQuoteByReferenceAsync(string quoteReference, string paymentIntentId, CancellationToken cancellationToken = default)
+    {
+        return db.Set<Quote>()
+            .FirstOrDefaultAsync(q => q.QuoteReference == quoteReference && q.PaymentIntentId == paymentIntentId , cancellationToken);
     }
 
     private static string GenerateQuoteReference()

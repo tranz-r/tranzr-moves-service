@@ -1,53 +1,59 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Mediator;
+using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using TranzrMoves.Api.Dtos;
-using TranzrMoves.Api.Services;
 using TranzrMoves.Application.Contracts;
+using TranzrMoves.Application.Features.Quote.Save;
+using TranzrMoves.Application.Mapper;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
+using TranzrMoves.Infrastructure.Services.EmailTemplates;
 
 namespace TranzrMoves.Api.Controllers;
 
 [Route("api/v1/[controller]")]
 public class CheckoutController(StripeClient stripeClient, 
     IConfiguration configuration, 
-    ILogger<CheckoutController> logger,  
+    ILogger<CheckoutController> logger,
+    IQuoteRepository quoteRepository,
+    IMediator mediator,
     IAwsEmailService awsEmailService,
-    IEmailService emailService) : ApiControllerBase
+    ITemplateService templateService) : ApiControllerBase
 {
     [HttpPost("payment-sheet", Name = "CreateStripeIntent")]
-    public async Task<ActionResult<PaymentSheetCreateResponse>> CreatePaymentSheet([FromBody] PaymentSheetRequest paymentSheetRequest)
+    public async Task<ActionResult<PaymentSheetCreateResponse>> CreatePaymentSheet([FromBody] SaveQuoteRequest? saveQuoteRequest, CancellationToken ct)
     {
         // Use an existing Customer ID if this is a returning customer.
         logger.LogInformation("Creating payment sheet");
+        
         var customerSearchResult = await stripeClient.V1.Customers.SearchAsync(new CustomerSearchOptions
         {
-            Query = $"email:'{paymentSheetRequest.Customer.Email}'",
-        });
+            Query = $"email:'{saveQuoteRequest?.Customer?.Email}'",
+        }, cancellationToken: ct);
         
         var customer = customerSearchResult.Data.FirstOrDefault();
         
         if (customer is null)
         { 
-            logger.LogInformation("Customer does not exist. Creating customer with {email}",  paymentSheetRequest.Customer.Email);
+            logger.LogInformation("Customer does not exist. Creating customer with {email}",  saveQuoteRequest?.Customer?.Email);
 
-            var splitAddress = paymentSheetRequest.Customer.BillingAddress.Line1.Split(',');
-            var city = splitAddress[^2].Trim();
+            var splitAddress = saveQuoteRequest?.Customer?.BillingAddress?.Line1.Split(',');
+            var city = splitAddress?[^2].Trim();
             var customerOptions = new CustomerCreateOptions
             {
-                Email = paymentSheetRequest.Customer.Email,
-                Name = paymentSheetRequest.Customer.FullName,
+                Email = saveQuoteRequest?.Customer?.Email,
+                Name = saveQuoteRequest?.Customer?.FullName,
                 Address = new AddressOptions
                 {
-                    Line1 = splitAddress.FirstOrDefault()?.Trim(),
-                    Line2 = splitAddress.Length == 4 ? splitAddress[2].Trim() : string.Empty,
+                    Line1 = splitAddress?.FirstOrDefault()?.Trim(),
+                    Line2 = splitAddress?.Length == 4 ? splitAddress[2].Trim() : string.Empty,
                     City = city,
-                    PostalCode = splitAddress.LastOrDefault()?.Trim(),
+                    PostalCode = splitAddress?.LastOrDefault()?.Trim(),
                     Country = "United Kingdom"
                 }
             };
             
-            customer = await stripeClient.V1.Customers.CreateAsync(customerOptions);
+            customer = await stripeClient.V1.Customers.CreateAsync(customerOptions, cancellationToken: ct);
         }
         
         var ephemeralKeyOptions = new EphemeralKeyCreateOptions
@@ -56,28 +62,28 @@ public class CheckoutController(StripeClient stripeClient,
             StripeVersion = "2025-06-30.basil",
         };
         
-        var ephemeralKey = await stripeClient.V1.EphemeralKeys.CreateAsync(ephemeralKeyOptions);
+        var ephemeralKey = await stripeClient.V1.EphemeralKeys.CreateAsync(ephemeralKeyOptions, cancellationToken: ct);
 
         // Determine payment amount based on payment type
         long paymentAmount = 0;
         string description = "Your Tranzr Moves payment";
         
-        switch (paymentSheetRequest.PaymentType)
+        switch (saveQuoteRequest?.Quote.Payment?.PaymentType)
         {
             case PaymentType.Full:
-                paymentAmount = (long)Math.Round(paymentSheetRequest.Cost.Total * 100, 0, MidpointRounding.AwayFromZero);
+                paymentAmount = (long)Math.Round((decimal)(saveQuoteRequest.Quote.Pricing?.TotalCost * 100)!, 0, MidpointRounding.AwayFromZero);
                 description = "Your Tranzr Moves payment - Full amount";
                 break;
                 
             case PaymentType.Deposit:
                 // Calculate deposit amount from percentage for security
-                var depositPercentage = paymentSheetRequest.DepositPercentage ?? 25m; // Default to 25% if not specified
-                var calculatedDepositAmount = (decimal)paymentSheetRequest.Cost.Total * (depositPercentage / 100m);
+                var depositPercentage = 25m; // Default to 25% if not specified
+                var calculatedDepositAmount = (decimal)saveQuoteRequest.Quote.Pricing?.TotalCost! * (depositPercentage / 100m);
                 paymentAmount = (long)Math.Round(calculatedDepositAmount * 100, 0, MidpointRounding.AwayFromZero);
                 
                 // Log the calculation for audit
                 logger.LogInformation("Deposit calculation: Total {Total} * {Percentage}% = {DepositAmount}", 
-                    paymentSheetRequest.Cost.Total, depositPercentage, calculatedDepositAmount);
+                    saveQuoteRequest.Quote.Pricing?.TotalCost, depositPercentage, calculatedDepositAmount);
                 
                 description = $"Your Tranzr Moves payment - {depositPercentage}% deposit";
                 break;
@@ -88,9 +94,11 @@ public class CheckoutController(StripeClient stripeClient,
                 description = "Your Tranzr Moves payment - Payment deferred";
                 break;
         }
+        
+        // var sessionId = Request.Cookies[CookieName];
 
         // Handle different payment types
-        if (paymentSheetRequest.PaymentType == PaymentType.Later)
+        if (saveQuoteRequest is { Quote.Payment.PaymentType: PaymentType.Later })
         {
             // Create Setup Intent for "pay later" option
             var setupIntentOptions = new SetupIntentCreateOptions
@@ -104,18 +112,22 @@ public class CheckoutController(StripeClient stripeClient,
                 // Add metadata for payment tracking
                 Metadata = new Dictionary<string, string>
                 {
-                    { "payment_type", paymentSheetRequest.PaymentType.ToString() },
-                    { "total_cost", paymentSheetRequest.Cost.Total.ToString("F2") },
-                    { "deposit_percentage", paymentSheetRequest.DepositPercentage?.ToString() ?? "0" },
-                    { "due_date", paymentSheetRequest.DueDate?.ToString("yyyy-MM-dd") ?? "" },
-                    { "booking_id", paymentSheetRequest.BookingId ?? "" }
+                    { nameof(PaymentMetadata.PaymentType), saveQuoteRequest.Quote.Payment.PaymentType.ToString() },
+                    { nameof(PaymentMetadata.TotalCost), saveQuoteRequest.Quote.Pricing?.TotalCost?.ToString("F2")! },
+                    { nameof(PaymentMetadata.DepositPercentage), saveQuoteRequest.Quote.Payment.DepositPercentage?.ToString() ?? "0" },
+                    { nameof(PaymentMetadata.DueDate), saveQuoteRequest.Quote.Payment.DueDate?.ToString("yyyy-MM-dd") ?? "" },
+                    { nameof(PaymentMetadata.QuoteReference), saveQuoteRequest.Quote.QuoteReference ?? "" },
+                    { nameof(PaymentMetadata.QuoteId), saveQuoteRequest.Quote.Id.ToString() },
+                    { nameof(PaymentMetadata.SessionId), saveQuoteRequest.Quote.SessionId ?? "" }
                 }
             };
             
-            var setupIntent = await stripeClient.V1.SetupIntents.CreateAsync(setupIntentOptions);
+            var setupIntent = await stripeClient.V1.SetupIntents.CreateAsync(setupIntentOptions, cancellationToken: ct);
             
-            logger.LogInformation("Setup intent created for {PaymentType} to save payment method", 
-                paymentSheetRequest.PaymentType);
+            logger.LogInformation("Setup intent created for {PaymentType} to save payment method", saveQuoteRequest.Quote.Payment.PaymentType);
+
+            saveQuoteRequest.Quote.Payment.PaymentIntentId = setupIntent.Id;
+            _ = await UpdateQuoteAsync(saveQuoteRequest, ct);
             
             return new PaymentSheetCreateResponse
             {
@@ -134,21 +146,23 @@ public class CheckoutController(StripeClient stripeClient,
             Currency = "gbp",
             Customer = customer.Id,
             Description = description,
-            ReceiptEmail = paymentSheetRequest.Customer.Email,
+            ReceiptEmail = saveQuoteRequest?.Customer?.Email,
             
             // Add metadata for payment tracking
             Metadata = new Dictionary<string, string>
             {
-                { "payment_type", paymentSheetRequest.PaymentType.ToString() },
-                { "total_cost", paymentSheetRequest.Cost.Total.ToString("F2") },
-                { "deposit_percentage", paymentSheetRequest.DepositPercentage?.ToString() ?? "0" },
-                { "due_date", paymentSheetRequest.DueDate?.ToString("yyyy-MM-dd") ?? "" },
-                { "booking_id", paymentSheetRequest.BookingId ?? "" }
+                { nameof(PaymentMetadata.PaymentType), saveQuoteRequest!.Quote.Payment?.PaymentType.ToString()! },
+                { nameof(PaymentMetadata.TotalCost), saveQuoteRequest.Quote.Pricing?.TotalCost?.ToString("F2")! },
+                { nameof(PaymentMetadata.DepositPercentage), saveQuoteRequest.Quote.Payment!.DepositPercentage?.ToString() ?? "0" },
+                { nameof(PaymentMetadata.DueDate), saveQuoteRequest.Quote.Payment.DueDate?.ToString("yyyy-MM-dd") ?? "" },
+                { nameof(PaymentMetadata.QuoteReference), saveQuoteRequest.Quote.QuoteReference ?? "" },
+                { nameof(PaymentMetadata.QuoteId), saveQuoteRequest.Quote.Id.ToString() },
+                { nameof(PaymentMetadata.SessionId), saveQuoteRequest.Quote.SessionId ?? "" }
             }
         };
             
         // Set up future usage for deposits
-        if (paymentSheetRequest.PaymentType == PaymentType.Full)
+        if (saveQuoteRequest is { Quote.Payment.PaymentType: PaymentType.Full })
         {
             // For full payment, use automatic payment methods
             paymentIntentOptions.AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
@@ -163,13 +177,17 @@ public class CheckoutController(StripeClient stripeClient,
             paymentIntentOptions.PaymentMethodTypes = ["card", "link"];
             paymentIntentOptions.SetupFutureUsage = "off_session"; // Enable automatic charging later
             logger.LogInformation("PaymentIntent created with setup_future_usage for {PaymentType}", 
-                paymentSheetRequest.PaymentType);
+                saveQuoteRequest.Quote.Payment.PaymentType);
         }
             
-        var paymentIntent = await stripeClient.V1.PaymentIntents.CreateAsync(paymentIntentOptions);
+        var paymentIntent = await stripeClient.V1.PaymentIntents.CreateAsync(paymentIntentOptions, cancellationToken: ct);
             
         logger.LogInformation("Payment intent created for {PaymentType} with amount {Amount}", 
-            paymentSheetRequest.PaymentType, paymentAmount);
+            saveQuoteRequest.Quote.Payment.PaymentType, paymentAmount);
+        
+        saveQuoteRequest.Quote.Payment.PaymentIntentId = paymentIntent.Id;
+        
+        await UpdateQuoteAsync(saveQuoteRequest, ct);
             
         return new PaymentSheetCreateResponse
         {
@@ -179,6 +197,14 @@ public class CheckoutController(StripeClient stripeClient,
             Customer = customer.Id,
             PublishableKey = StripeConfiguration.ClientId
         };
+    }
+    
+    private async Task<SaveQuoteResponse> UpdateQuoteAsync(SaveQuoteRequest saveQuoteRequest, CancellationToken ct = default)
+    {
+        var command = new SaveQuoteCommand(saveQuoteRequest.Quote, saveQuoteRequest.Customer, saveQuoteRequest.ETag);
+        var result = await mediator.Send(command, ct);
+
+        return result.Value;
     }
     
     [HttpGet("payment-intent", Name = "GetPaymentIntent")]
@@ -287,14 +313,14 @@ public class CheckoutController(StripeClient stripeClient,
                 OffSession = true, // This is an off-session payment (automatic)
                 Metadata = new Dictionary<string, string>
                 {
-                    { "payment_type", "balance" },
-                    { "original_booking_id", request.BookingId },
-                    { "deposit_paid", "true" },
-                    { "customer_name", request.CustomerName },
-                    { "payment_method_id", paymentMethod.Id },
-                    { "original_total_cost", request.OriginalTotalCost.ToString("F2") },
-                    { "original_deposit_amount", request.OriginalDepositAmount.ToString("F2") },
-                    { "calculated_remaining_amount", expectedRemainingAmount.ToString("F2") },
+                    { nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Balance) },
+                    { nameof(PaymentMetadata.QuoteReference), request.QuoteReference },
+                    { "deposit_paid", "true" }, //TODO: Remove maybe
+                    { "customer_name", request.CustomerName }, //TODO: Remove maybe
+                    { nameof(PaymentMetadata.PaymentMethodId), paymentMethod.Id },
+                    { nameof(PaymentMetadata.TotalCost), request.OriginalTotalCost.ToString("F2") },
+                    { nameof(PaymentMetadata.DepositAmount), request.OriginalDepositAmount.ToString("F2") },
+                    { nameof(PaymentMetadata.BalanceAmount), expectedRemainingAmount.ToString("F2") },
                     { "validation_passed", "true" }
                 }
             };
@@ -351,11 +377,6 @@ public class CheckoutController(StripeClient stripeClient,
                 var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
                 logger.LogInformation("A successful payment for {paymentAmount} GBP was made.", paymentIntent.Amount);
                 
-                // Update payment status in your database if needed
-                // Update receipt URL or other details
-                
-                var charge = await stripeClient.V1.Charges.GetAsync(paymentIntent.LatestChargeId);
-                
                 // Send order confirmation email
                 await HandlePaymentIntentSucceeded(paymentIntent);
             }
@@ -365,6 +386,11 @@ public class CheckoutController(StripeClient stripeClient,
                 logger.LogInformation("A successful setup intent was completed for customer {CustomerId}.", setupIntent.CustomerId);
                 
                 // Handle successful payment method setup for "Pay later" option
+                
+                // Update payment status in your database if needed
+                // Update receipt URL or other details
+                // Capture payment details (PaymentMethodId)
+                
                 await HandleSetupIntentSucceeded(setupIntent);
             }
             else if (stripeEvent.Type == EventTypes.PaymentMethodAttached)
@@ -399,60 +425,141 @@ public class CheckoutController(StripeClient stripeClient,
             
             if (customer != null && !string.IsNullOrEmpty(customer.Email))
             {
-                var orderId = paymentIntent.Id;
+                // var orderId = paymentIntent.Id;
                 var orderDate = DateTime.UtcNow;
                 var customerName = customer.Name ?? customer.Email.Split('@')[0];
                 
-                // Check payment type from metadata
-                var paymentType = paymentIntent.Metadata.GetValueOrDefault("payment_type", "full");
-                var totalCost = decimal.Parse(paymentIntent.Metadata.GetValueOrDefault("total_cost", "0"));
-                var depositPercentage = paymentIntent.Metadata.GetValueOrDefault("deposit_percentage", "0");
+                var hasPaymentType =
+                    paymentIntent.Metadata.TryGetValue(nameof(PaymentMetadata.PaymentType), out var paymentType);
                 
-                if (paymentType == "deposit")
+                if (!hasPaymentType)
+                {
+                    return;
+                }
+                
+                // Get quote by QuoteReference from metadata if available
+                var quoteReference = paymentIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.QuoteReference), "");
+                var quoteId = paymentIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.QuoteId), "");
+                
+                if (string.IsNullOrEmpty(quoteReference))
+                {
+                    logger.LogWarning("No quote reference found in metadata for payment intent {PaymentIntentId}", paymentIntent.Id);
+                    return;
+                }
+                
+                // Retrieve the latest charge
+                var charge = await stripeClient.V1.Charges.GetAsync(paymentIntent.LatestChargeId);
+                
+                // Retrieve the quote from your database
+                var quote = await quoteRepository.GetQuoteByReferenceAsync(quoteReference, paymentIntent.Id);
+                
+                var mapper = new QuoteMapper();
+                var quoteDto = mapper.ToDto(quote);
+                
+                quoteDto.Payment!.ReceiptUrl = charge.ReceiptUrl;
+                quoteDto.Payment.PaymentMethodId = paymentIntent.PaymentMethodId;
+                
+                // var totalCost = decimal.Parse(paymentIntent.Metadata.GetValueOrDefault("total_cost", "0"));
+                // var depositPercentage = paymentIntent.Metadata.GetValueOrDefault("deposit_percentage", "0");
+                
+                if (paymentType == nameof(PaymentType.Deposit))
                 {
                     // Send deposit confirmation email
                     logger.LogInformation("Sending deposit confirmation email for payment intent {PaymentIntentId}", paymentIntent.Id);
                     
-                    // Note: You'll need to implement SendDepositConfirmationEmailAsync in your email service
-                    // For now, we'll use the regular confirmation email with deposit context
-                    await awsEmailService.SendOrderConfirmationEmailAsync(
-                        customer.Email,
-                        customerName,
-                        paymentIntent.Amount, // Already in pence
-                        orderId,
-                        orderDate
-                    );
+                    quoteDto.Payment.Status = PaymentStatus.PartiallyPaid;
+                    
+                    var quoteDeposit = await UpdateQuoteAsync(new SaveQuoteRequest
+                    {
+                        Quote = quoteDto
+                    });
+                    
+                    var depositAmount = paymentIntent.Amount / 100.0m;
+                    var totalCost = quoteDto.Pricing?.TotalCost ?? depositAmount;
+                    var remainingAmount = totalCost - depositAmount;
+                    
+                    var templateData = new
+                    {
+                        customerName = quoteDeposit.Customer!.FullName,
+                        depositAmount = depositAmount.ToString("N2"),
+                        totalAmount = totalCost.ToString("N2"),
+                        remainingAmount = remainingAmount.ToString("N2"),
+                        quoteReference = quoteReference,
+                        paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
+                        paymentTime = orderDate.ToString("HH:mm") + " GMT",
+                        currentYear = DateTime.UtcNow.Year
+                    };
+                    
+                    var subject = $"Deposit Confirmation - #{quoteReference}";
+                    var htmlEmail = templateService.GenerateEmail("deposit-confirmation.html", templateData);
+                    var textEmail = templateService.GenerateEmail("deposit-confirmation.txt", templateData);
+
+                    await awsEmailService.SendBookingConfirmationEmailAsync(subject, customer.Email, htmlEmail, textEmail);
                     
                     logger.LogInformation("Deposit confirmation email sent for payment intent {PaymentIntentId}", paymentIntent.Id);
                 }
-                else if (paymentType == "balance")
+                else if (paymentType == nameof(PaymentType.Balance))
                 {
                     // Send balance payment confirmation email
                     logger.LogInformation("Sending balance payment confirmation email for payment intent {PaymentIntentId}", paymentIntent.Id);
                     
-                    await awsEmailService.SendOrderConfirmationEmailAsync(
-                        customer.Email,
-                        customerName,
-                        paymentIntent.Amount, // Already in pence
-                        orderId,
-                        orderDate
-                    );
+                    quoteDto.Payment.Status = PaymentStatus.Paid;
+                    await UpdateQuoteAsync(new SaveQuoteRequest
+                    {
+                        Quote = quoteDto
+                    });
+                    
+                    var balanceAmount = paymentIntent.Amount / 100.0m;
+                    var totalCost = quoteDto.Pricing?.TotalCost ?? balanceAmount;
+                    
+                    var templateData = new
+                    {
+                        customerName = customerName,
+                        balanceAmount = balanceAmount.ToString("N2"),
+                        totalAmount = totalCost.ToString("N2"),
+                        quoteReference = quoteReference,
+                        paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
+                        paymentTime = orderDate.ToString("HH:mm") + " GMT",
+                        currentYear = DateTime.UtcNow.Year
+                    };
+                    
+                    var subject = $"Balance Payment Confirmation - #{quoteReference}";
+                    var htmlEmail = templateService.GenerateEmail("balance-confirmation.html", templateData);
+                    var textEmail = templateService.GenerateEmail("balance-confirmation.txt", templateData);
+                    
+                    await awsEmailService.SendBookingConfirmationEmailAsync(subject, customer.Email, htmlEmail, textEmail);
                     
                     logger.LogInformation("Balance payment confirmation email sent for payment intent {PaymentIntentId}", paymentIntent.Id);
                 }
                 else
                 {
-                    // Send regular order confirmation email for full payments
-                    await awsEmailService.SendOrderConfirmationEmailAsync(
-                        customer.Email,
-                        customerName,
-                        paymentIntent.Amount, // Already in pence
-                        orderId,
-                        orderDate
-                    );
+                    quoteDto.Payment.Status = PaymentStatus.Paid;
+                    await UpdateQuoteAsync(new SaveQuoteRequest
+                    {
+                        Quote = quoteDto
+                    });
+                    
+                    var fullAmount = paymentIntent.Amount / 100.0m;
+                    
+                    var templateData = new
+                    {
+                        customerName = customerName,
+                        totalAmount = fullAmount.ToString("N2"),
+                        quoteReference = quoteReference,
+                        paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
+                        paymentTime = orderDate.ToString("HH:mm") + " GMT",
+                        currentYear = DateTime.UtcNow.Year
+                    };
+                    
+                    var subject = $"Order Confirmation - #{quoteReference}";
+                    var htmlEmail = templateService.GenerateEmail("full-payment-confirmation.html", templateData);
+                    var textEmail = templateService.GenerateEmail("full-payment-confirmation.txt", templateData);
+                    
+                    await awsEmailService.SendBookingConfirmationEmailAsync(subject, customer.Email, htmlEmail, textEmail);
                     
                     logger.LogInformation("Order confirmation email sent for payment intent {PaymentIntentId}", paymentIntent.Id);
                 }
+                
             }
             else
             {
@@ -479,25 +586,63 @@ public class CheckoutController(StripeClient stripeClient,
                 var setupDate = DateTime.UtcNow;
                 var customerName = customer.Name ?? customer.Email.Split('@')[0];
                 
+                // Get quote by QuoteReference from metadata if available
+                var quoteReference = setupIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.QuoteReference), "");
+                var quoteId = setupIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.QuoteId), "");
+                
+                if (string.IsNullOrEmpty(quoteReference))
+                {
+                    logger.LogWarning("No quote reference found in metadata for payment intent {PaymentIntentId}", setupIntent.Id);
+                    return;
+                }
+                
+                // Retrieve the quote from your database
+                var quote = await quoteRepository.GetQuoteByReferenceAsync(quoteReference, setupIntent.Id);
+                
+                var mapper = new QuoteMapper();
+                var quoteDto = mapper.ToDto(quote);
+                
+                quoteDto.Payment!.PaymentMethodId = setupIntent.PaymentMethodId;
+                
                 // Check payment type from metadata
-                var paymentType = setupIntent.Metadata.GetValueOrDefault("payment_type", "later");
+                //var paymentType = setupIntent.Metadata.GetValueOrDefault("payment_type", "later");
                 var totalCost = decimal.Parse(setupIntent.Metadata.GetValueOrDefault("total_cost", "0"));
                 var dueDate = setupIntent.Metadata.GetValueOrDefault("due_date", "");
                 
-                if (paymentType == "later")
+                var hasPaymentType =
+                    setupIntent.Metadata.TryGetValue(nameof(PaymentMetadata.PaymentType), out var paymentType);
+                
+                if (!hasPaymentType)
+                {
+                    return;
+                }
+                
+                if (paymentType == nameof(PaymentType.Later))
                 {
                     // Send setup confirmation email for "Pay later" option
                     logger.LogInformation("Sending setup confirmation email for setup intent {SetupIntentId}", setupIntent.Id);
                     
-                    // Note: You'll need to implement SendSetupIntentConfirmationEmailAsync in your email service
-                    // For now, we'll use the regular confirmation email with setup context
-                    await awsEmailService.SendOrderConfirmationEmailAsync(
-                        customer.Email,
-                        customerName,
-                        0, // No immediate charge for setup
-                        setupId,
-                        setupDate
-                    );
+                    quoteDto.Payment.Status = PaymentStatus.PaymentSetup;
+                    await UpdateQuoteAsync(new SaveQuoteRequest
+                    {
+                        Quote = quoteDto
+                    });
+                    
+                    var templateData = new
+                    {
+                        customerName = customerName,
+                        totalAmount = totalCost.ToString("N2"),
+                        quoteReference = quoteReference,
+                        setupDate = setupDate.ToString("dddd, MMMM dd, yyyy"),
+                        setupTime = setupDate.ToString("HH:mm") + " GMT",
+                        currentYear = DateTime.UtcNow.Year
+                    };
+                    
+                    var subject = $"Payment Setup Confirmation - #{quoteReference}";
+                    var htmlEmail = templateService.GenerateEmail("setup-confirmation.html", templateData);
+                    var textEmail = templateService.GenerateEmail("setup-confirmation.txt", templateData);
+                    
+                    await awsEmailService.SendBookingConfirmationEmailAsync(subject, customer.Email, htmlEmail, textEmail);
                     
                     logger.LogInformation("Setup confirmation email sent for setup intent {SetupIntentId}", setupIntent.Id);
                 }
@@ -511,6 +656,35 @@ public class CheckoutController(StripeClient stripeClient,
         {
             logger.LogError(ex, "Failed to send setup confirmation email for setup intent {SetupIntentId}", setupIntent.Id);
             // Don't throw here to avoid failing the webhook
+        }
+    }
+
+    [HttpGet("test-template/{templateName}")]
+    public IActionResult TestTemplate(string templateName)
+    {
+        try
+        {
+            var testData = new
+            {
+                customerName = "John Doe",
+                depositAmount = "125.00",
+                totalAmount = "500.00",
+                remainingAmount = "375.00",
+                balanceAmount = "375.00",
+                quoteReference = "TEST123",
+                paymentDate = "Monday, January 15, 2024",
+                paymentTime = "14:30 GMT",
+                setupDate = "Monday, January 15, 2024",
+                setupTime = "14:30 GMT",
+                currentYear = DateTime.UtcNow.Year
+            };
+
+            var result = templateService.GenerateEmail(templateName, testData);
+            return Ok(new { templateName, result });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
         }
     }
 }

@@ -20,6 +20,26 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
                 v => v.ToString(),
                 v => (QuoteType)Enum.Parse(typeof(QuoteType), v));
         
+        builder.Property(x => x.PaymentType)
+            .HasConversion(
+                v => v.ToString(),
+                v => (PaymentType)Enum.Parse(typeof(PaymentType), v));
+        
+        builder.Property(x => x.PaymentStatus)
+            .HasConversion(
+                v => v.ToString(),
+                v => (PaymentStatus)Enum.Parse(typeof(PaymentStatus), v));
+        
+        builder.Property(x => x.TimeSlot)
+            .HasConversion(
+                v => v.ToString(),
+                v => (TimeSlot)Enum.Parse(typeof(TimeSlot), v));
+        
+        builder.Property(x => x.VanType)
+            .HasConversion(
+                v => v.ToString(),
+                v => (VanType)Enum.Parse(typeof(VanType), v));
+        
         // Core Properties
         builder.Property(x => x.VanType).IsRequired();
         builder.Property(x => x.DriverCount).IsRequired();

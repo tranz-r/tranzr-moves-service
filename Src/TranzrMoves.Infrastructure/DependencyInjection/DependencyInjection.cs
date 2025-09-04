@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.Respositories;
 using TranzrMoves.Infrastructure.Services;
+using TranzrMoves.Infrastructure.Services.EmailTemplates;
 
 namespace TranzrMoves.Infrastructure.DependencyInjection;
 
@@ -20,6 +21,7 @@ public static class DependencyInjection
         // services.AddDefaultAWSOptions(configuration.GetAWSOptions());
         services.AddAWSService<IAmazonSimpleEmailServiceV2>();
         services.AddSingleton<IAwsEmailService, AwsEmailService>();
+        services.AddSingleton<ITemplateService, TemplateService>();
         
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IUserQuoteRepository, UserQuoteRepository>();

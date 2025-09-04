@@ -71,4 +71,5 @@ public class FuturePaymentRequest
     public decimal OriginalTotalCost { get; set; }
     public decimal OriginalDepositAmount { get; set; }
     public decimal ExtraCharges { get; set; }
+    public string QuoteReference { get; set; }
 }

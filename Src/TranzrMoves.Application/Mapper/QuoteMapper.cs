@@ -20,13 +20,17 @@ public partial class QuoteMapper
     [MapProperty(nameof(Quote.PaymentStatus), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.Status))]
     [MapProperty(nameof(Quote.PaymentType),   nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.PaymentType))]
     [MapProperty(nameof(Quote.DepositAmount), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.DepositAmount))]
+    [MapProperty(nameof(Quote.PaymentIntentId), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.PaymentIntentId))]
+    [MapProperty(nameof(Quote.PaymentMethodId), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.PaymentMethodId))]
+    [MapProperty(nameof(Quote.ReceiptUrl), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.ReceiptUrl))]
     // Note: Customer properties are not part of Quote entity
-    public partial QuoteDto ToDto(Quote src);
+    public partial QuoteDto ToDto(Quote? src);
     
     public partial List<QuoteDto> ToDtoList(List<Quote> src);
 
     // ========== DTO ➜ ENTITY (create new) ==========
     // Only specify the asymmetric pieces; everything else maps by name.
+    [MapperIgnoreTarget(nameof(Quote.Id))]      // Id should not be changed
     [MapProperty(nameof(QuoteDto.Items), nameof(Quote.InventoryItems))]
     [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.DateISO),         nameof(Quote.CollectionDate))]
     [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.DeliveryDateISO), nameof(Quote.DeliveryDate))]
@@ -38,6 +42,9 @@ public partial class QuoteMapper
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.Status),            nameof(Quote.PaymentStatus))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentType),       nameof(Quote.PaymentType))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.DepositAmount),     nameof(Quote.DepositAmount))]
+    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentMethodId),     nameof(Quote.PaymentMethodId))]
+    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentIntentId),     nameof(Quote.PaymentIntentId))]
+    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.ReceiptUrl),     nameof(Quote.ReceiptUrl))]
     // Note: Customer properties are not part of Quote entity
     public partial Quote ToEntity(QuoteDto src);
     
@@ -63,6 +70,9 @@ public partial class QuoteMapper
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.Status),            nameof(Quote.PaymentStatus))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentType),       nameof(Quote.PaymentType))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.DepositAmount),     nameof(Quote.DepositAmount))]
+    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentMethodId),     nameof(Quote.PaymentMethodId))]
+    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentIntentId),     nameof(Quote.PaymentIntentId))]
+    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.ReceiptUrl),     nameof(Quote.ReceiptUrl))]
     public partial void UpdateEntity(QuoteDto src, Quote target);
 
     // ========== Nested types ==========

@@ -4,6 +4,7 @@ namespace TranzrMoves.Application.Contracts;
 
 public class QuoteDto
 {
+    public Guid Id { get; set; }
     public string? SessionId { get; set; } = string.Empty; // Maps to guestId
     public string? QuoteReference { get; set; } = string.Empty;
     public QuoteType? Type { get; set; }
@@ -42,5 +43,10 @@ public class PaymentDto
 {
     public PaymentStatus Status { get; set; }
     public PaymentType PaymentType { get; set; }
+    public string? PaymentMethodId { get; set; }
+    public string? PaymentIntentId { get; set; }
     public decimal? DepositAmount { get; set; }
+    public decimal? DepositPercentage { get; set; } = 25m; // e.g., 25 for 25%
+    public string? ReceiptUrl { get; set; }
+    public DateTime? DueDate { get; set; } // When full payment is due
 }

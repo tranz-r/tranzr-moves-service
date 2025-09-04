@@ -3,6 +3,7 @@ using Amazon.SimpleEmailV2.Model;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Domain.Interfaces;
+using TranzrMoves.Infrastructure.Services.EmailTemplates;
 
 namespace TranzrMoves.Infrastructure.Services;
 
@@ -23,24 +24,24 @@ public class AwsEmailService : IAwsEmailService
         _fromEmail = _configuration["FROM_EMAIL"] ?? "noreply@tranzrmoves.com";
     }
 
-    public async Task SendOrderConfirmationEmailAsync(string customerEmail, string customerName, long amount, string orderId, DateTime orderDate)
+    public async Task SendBookingConfirmationEmailAsync(string subject, string toEmail, string htmlEmail, string textEmail)
     {
         var emailRequest = new SendEmailRequest
         {
             FromEmailAddress = _fromEmail,
             Destination = new Destination
             {
-                ToAddresses = [customerEmail],
+                ToAddresses = [toEmail],
             },
             Content = new EmailContent
             {
                 Simple = new Message
                 {
-                    Subject = new Content { Data = $"Your Tranzr Moves Order Confirmation - #{orderId}" },
+                    Subject = new Content { Data = subject },
                     Body = new Body
                     {
-                        Html = new Content { Data = GenerateOrderConfirmationHtml(customerName, amount, orderId, orderDate) },
-                        Text = new Content { Data = GenerateOrderConfirmationText(customerName, amount, orderId, orderDate) }
+                        Html = new Content { Data = htmlEmail },
+                        Text = new Content { Data = textEmail }
                     }
                 }
             }
@@ -56,7 +57,7 @@ public class AwsEmailService : IAwsEmailService
         {
             _logger.LogError("The email was not sent.");
             _logger.LogError("Error message: " + ex.Message);
-            _logger.LogError(ex, "Failed to send order confirmation email to {Email} for order {OrderId}", customerEmail, orderId);
+            _logger.LogError(ex, "Failed to send order confirmation email to {Email}", toEmail);
 
         }
     }
@@ -282,45 +283,5 @@ public class AwsEmailService : IAwsEmailService
     </div>
 </body>
 </html>";
-    }
-
-    private static string GenerateOrderConfirmationText(string customerName, long amount, string orderId, DateTime orderDate)
-    {
-        var amountInPounds = amount / 100.0m;
-        
-        return $@"ORDER CONFIRMATION - Tranzr Moves
-
-Dear {customerName},
-
-Thank you for your recent order with Tranzr Moves. We're pleased to confirm that your booking has been successfully processed and your payment has been received.
-
-ORDER SUMMARY
-=============
-Order Reference: #{orderId}
-Order Date: {orderDate:dddd, MMMM dd, yyyy}
-Order Time: {orderDate:HH:mm} GMT
-Service Type: Professional Moving Service
-Total Amount: £{amountInPounds:N2}
-
-PAYMENT CONFIRMED
-================
-Your payment has been processed successfully. Our team will contact you within 24 hours to confirm your moving date and provide detailed service information.
-
-CUSTOMER SUPPORT
-===============
-Email: support@tranzrmoves.com
-Phone: +44 (0) 20 1234 5678
-Hours: Monday - Friday, 8:00 AM - 6:00 PM GMT
-
-Thank you for choosing Tranzr Moves for your moving needs.
-
-Best regards,
-The Tranzr Moves Team
-
----
-Tranzr Moves Ltd
-Professional moving services across the United Kingdom
-Registered in England & Wales | Company No: 12345678
-© {DateTime.UtcNow.Year} Tranzr Moves. All rights reserved.";
     }
 } 

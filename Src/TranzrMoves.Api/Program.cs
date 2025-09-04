@@ -5,7 +5,6 @@ using Serilog;
 using Stripe;
 using Supabase;
 using TranzrMoves.Api.Configuration;
-using TranzrMoves.Api.Services;
 using TranzrMoves.Application.DependencyInjection;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.DependencyInjection;
@@ -52,8 +51,7 @@ try
         builder.Configuration["ADDRESS_ADMINISTRATION_KEY"]));
     builder.Services.AddHttpClient<GetAddress.Api>();
     
-    // Register email service
-    builder.Services.AddScoped<IEmailService, EmailService>();
+    // Email service is handled by IAwsEmailService in Infrastructure layer
     
     builder.Services.AddHttpClient<IMapBoxService, MapBoxService>(
         client =>

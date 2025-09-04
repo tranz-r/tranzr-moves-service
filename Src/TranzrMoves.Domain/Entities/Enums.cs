@@ -12,6 +12,9 @@ public enum Role
 public enum PaymentStatus
 {
     Pending = 0,
+    Paid,
+    PartiallyPaid,
+    PaymentSetup,
     Failed,
     Succeeded,
     Cancelled
@@ -37,7 +40,8 @@ public enum PaymentType
 {
     Full,
     Deposit,
-    Later
+    Later,
+    Balance
 }
 
 public enum TimeSlot
@@ -58,4 +62,18 @@ public enum AdditionalPriceType
     Dismantle = 1,
     Assembly = 2,
     Storage = 3
+}
+
+public enum PaymentMetadata
+{
+    PaymentType = 1,
+    TotalCost,
+    DepositPercentage,
+    DepositAmount,
+    BalanceAmount,
+    DueDate,
+    QuoteReference,
+    PaymentMethodId,
+    SessionId,
+    QuoteId
 }

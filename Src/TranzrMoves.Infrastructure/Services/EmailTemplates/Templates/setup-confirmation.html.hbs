@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Setup Confirmation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background-color: #f7fafc;
+            font-size: 16px;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #9568b0 0%, #7a5294 100%);
+            color: white;
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 18px;
+            opacity: 0.95;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .content {
+            padding: 50px 40px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #a4cbd1 0%, #8bb8c0 100%);
+            color: #2c5f73;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 35px;
+            box-shadow: 0 2px 4px rgba(164, 203, 209, 0.3);
+        }
+        
+        .greeting {
+            margin-bottom: 35px;
+        }
+        
+        .greeting h2 {
+            color: #9568b0;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .greeting p {
+            color: #4a5568;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+        
+        .amount-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+            border-left: 5px solid #9568b0;
+            padding: 35px;
+            margin: 35px 0;
+            border-radius: 0 12px 12px 0;
+            position: relative;
+        }
+        
+        .amount-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(149, 104, 176, 0.05) 0%, rgba(149, 104, 176, 0.02) 100%);
+            border-radius: 0 12px 12px 0;
+        }
+        
+        .amount-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .amount-row:last-child {
+            margin-bottom: 0;
+            padding-top: 20px;
+            border-top: 2px solid rgba(149, 104, 176, 0.2);
+            font-weight: 700;
+            font-size: 20px;
+        }
+        
+        .amount-label {
+            color: #718096;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        
+        .amount-value {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 18px;
+        }
+        
+        .total-amount {
+            color: #9568b0;
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .info-section {
+            margin: 35px 0;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 18px;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            min-width: 140px;
+            color: #718096;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .info-value {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .setup-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+            padding: 35px;
+            margin: 35px 0;
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .setup-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(149, 104, 176, 0.05) 0%, rgba(149, 104, 176, 0.02) 100%);
+            border-radius: 12px;
+        }
+        
+        .setup-section h3 {
+            color: #9568b0;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .setup-list {
+            list-style: none;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .setup-list li {
+            margin-bottom: 15px;
+            padding-left: 35px;
+            position: relative;
+            color: #4a5568;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .setup-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #9568b0;
+            font-weight: bold;
+            font-size: 18px;
+            background: rgba(149, 104, 176, 0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .important-note {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            border-left: 5px solid #f56565;
+            padding: 25px;
+            margin: 35px 0;
+            border-radius: 0 12px 12px 0;
+        }
+        
+        .important-note h4 {
+            color: #c53030;
+            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .important-note p {
+            color: #c53030;
+            font-size: 15px;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f4 100%);
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .footer p {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        
+        .footer .highlight {
+            color: #9568b0;
+            font-weight: 600;
+        }
+        
+        .footer .contact-info {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .header {
+                padding: 40px 25px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .content {
+                padding: 35px 25px;
+            }
+            
+            .amount-section {
+                padding: 25px;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px 0;
+            }
+            
+            .info-label {
+                min-width: auto;
+                margin-bottom: 8px;
+            }
+            
+            .setup-section {
+                padding: 25px;
+            }
+            
+            .footer {
+                padding: 30px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Payment Setup Complete</h1>
+            <p>Your payment method has been securely saved</p>
+        </div>
+        
+        <div class="content">
+            <div class="status-badge">Payment Method Saved</div>
+            
+            <div class="greeting">
+                <h2>Hello {{customerName}},</h2>
+                <p>Great! Your payment method has been successfully set up and saved securely. Your move is now confirmed and ready to proceed.</p>
+            </div>
+            
+            <div class="amount-section">
+                <div class="amount-row">
+                    <span class="amount-label">Total Amount:</span>
+                    <span class="amount-value total-amount">£{{totalAmount}}</span>
+                </div>
+                <div class="amount-row">
+                    <span class="amount-label">Payment Status:</span>
+                    <span class="amount-value">Payment Setup</span>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-row">
+                    <span class="info-label">Quote Reference:</span>
+                    <span class="info-value">#{{quoteReference}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Setup Date:</span>
+                    <span class="info-value">{{setupDate}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Setup Time:</span>
+                    <span class="info-value">{{setupTime}}</span>
+                </div>
+            </div>
+            
+            <div class="setup-section">
+                <h3>What Happens Next?</h3>
+                <ul class="setup-list">
+                    <li>We'll contact you within 24 hours to confirm your moving details</li>
+                    <li>Your payment method will be charged on the day of your move</li>
+                    <li>You'll receive a reminder 48 hours before your move</li>
+                    <li>Payment will be processed automatically on move day</li>
+                </ul>
+            </div>
+            
+            <div class="important-note">
+                <h4>Important Information</h4>
+                <p>Your payment method will be charged the full amount (£{{totalAmount}}) on the day of your move. Please ensure your payment method has sufficient funds available on the scheduled date.</p>
+            </div>
+            
+            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">If you need to update your payment method or modify your booking, please contact us as soon as possible. Changes made within 48 hours of your move may incur additional charges.</p>
+            
+            <p style="color: #9568b0; font-weight: 600; font-size: 18px; margin-top: 25px;">Thank you for choosing Tranzr Moves!</p>
+        </div>
+        
+        <div class="footer">
+            <p><span class="highlight">Tranzr Moves</span> - Professional moving services across the United Kingdom</p>
+            <div class="contact-info">
+                <p>Email: support@tranzrmoves.com | Phone: +44 (0) 20 1234 5678</p>
+                <p>© {{currentYear}} Tranzr Moves. All rights reserved.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

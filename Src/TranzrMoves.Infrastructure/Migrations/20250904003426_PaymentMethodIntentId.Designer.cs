@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TranzrMoves.Infrastructure;
@@ -11,9 +12,11 @@ using TranzrMoves.Infrastructure;
 namespace TranzrMoves.Infrastructure.Migrations
 {
     [DbContext(typeof(TranzrMovesDbContext))]
-    partial class TranzrMovesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250904003426_PaymentMethodIntentId")]
+    partial class PaymentMethodIntentId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -208,12 +211,11 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.Property<string>("PaymentMethodId")
                         .HasColumnType("text");
 
-                    b.Property<string>("PaymentStatus")
-                        .HasColumnType("text");
+                    b.Property<int?>("PaymentStatus")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("PaymentType")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("PaymentType")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("PricingTier")
                         .HasColumnType("integer");
@@ -229,8 +231,8 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("TimeSlot")
-                        .HasColumnType("text");
+                    b.Property<int?>("TimeSlot")
+                        .HasColumnType("integer");
 
                     b.Property<decimal?>("TotalCost")
                         .HasColumnType("numeric");
@@ -239,9 +241,8 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("VanType")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("VanType")
+                        .HasColumnType("integer");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()

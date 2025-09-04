@@ -10,9 +10,11 @@ public interface IQuoteRepository
     
     // Individual Quote Management
     Task<Quote?> GetQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
+    Task<Quote?> GetQuoteAsync(Guid quoteId, CancellationToken ct = default);
     Task<Quote?> GetOrCreateQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
-    Task<ErrorOr<Quote>> UpdateQuoteAsync(string guestId, Quote quote, CancellationToken ct = default);
+    Task<ErrorOr<Quote>> UpdateQuoteAsync(Quote quote, CancellationToken ct = default);
     Task<bool> DeleteQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
+    Task<Quote?> GetQuoteByReferenceAsync(string quoteReference, string paymentIntentId, CancellationToken cancellationToken = default);
 }
 
 
