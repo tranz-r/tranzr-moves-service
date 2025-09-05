@@ -41,6 +41,7 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
     public async Task<Quote?> GetQuoteAsync(Guid quoteId, CancellationToken ct = default)
     {
         return await db.Set<Quote>()
+            .Include(q => q.InventoryItems)
             .Where(q => q.Id == quoteId)
             .FirstOrDefaultAsync(ct);
     }
@@ -111,6 +112,7 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
     public Task<Quote?> GetQuoteByReferenceAsync(string quoteReference, string paymentIntentId, CancellationToken cancellationToken = default)
     {
         return db.Set<Quote>()
+            .Include(x => x.InventoryItems)
             .FirstOrDefaultAsync(q => q.QuoteReference == quoteReference && q.PaymentIntentId == paymentIntentId , cancellationToken);
     }
 

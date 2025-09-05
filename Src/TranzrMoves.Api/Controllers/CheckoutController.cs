@@ -16,6 +16,7 @@ public class CheckoutController(StripeClient stripeClient,
     IConfiguration configuration, 
     ILogger<CheckoutController> logger,
     IQuoteRepository quoteRepository,
+    IUserRepository userRepository,
     IMediator mediator,
     IAwsEmailService awsEmailService,
     ITemplateService templateService) : ApiControllerBase
@@ -422,12 +423,11 @@ public class CheckoutController(StripeClient stripeClient,
         {
             // Get customer details from Stripe
             var customer = await stripeClient.V1.Customers.GetAsync(paymentIntent.CustomerId);
+            var user = await userRepository.GetUserByEmailAsync(customer.Email, CancellationToken.None);
             
-            if (customer != null && !string.IsNullOrEmpty(customer.Email))
+            if (!string.IsNullOrEmpty(customer.Email))
             {
-                // var orderId = paymentIntent.Id;
                 var orderDate = DateTime.UtcNow;
-                var customerName = customer.Name ?? customer.Email.Split('@')[0];
                 
                 var hasPaymentType =
                     paymentIntent.Metadata.TryGetValue(nameof(PaymentMetadata.PaymentType), out var paymentType);
@@ -439,7 +439,6 @@ public class CheckoutController(StripeClient stripeClient,
                 
                 // Get quote by QuoteReference from metadata if available
                 var quoteReference = paymentIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.QuoteReference), "");
-                var quoteId = paymentIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.QuoteId), "");
                 
                 if (string.IsNullOrEmpty(quoteReference))
                 {
@@ -453,14 +452,12 @@ public class CheckoutController(StripeClient stripeClient,
                 // Retrieve the quote from your database
                 var quote = await quoteRepository.GetQuoteByReferenceAsync(quoteReference, paymentIntent.Id);
                 
+                var userMapper = new UserMapper();
                 var mapper = new QuoteMapper();
                 var quoteDto = mapper.ToDto(quote);
                 
                 quoteDto.Payment!.ReceiptUrl = charge.ReceiptUrl;
                 quoteDto.Payment.PaymentMethodId = paymentIntent.PaymentMethodId;
-                
-                // var totalCost = decimal.Parse(paymentIntent.Metadata.GetValueOrDefault("total_cost", "0"));
-                // var depositPercentage = paymentIntent.Metadata.GetValueOrDefault("deposit_percentage", "0");
                 
                 if (paymentType == nameof(PaymentType.Deposit))
                 {
@@ -471,7 +468,8 @@ public class CheckoutController(StripeClient stripeClient,
                     
                     var quoteDeposit = await UpdateQuoteAsync(new SaveQuoteRequest
                     {
-                        Quote = quoteDto
+                        Quote = quoteDto,
+                        Customer = userMapper.ToDto(user!)
                     });
                     
                     var depositAmount = paymentIntent.Amount / 100.0m;
@@ -484,7 +482,7 @@ public class CheckoutController(StripeClient stripeClient,
                         depositAmount = depositAmount.ToString("N2"),
                         totalAmount = totalCost.ToString("N2"),
                         remainingAmount = remainingAmount.ToString("N2"),
-                        quoteReference = quoteReference,
+                        quoteReference,
                         paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
                         paymentTime = orderDate.ToString("HH:mm") + " GMT",
                         currentYear = DateTime.UtcNow.Year
@@ -506,7 +504,8 @@ public class CheckoutController(StripeClient stripeClient,
                     quoteDto.Payment.Status = PaymentStatus.Paid;
                     await UpdateQuoteAsync(new SaveQuoteRequest
                     {
-                        Quote = quoteDto
+                        Quote = quoteDto,
+                        Customer = userMapper.ToDto(user!)
                     });
                     
                     var balanceAmount = paymentIntent.Amount / 100.0m;
@@ -514,10 +513,10 @@ public class CheckoutController(StripeClient stripeClient,
                     
                     var templateData = new
                     {
-                        customerName = customerName,
+                        customerName = user?.FullName,
                         balanceAmount = balanceAmount.ToString("N2"),
                         totalAmount = totalCost.ToString("N2"),
-                        quoteReference = quoteReference,
+                        quoteReference,
                         paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
                         paymentTime = orderDate.ToString("HH:mm") + " GMT",
                         currentYear = DateTime.UtcNow.Year
@@ -536,14 +535,15 @@ public class CheckoutController(StripeClient stripeClient,
                     quoteDto.Payment.Status = PaymentStatus.Paid;
                     await UpdateQuoteAsync(new SaveQuoteRequest
                     {
-                        Quote = quoteDto
+                        Quote = quoteDto,
+                        Customer = userMapper.ToDto(user!)
                     });
                     
                     var fullAmount = paymentIntent.Amount / 100.0m;
                     
                     var templateData = new
                     {
-                        customerName = customerName,
+                        customerName = user?.FullName,
                         totalAmount = fullAmount.ToString("N2"),
                         quoteReference = quoteReference,
                         paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
@@ -580,7 +580,9 @@ public class CheckoutController(StripeClient stripeClient,
             // Get customer details from Stripe
             var customer = await stripeClient.V1.Customers.GetAsync(setupIntent.CustomerId);
             
-            if (customer != null && !string.IsNullOrEmpty(customer.Email))
+            var user = await userRepository.GetUserByEmailAsync(customer.Email, CancellationToken.None);
+            
+            if (!string.IsNullOrEmpty(customer.Email))
             {
                 var setupId = setupIntent.Id;
                 var setupDate = DateTime.UtcNow;
@@ -599,6 +601,7 @@ public class CheckoutController(StripeClient stripeClient,
                 // Retrieve the quote from your database
                 var quote = await quoteRepository.GetQuoteByReferenceAsync(quoteReference, setupIntent.Id);
                 
+                var userMapper = new UserMapper();
                 var mapper = new QuoteMapper();
                 var quoteDto = mapper.ToDto(quote);
                 
@@ -625,12 +628,13 @@ public class CheckoutController(StripeClient stripeClient,
                     quoteDto.Payment.Status = PaymentStatus.PaymentSetup;
                     await UpdateQuoteAsync(new SaveQuoteRequest
                     {
-                        Quote = quoteDto
+                        Quote = quoteDto,
+                        Customer = userMapper.ToDto(user!)
                     });
                     
                     var templateData = new
                     {
-                        customerName = customerName,
+                        customerName = user?.FullName,
                         totalAmount = totalCost.ToString("N2"),
                         quoteReference = quoteReference,
                         setupDate = setupDate.ToString("dddd, MMMM dd, yyyy"),

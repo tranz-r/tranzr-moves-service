@@ -18,7 +18,7 @@ public class SaveQuoteCommandHandler(
     public async ValueTask<ErrorOr<SaveQuoteResponse>> Handle(
         SaveQuoteCommand command, 
         CancellationToken cancellationToken)
-    {
+    { 
         if (string.IsNullOrWhiteSpace(command.Quote.SessionId))
         {
             return Error.Custom((int)CustomErrorType.BadRequest, "SessionId.Required", "Session Id is required");
@@ -168,6 +168,10 @@ public class SaveQuoteCommandHandler(
                     logger.LogWarning(ex, "Error handling customer data for quote {QuoteId}, continuing without customer data", updatedQuote.Id);
                 }
             }
+            else
+            {
+                userToSave = await userRepository.GetUserByEmailAsync(command.Customer.Email, cancellationToken);
+            }
 
             // Return the updated quote's Version as the new ETag
             var newEtag = updatedQuote.Version.ToString();
@@ -177,7 +181,10 @@ public class SaveQuoteCommandHandler(
             
             var userMapper = new UserMapper();
 
-            return new SaveQuoteResponse(mapper.ToDto(updatedQuote), userMapper.ToDto(userToSave!), newEtag);
+            var quoteDtoToSave = mapper.ToDto(updatedQuote);
+            var customerDtoToSave = userMapper.ToDto(userToSave!);
+
+            return new SaveQuoteResponse(quoteDtoToSave, customerDtoToSave, newEtag);
         }
         catch (Exception ex)
         {

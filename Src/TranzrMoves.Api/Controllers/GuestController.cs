@@ -1,4 +1,3 @@
-using ErrorOr;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -290,7 +289,7 @@ public class GuestController(
             {
                 Version = 99999, // Different version to test if it gets ignored
                 Type = QuoteType.Send,
-                VanType = Domain.Entities.VanType.mediumVan, // Different value to test mapping
+                VanType = VanType.mediumVan, // Different value to test mapping
                 DriverCount = 3
             };
 
@@ -319,7 +318,7 @@ public class GuestController(
                     success = true, 
                     message = "MapperIgnoreTarget working correctly",
                     originalVersion = existingQuote.Version,
-                    vanTypeUpdated = existingQuote.VanType == Domain.Entities.VanType.mediumVan,
+                    vanTypeUpdated = existingQuote.VanType == VanType.mediumVan,
                     driverCountUpdated = existingQuote.DriverCount == 3
                 });
             }
