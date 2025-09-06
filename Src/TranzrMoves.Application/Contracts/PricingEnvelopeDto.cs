@@ -3,8 +3,9 @@ namespace TranzrMoves.Application.Contracts;
 public sealed class RateLeafDto
 {
     public int BaseBlockHours { get; init; }
-    public decimal BaseBlockPrice { get; init; }
+    public decimal BaseBlockPrice { get; set; }
     public decimal HourlyAfter { get; init; }
+    public QuoteBreakdown? PickUpDropOff { get; set; }
 }
 
 public sealed class MoversDto
