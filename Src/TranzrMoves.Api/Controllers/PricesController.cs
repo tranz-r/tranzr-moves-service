@@ -10,7 +10,7 @@ namespace TranzrMoves.Api.Controllers;
 public class PricesController(IMediator mediator) : ApiControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> GetPickUpDropOffPricingAsync([FromBody] QuoteRequest req, CancellationToken cancellationToken)
+    public async Task<ActionResult<RemovalPricingDto>> GetPickUpDropOffPricingAsync([FromBody] QuoteRequest req, CancellationToken cancellationToken)
     {
         var cfg = new PricingConfig();
 
