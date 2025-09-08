@@ -32,6 +32,10 @@ public static class DependencyInjection
         services.AddTransient<IRateCardRepository, RateCardRepository>();
         services.AddTransient<IServiceFeatureRepository, ServiceFeatureRepository>();
         services.AddTransient<IAdditionalPriceRepository, AdditionalPriceRepository>();
+        services.AddTransient<ILegalDocumentRepository, LegalDocumentRepository>();
+
+        // Azure Blob Storage Service
+        services.AddTransient<IAzureBlobService, AzureBlobService>();
 
         return services;
     }

@@ -15,5 +15,6 @@ public static class Db
         public const string RateCards = nameof(RateCards);
         public const string ServiceFeatures = nameof(ServiceFeatures);
         public const string AdditionalPrices = nameof(AdditionalPrices);
+        public const string LegalDocuments = nameof(LegalDocuments);
     }
 }
