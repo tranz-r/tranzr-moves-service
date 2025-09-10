@@ -95,8 +95,6 @@ public class CheckoutController(StripeClient stripeClient,
                 description = "Your Tranzr Moves payment - Payment deferred";
                 break;
         }
-        
-        // var sessionId = Request.Cookies[CookieName];
 
         // Handle different payment types
         if (saveQuoteRequest is { Quote.Payment.PaymentType: PaymentType.Later })
@@ -119,7 +117,7 @@ public class CheckoutController(StripeClient stripeClient,
                     { nameof(PaymentMetadata.DueDate), saveQuoteRequest.Quote.Payment.DueDate?.ToString("yyyy-MM-dd") ?? "" },
                     { nameof(PaymentMetadata.QuoteReference), saveQuoteRequest.Quote.QuoteReference ?? "" },
                     { nameof(PaymentMetadata.QuoteId), saveQuoteRequest.Quote.Id.ToString() },
-                    { nameof(PaymentMetadata.SessionId), saveQuoteRequest.Quote.SessionId ?? "" }
+                    { nameof(PaymentMetadata.PaymentDueDate), saveQuoteRequest.Quote.Payment.DueDate?.ToString("yyyy-MM-dd") ?? "" }
                 }
             };
             
@@ -128,6 +126,8 @@ public class CheckoutController(StripeClient stripeClient,
             logger.LogInformation("Setup intent created for {PaymentType} to save payment method", saveQuoteRequest.Quote.Payment.PaymentType);
 
             saveQuoteRequest.Quote.Payment.PaymentIntentId = setupIntent.Id;
+            saveQuoteRequest.Quote.Payment.DueDate = saveQuoteRequest.Quote.Schedule!.DateISO!.Value.AddHours(-72); // Due 72 hours before move
+            
             _ = await UpdateQuoteAsync(saveQuoteRequest, ct);
             
             return new PaymentSheetCreateResponse
@@ -157,8 +157,7 @@ public class CheckoutController(StripeClient stripeClient,
                 { nameof(PaymentMetadata.DepositPercentage), saveQuoteRequest.Quote.Payment!.DepositPercentage?.ToString() ?? "0" },
                 { nameof(PaymentMetadata.DueDate), saveQuoteRequest.Quote.Payment.DueDate?.ToString("yyyy-MM-dd") ?? "" },
                 { nameof(PaymentMetadata.QuoteReference), saveQuoteRequest.Quote.QuoteReference ?? "" },
-                { nameof(PaymentMetadata.QuoteId), saveQuoteRequest.Quote.Id.ToString() },
-                { nameof(PaymentMetadata.SessionId), saveQuoteRequest.Quote.SessionId ?? "" }
+                { nameof(PaymentMetadata.QuoteId), saveQuoteRequest.Quote.Id.ToString() }
             }
         };
             
@@ -177,6 +176,8 @@ public class CheckoutController(StripeClient stripeClient,
             // For deposit payments, specify payment method types and enable future usage
             paymentIntentOptions.PaymentMethodTypes = ["card", "link"];
             paymentIntentOptions.SetupFutureUsage = "off_session"; // Enable automatic charging later
+            saveQuoteRequest.Quote.Payment.DueDate = saveQuoteRequest.Quote.Schedule!.DateISO;
+            
             logger.LogInformation("PaymentIntent created with setup_future_usage for {PaymentType}", 
                 saveQuoteRequest.Quote.Payment.PaymentType);
         }
@@ -386,12 +387,6 @@ public class CheckoutController(StripeClient stripeClient,
                 var setupIntent = stripeEvent.Data.Object as SetupIntent;
                 logger.LogInformation("A successful setup intent was completed for customer {CustomerId}.", setupIntent.CustomerId);
                 
-                // Handle successful payment method setup for "Pay later" option
-                
-                // Update payment status in your database if needed
-                // Update receipt URL or other details
-                // Capture payment details (PaymentMethodId)
-                
                 await HandleSetupIntentSucceeded(setupIntent);
             }
             else if (stripeEvent.Type == EventTypes.PaymentMethodAttached)
@@ -545,7 +540,7 @@ public class CheckoutController(StripeClient stripeClient,
                     {
                         customerName = user?.FullName,
                         totalAmount = fullAmount.ToString("N2"),
-                        quoteReference = quoteReference,
+                        quoteReference,
                         paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
                         paymentTime = orderDate.ToString("HH:mm") + " GMT",
                         currentYear = DateTime.UtcNow.Year
@@ -584,9 +579,7 @@ public class CheckoutController(StripeClient stripeClient,
             
             if (!string.IsNullOrEmpty(customer.Email))
             {
-                var setupId = setupIntent.Id;
                 var setupDate = DateTime.UtcNow;
-                var customerName = customer.Name ?? customer.Email.Split('@')[0];
                 
                 // Get quote by QuoteReference from metadata if available
                 var quoteReference = setupIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.QuoteReference), "");
@@ -610,7 +603,7 @@ public class CheckoutController(StripeClient stripeClient,
                 // Check payment type from metadata
                 //var paymentType = setupIntent.Metadata.GetValueOrDefault("payment_type", "later");
                 var totalCost = decimal.Parse(setupIntent.Metadata.GetValueOrDefault("total_cost", "0"));
-                var dueDate = setupIntent.Metadata.GetValueOrDefault("due_date", "");
+                var dueDate = setupIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.PaymentDueDate), "");
                 
                 var hasPaymentType =
                     setupIntent.Metadata.TryGetValue(nameof(PaymentMetadata.PaymentType), out var paymentType);
@@ -636,7 +629,7 @@ public class CheckoutController(StripeClient stripeClient,
                     {
                         customerName = user?.FullName,
                         totalAmount = totalCost.ToString("N2"),
-                        quoteReference = quoteReference,
+                        quoteReference,
                         setupDate = setupDate.ToString("dddd, MMMM dd, yyyy"),
                         setupTime = setupDate.ToString("HH:mm") + " GMT",
                         currentYear = DateTime.UtcNow.Year

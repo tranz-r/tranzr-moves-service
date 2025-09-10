@@ -74,7 +74,7 @@ public enum PaymentMetadata
     DueDate,
     QuoteReference,
     PaymentMethodId,
-    SessionId,
+    PaymentDueDate,
     QuoteId
 }
 

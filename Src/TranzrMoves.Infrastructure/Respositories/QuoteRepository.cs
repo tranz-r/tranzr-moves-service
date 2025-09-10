@@ -30,8 +30,6 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
 
     public async Task<Quote?> GetQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default)
     {
-        List<PaymentStatus> listedStatuses = [PaymentStatus.Paid, PaymentStatus.PartiallyPaid];
-        
         return await db.Set<Quote>()
             .Where(q => q.SessionId == guestId && q.Type == quoteType)
             .Include(q => q.InventoryItems)
@@ -60,8 +58,6 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
             QuoteReference = GenerateQuoteReference(),
             VanType = VanType.largeVan, // Default
             DriverCount = 1, // Default
-            // CreatedAt = DateTime.UtcNow,
-            // ModifiedAt = DateTime.UtcNow
         };
 
         db.Set<Quote>().Add(quote);

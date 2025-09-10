@@ -13,7 +13,7 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         builder.HasKey(x => x.Id);
         
         // Session Management
-        builder.Property(x => x.SessionId).IsRequired();
+        builder.Property(x => x.SessionId).IsRequired(false);
         
         builder.Property(x => x.Type).IsRequired()
             .HasConversion(

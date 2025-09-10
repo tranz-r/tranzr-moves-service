@@ -61,7 +61,7 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
         using var res = await client.GetAsync(directionsUrl, cancellationToken);
         res.EnsureSuccessStatusCode();
         await using var stream = await res.Content.ReadAsStreamAsync(cancellationToken);
-        using var doc = await JsonDocument.ParseAsync(stream);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
 
         var routes = doc.RootElement.GetProperty("routes");
         if (routes.GetArrayLength() == 0)
