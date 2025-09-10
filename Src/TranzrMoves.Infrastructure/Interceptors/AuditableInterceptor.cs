@@ -21,7 +21,7 @@ public class AuditableInterceptor() : SaveChangesInterceptor
 
     private void UpdateAuditableEntities(DbContext context)
     {
-        DateTime utcNow = DateTime.UtcNow;
+        DateTimeOffset utcNow = DateTimeOffset.UtcNow;
         var entities = context.ChangeTracker.Entries<IAuditable>().ToList();
 
         foreach (EntityEntry<IAuditable> entry in entities)
@@ -48,7 +48,7 @@ public class AuditableInterceptor() : SaveChangesInterceptor
         static void SetCurrentPropertyDateTimeValue(
             EntityEntry entry,
             string propertyName,
-            DateTime utcNow) =>
+            DateTimeOffset utcNow) =>
             entry.Property(propertyName).CurrentValue = utcNow;
 
         static void SetCurrentPropertyValue(

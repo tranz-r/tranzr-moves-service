@@ -3,13 +3,6 @@ using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Application.Contracts;
 
-public enum PaymentType
-{
-    Full,
-    Deposit,
-    Later
-}
-
 // public class PaymentSheetRequest
 // {
 //     public required string Email { get; set; }
@@ -77,4 +70,6 @@ public class FuturePaymentRequest
     public string CustomerName { get; set; }
     public decimal OriginalTotalCost { get; set; }
     public decimal OriginalDepositAmount { get; set; }
+    public decimal ExtraCharges { get; set; }
+    public string QuoteReference { get; set; }
 }

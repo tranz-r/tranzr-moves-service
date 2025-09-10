@@ -12,6 +12,9 @@ public enum Role
 public enum PaymentStatus
 {
     Pending = 0,
+    Paid,
+    PartiallyPaid,
+    PaymentSetup,
     Failed,
     Succeeded,
     Cancelled
@@ -31,4 +34,52 @@ public enum VanType
     SmallVan,
     mediumVan,
     xlLuton
+}
+
+public enum PaymentType
+{
+    Full,
+    Deposit,
+    Later,
+    Balance
+}
+
+public enum TimeSlot
+{
+    morning = 1,
+    afternoon,
+    evening
+}
+
+public enum ServiceLevel
+{
+    Standard = 0,
+    Premium  = 1
+}
+
+public enum AdditionalPriceType
+{
+    Dismantle = 1,
+    Assembly = 2,
+    Storage = 3
+}
+
+public enum PaymentMetadata
+{
+    PaymentType = 1,
+    TotalCost,
+    DepositPercentage,
+    DepositAmount,
+    BalanceAmount,
+    DueDate,
+    QuoteReference,
+    PaymentMethodId,
+    PaymentDueDate,
+    QuoteId
+}
+
+public enum LegalDocumentType
+{
+    TermsAndConditions = 1,
+    PrivacyPolicy = 2
 }

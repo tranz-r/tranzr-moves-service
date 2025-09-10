@@ -27,7 +27,7 @@ public class AddressController(IMediator mediator, ILogger<AddressController> lo
     [HttpGet("distance")]
     public async Task<double> GetDrivingDistanceAsync([FromQuery] string originAddress, [FromQuery] string destinationAddress, CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new TranzrMoves.Application.Features.Addresses.GetDrivingDistance.GetDrivingDistanceQuery(originAddress, destinationAddress), cancellationToken);
+        var result = await mediator.Send(new Application.Features.Addresses.GetDrivingDistance.GetDrivingDistanceQuery(originAddress, destinationAddress), cancellationToken);
         return result.miles;
     }
 }

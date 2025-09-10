@@ -9,6 +9,8 @@ namespace TranzrMoves.Api.Controllers;
 public class ApiControllerBase : ControllerBase
 {
     internal const string ApplicationJson = "application/json";
+
+    internal const string CookieName = "tranzr_guest";
     protected IActionResult Problem(List<Error> errors)
     {
         if (errors.Count is 0)

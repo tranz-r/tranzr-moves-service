@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.Respositories;
 using TranzrMoves.Infrastructure.Services;
+using TranzrMoves.Infrastructure.Services.EmailTemplates;
 
 namespace TranzrMoves.Infrastructure.DependencyInjection;
 
@@ -20,11 +21,21 @@ public static class DependencyInjection
         // services.AddDefaultAWSOptions(configuration.GetAWSOptions());
         services.AddAWSService<IAmazonSimpleEmailServiceV2>();
         services.AddSingleton<IAwsEmailService, AwsEmailService>();
+        services.AddSingleton<ITemplateService, TemplateService>();
         
         services.AddTransient<IUserRepository, UserRepository>();
-        services.AddTransient<IJobRepository, JobRepository>();
-        services.AddTransient<IUserJobRepository, UserJobRepository>();
-        services.AddTransient<IDriverJobRepository, DriverJobRepository>();
+        services.AddTransient<IUserQuoteRepository, UserQuoteRepository>();
+        services.AddTransient<IDriverQuoteRepository, DriverQuoteRepository>();
+        services.AddTransient<IQuoteRepository, QuoteRepository>();
+
+        services.AddTransient<IRemovalPricingRepository, RemovalPricingRepository>();
+        services.AddTransient<IRateCardRepository, RateCardRepository>();
+        services.AddTransient<IServiceFeatureRepository, ServiceFeatureRepository>();
+        services.AddTransient<IAdditionalPriceRepository, AdditionalPriceRepository>();
+        services.AddTransient<ILegalDocumentRepository, LegalDocumentRepository>();
+
+        // Azure Blob Storage Service
+        services.AddTransient<IAzureBlobService, AzureBlobService>();
 
         return services;
     }

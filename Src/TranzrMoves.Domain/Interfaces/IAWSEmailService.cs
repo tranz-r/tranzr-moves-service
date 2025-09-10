@@ -2,6 +2,5 @@ namespace TranzrMoves.Domain.Interfaces;
 
 public interface IAwsEmailService
 {
-    Task SendOrderConfirmationEmailAsync(string customerEmail, string customerName, long amount, string orderId,
-        DateTime orderDate);
+    Task SendBookingConfirmationEmailAsync(string subject, string toEmail, string htmlEmail, string textEmail);
 }

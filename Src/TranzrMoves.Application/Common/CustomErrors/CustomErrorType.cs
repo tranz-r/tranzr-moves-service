@@ -11,4 +11,5 @@ public static class CustomErrorType
     public const ErrorType InternalServerError = (ErrorType)((int)HttpStatusCode.InternalServerError);
     public const ErrorType ServiceUnavailable = (ErrorType)((int)HttpStatusCode.ServiceUnavailable);
     public const ErrorType NotFound = (ErrorType)((int)HttpStatusCode.NotFound);
+    public const ErrorType Conflict = (ErrorType)((int)HttpStatusCode.Conflict);
 }

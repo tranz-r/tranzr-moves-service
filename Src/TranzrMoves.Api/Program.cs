@@ -1,8 +1,10 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using Stripe;
 using Supabase;
 using TranzrMoves.Api.Configuration;
-using TranzrMoves.Api.Services;
 using TranzrMoves.Application.DependencyInjection;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.DependencyInjection;
@@ -19,16 +21,23 @@ try
     builder.Host.UseSerilog();
 
 // Add services to the container.
-    var  MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+    var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
     builder.Services.AddCors(options =>
     {
         options.AddPolicy(name: MyAllowSpecificOrigins,
-            policy  =>
+            policy =>
             {
-                policy.WithOrigins(new[]{"http://localhost:3000", "http://localhost:3001"})
+                policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
                     .AllowAnyMethod()
-                    .AllowAnyHeader();
+                    .AllowAnyHeader()
+                    .AllowCredentials();
             });
+    });
+    
+    builder.Services.Configure<JsonOptions>(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
     
     builder.Services.AddControllers();
@@ -42,8 +51,7 @@ try
         builder.Configuration["ADDRESS_ADMINISTRATION_KEY"]));
     builder.Services.AddHttpClient<GetAddress.Api>();
     
-    // Register email service
-    builder.Services.AddScoped<IEmailService, EmailService>();
+    // Email service is handled by IAwsEmailService in Infrastructure layer
     
     builder.Services.AddHttpClient<IMapBoxService, MapBoxService>(
         client =>
@@ -81,6 +89,7 @@ try
 
     app.UseHttpLogging();
     app.UseHttpsRedirection();
+    
     app.MapHealthChecks("/healthz");
     app.MapHealthChecks("/ready");
     app.UseCors(MyAllowSpecificOrigins);
@@ -93,4 +102,9 @@ try
 catch (Exception ex)
 {
     Log.CloseAndFlush();
+}
+
+namespace TranzrMoves.Api
+{
+    public partial class Program { }
 }
