@@ -6,6 +6,7 @@ using Stripe;
 using Supabase;
 using TranzrMoves.Api.Configuration;
 using TranzrMoves.Application.DependencyInjection;
+using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.DependencyInjection;
 using TranzrMoves.Infrastructure.Services;
@@ -20,14 +21,14 @@ try
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog();
 
-// Add services to the container.
-    var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+    // Add services to the container.
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy(name: MyAllowSpecificOrigins,
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        options.AddPolicy(Cors.TranzrMovesCorsPolicy,
             policy =>
             {
-                policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+                policy.WithOrigins(allowedOrigins ?? [])
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials();
@@ -92,7 +93,7 @@ try
     
     app.MapHealthChecks("/healthz");
     app.MapHealthChecks("/ready");
-    app.UseCors(MyAllowSpecificOrigins);
+    app.UseCors();
     app.UseAuthorization();
 
     app.MapControllers();
