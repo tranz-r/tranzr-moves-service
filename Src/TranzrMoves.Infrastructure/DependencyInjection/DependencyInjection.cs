@@ -1,5 +1,6 @@
 ﻿using Amazon.Runtime;
 using Amazon.SimpleEmailV2;
+using Azure.Communication.Email;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TranzrMoves.Domain.Interfaces;
@@ -20,7 +21,15 @@ public static class DependencyInjection
         
         // services.AddDefaultAWSOptions(configuration.GetAWSOptions());
         services.AddAWSService<IAmazonSimpleEmailServiceV2>();
-        services.AddSingleton<IAwsEmailService, AwsEmailService>();
+        // services.AddSingleton<IEmailService, AwsEmailService>();
+
+        services.AddSingleton(_ =>
+        {
+            var connectionString = configuration["COMMUNICATION_SERVICES_CONNECTION_STRING"];
+            return new EmailClient(connectionString);
+        });
+        
+        services.AddSingleton<IEmailService, AzureEmailService>();
         services.AddSingleton<ITemplateService, TemplateService>();
         
         services.AddTransient<IUserRepository, UserRepository>();

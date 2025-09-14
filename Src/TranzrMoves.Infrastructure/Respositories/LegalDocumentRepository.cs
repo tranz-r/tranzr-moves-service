@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
-using TranzrMoves.Infrastructure;
 
 namespace TranzrMoves.Infrastructure.Respositories;
 

@@ -6,7 +6,7 @@ using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Infrastructure.Services;
 
-public class AwsEmailService : IAwsEmailService
+public class AwsEmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<AwsEmailService> _logger;
@@ -23,7 +23,7 @@ public class AwsEmailService : IAwsEmailService
         _fromEmail = _configuration["FROM_EMAIL"] ?? "noreply@tranzrmoves.com";
     }
 
-    public async Task SendBookingConfirmationEmailAsync(string subject, string toEmail, string htmlEmail, string textEmail)
+    public async Task SendBookingConfirmationEmailAsync(string fromEmail, string subject, string toEmail, string htmlEmail, string textEmail)
     {
         var emailRequest = new SendEmailRequest
         {

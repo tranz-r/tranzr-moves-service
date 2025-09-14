@@ -93,7 +93,7 @@ try
     
     app.MapHealthChecks("/healthz");
     app.MapHealthChecks("/ready");
-    app.UseCors();
+    app.UseCors(Cors.TranzrMovesCorsPolicy);
     app.UseAuthorization();
 
     app.MapControllers();

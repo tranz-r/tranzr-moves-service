@@ -5,6 +5,7 @@ using TranzrMoves.Api.Dtos;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.Quote.Save;
 using TranzrMoves.Application.Mapper;
+using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.Services.EmailTemplates;
@@ -18,7 +19,7 @@ public class CheckoutController(StripeClient stripeClient,
     IQuoteRepository quoteRepository,
     IUserRepository userRepository,
     IMediator mediator,
-    IAwsEmailService awsEmailService,
+    IEmailService emailService,
     ITemplateService templateService) : ApiControllerBase
 {
     [HttpPost("payment-sheet", Name = "CreateStripeIntent")]
@@ -487,7 +488,7 @@ public class CheckoutController(StripeClient stripeClient,
                     var htmlEmail = templateService.GenerateEmail("deposit-confirmation.html", templateData);
                     var textEmail = templateService.GenerateEmail("deposit-confirmation.txt", templateData);
 
-                    await awsEmailService.SendBookingConfirmationEmailAsync(subject, customer.Email, htmlEmail, textEmail);
+                    await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking                                                                                                                   , subject, customer.Email, htmlEmail, textEmail);
                     
                     logger.LogInformation("Deposit confirmation email sent for payment intent {PaymentIntentId}", paymentIntent.Id);
                 }
@@ -521,7 +522,7 @@ public class CheckoutController(StripeClient stripeClient,
                     var htmlEmail = templateService.GenerateEmail("balance-confirmation.html", templateData);
                     var textEmail = templateService.GenerateEmail("balance-confirmation.txt", templateData);
                     
-                    await awsEmailService.SendBookingConfirmationEmailAsync(subject, customer.Email, htmlEmail, textEmail);
+                    await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, customer.Email, htmlEmail, textEmail);
                     
                     logger.LogInformation("Balance payment confirmation email sent for payment intent {PaymentIntentId}", paymentIntent.Id);
                 }
@@ -550,7 +551,7 @@ public class CheckoutController(StripeClient stripeClient,
                     var htmlEmail = templateService.GenerateEmail("full-payment-confirmation.html", templateData);
                     var textEmail = templateService.GenerateEmail("full-payment-confirmation.txt", templateData);
                     
-                    await awsEmailService.SendBookingConfirmationEmailAsync(subject, customer.Email, htmlEmail, textEmail);
+                    await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, customer.Email, htmlEmail, textEmail);
                     
                     logger.LogInformation("Order confirmation email sent for payment intent {PaymentIntentId}", paymentIntent.Id);
                 }
@@ -639,7 +640,7 @@ public class CheckoutController(StripeClient stripeClient,
                     var htmlEmail = templateService.GenerateEmail("setup-confirmation.html", templateData);
                     var textEmail = templateService.GenerateEmail("setup-confirmation.txt", templateData);
                     
-                    await awsEmailService.SendBookingConfirmationEmailAsync(subject, customer.Email, htmlEmail, textEmail);
+                    await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, customer.Email, htmlEmail, textEmail);
                     
                     logger.LogInformation("Setup confirmation email sent for setup intent {SetupIntentId}", setupIntent.Id);
                 }
