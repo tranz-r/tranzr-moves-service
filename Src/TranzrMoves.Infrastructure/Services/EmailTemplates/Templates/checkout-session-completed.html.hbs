@@ -8,7 +8,7 @@
     <meta name="format-detection" content="date=no">
     <meta name="format-detection" content="address=no">
     <meta name="format-detection" content="email=no">
-    <title>Deposit Confirmation - {{quoteReference}}</title>
+    <title>Payment Confirmation - {{quoteReference}}</title>
     <!--[if mso]>
     <noscript>
         <xml>
@@ -111,12 +111,15 @@
             color: #9568b0;
         }
         
-        .balance-notice {
-            background-color: #f0f9fa;
-            border: 1px solid #b8e3e9;
-            padding: 15px;
+        .button {
+            display: inline-block;
+            background-color: #9568b0;
+            color: #ffffff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
             margin: 20px 0;
-            text-align: center;
         }
         
         .footer {
@@ -150,32 +153,28 @@
 <body>
     <div class="email-container">
         <div class="header">
-            <h1>Deposit Confirmed</h1>
+            <h1>Payment Confirmed</h1>
             <p>Quote #{{quoteReference}}</p>
         </div>
         <div class="content">
             <div class="greeting">Hello {{customerName}},</div>
             
             <div class="main-text">
-                Your deposit payment has been successfully processed. Your booking is now confirmed and secured.
+                Your payment has been successfully processed. Your move is now confirmed and paid in full.
             </div>
             
             <div class="payment-details">
                 <div class="payment-row">
+                    <span class="payment-label">Total Amount Paid:</span>
+                    <span class="payment-value amount">£{{paymentAmount}}</span>
+                </div>
+                <div class="payment-row">
+                    <span class="payment-label">Payment Status:</span>
+                    <span class="payment-value">Fully Paid</span>
+                </div>
+                <div class="payment-row">
                     <span class="payment-label">Quote Reference:</span>
                     <span class="payment-value">#{{quoteReference}}</span>
-                </div>
-                <div class="payment-row">
-                    <span class="payment-label">Deposit Paid:</span>
-                    <span class="payment-value amount">£{{depositAmount}}</span>
-                </div>
-                <div class="payment-row">
-                    <span class="payment-label">Total Amount:</span>
-                    <span class="payment-value">£{{totalAmount}}</span>
-                </div>
-                <div class="payment-row">
-                    <span class="payment-label">Remaining Balance:</span>
-                    <span class="payment-value" style="color: #5aa5b3; font-weight: bold;">£{{remainingAmount}}</span>
                 </div>
                 <div class="payment-row">
                     <span class="payment-label">Payment Date:</span>
@@ -183,23 +182,16 @@
                 </div>
             </div>
             
-            <div class="balance-notice">
-                <h3>Remaining Balance</h3>
-                <p>Your remaining balance of <strong>£{{remainingAmount}}</strong> will be due closer to your moving date. We'll send you a reminder when it's time to pay.</p>
+            {{#if receiptUrl}}
+            <div style="text-align: center;">
+                <a href="{{receiptUrl}}" class="button">View Receipt</a>
             </div>
+            {{/if}}
             
             <div class="main-text">
-                <p><strong>What happens next?</strong></p>
-                <ul style="margin-left: 20px; margin-top: 10px;">
-                    <li>Your booking is now confirmed and secured</li>
-                    <li>Our team will contact you to finalize moving details</li>
-                    <li>You'll receive updates about your booking via email</li>
-                    <li>We'll send a reminder for the remaining balance payment</li>
-                </ul>
-            </div>
-            
-            <div class="main-text">
-                <p><strong>Need help?</strong> If you have any questions about your deposit or booking, please contact our support team at support@tranzrmoves.com or call us at 0800 123 4567.</p>
+                <p>Thank you for choosing Tranzr Moves. Our team will contact you soon to finalize your moving details.</p>
+                
+                <p>If you have any questions, please contact our support team at support@tranzrmoves.com or call us at 0800 123 4567.</p>
             </div>
             
             <div class="footer">
@@ -209,7 +201,7 @@
                 <p>© {{currentYear}} Tranzr Moves. All rights reserved.</p>
                 
                 <div class="unsubscribe">
-                    <p>You received this email because you made a deposit payment for quote #{{quoteReference}}. If you have any concerns about this email, please contact us at support@tranzrmoves.com.</p>
+                    <p>You received this email because you made a payment for quote #{{quoteReference}}. If you have any concerns about this email, please contact us at support@tranzrmoves.com.</p>
                 </div>
             </div>
         </div>

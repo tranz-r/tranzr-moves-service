@@ -19,6 +19,7 @@ public class QuoteDto
     public PricingDto? Pricing { get; set; }
     public List<InventoryItemDto>? Items { get; set; } = [];
     public PaymentDto? Payment { get; set; }
+    public List<QuoteAdditionalPaymentDto>? QuoteAdditionalPayments { get; set; } = [];
     // Concurrency control using PostgreSQL xmin system column
     public uint Version { get; set; }
 }
@@ -49,4 +50,15 @@ public class PaymentDto
     public decimal? DepositPercentage { get; set; } = 25m; // e.g., 25 for 25%
     public string? ReceiptUrl { get; set; }
     public DateTime? DueDate { get; set; } // When full payment is due
+}
+
+public class QuoteAdditionalPaymentDto
+{
+    public Guid Id { get; set; }
+    public Guid QuoteId { get; set; }
+    public decimal Amount { get; set; }
+    public string? Description { get; set; }
+    public string? PaymentMethodId { get; set; }
+    public string? PaymentIntentId { get; set; }
+    public string? ReceiptUrl { get; set; }
 }

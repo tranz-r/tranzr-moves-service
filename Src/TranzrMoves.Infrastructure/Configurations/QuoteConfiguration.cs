@@ -81,6 +81,14 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
             inventoryItem.WithOwner().HasForeignKey(e => e.JobId);
         });
         
+        // Quote Additional Payments
+        builder.OwnsMany(c => c.QuoteAdditionalPayments, quoteAdditionalPayment =>
+        {
+            quoteAdditionalPayment.ToTable(Db.Tables.QuoteAdditionalPayments);
+            quoteAdditionalPayment.HasKey(x => x.Id);
+            quoteAdditionalPayment.WithOwner().HasForeignKey(e => e.QuoteId);
+        });
+        
         // Concurrency Token
         builder.Property(b => b.Version)
             .IsRowVersion()

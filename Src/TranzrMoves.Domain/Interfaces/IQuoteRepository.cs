@@ -15,6 +15,7 @@ public interface IQuoteRepository
     Task<ErrorOr<Quote>> UpdateQuoteAsync(Quote quote, CancellationToken ct = default);
     Task<bool> DeleteQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
     Task<Quote?> GetQuoteByReferenceAsync(string quoteReference, string paymentIntentId, CancellationToken cancellationToken = default);
+    Task<Quote?> GetQuoteByReferenceAsync(string quoteReference, CancellationToken cancellationToken = default);
 }
 
 

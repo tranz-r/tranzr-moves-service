@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Domain.Entities;
@@ -58,8 +59,9 @@ public class Quote : IAuditable
     // Note: Customer information is stored in User entity, not directly in Quote
     
     // Relationships
-    public List<CustomerQuote>? CustomerQuotes { get; set; } = [];
-    public List<DriverQuote>? DriverQuotes { get; set; } = [];
+    public Collection<CustomerQuote>? CustomerQuotes { get; set; } = [];
+    public Collection<DriverQuote>? DriverQuotes { get; set; } = [];
+    public Collection<QuoteAdditionalPayment>? QuoteAdditionalPayments { get; set; } = [];
     
     // Audit
     public DateTimeOffset CreatedAt { get; set; }

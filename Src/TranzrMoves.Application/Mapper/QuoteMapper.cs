@@ -24,6 +24,7 @@ public partial class QuoteMapper
     [MapProperty(nameof(Quote.PaymentMethodId), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.PaymentMethodId))]
     [MapProperty(nameof(Quote.ReceiptUrl), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.ReceiptUrl))]
     [MapProperty(nameof(Quote.DueDate), nameof(QuoteDto.Payment)  + "." + nameof(PaymentDto.DueDate))]
+    [MapProperty(nameof(Quote.QuoteAdditionalPayments), nameof(QuoteDto.QuoteAdditionalPayments))]
     // Note: Customer properties are not part of Quote entity
     public partial QuoteDto ToDto(Quote? src);
     
@@ -47,6 +48,7 @@ public partial class QuoteMapper
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentIntentId),     nameof(Quote.PaymentIntentId))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.ReceiptUrl),     nameof(Quote.ReceiptUrl))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.DueDate),     nameof(Quote.DueDate))]
+    [MapProperty(nameof(QuoteDto.QuoteAdditionalPayments), nameof(Quote.QuoteAdditionalPayments))]
     // Note: Customer properties are not part of Quote entity
     public partial Quote ToEntity(QuoteDto src);
     
@@ -76,6 +78,7 @@ public partial class QuoteMapper
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentIntentId),     nameof(Quote.PaymentIntentId))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.ReceiptUrl),     nameof(Quote.ReceiptUrl))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.DueDate),     nameof(Quote.DueDate))]
+    [MapProperty(nameof(QuoteDto.QuoteAdditionalPayments), nameof(Quote.QuoteAdditionalPayments))]
     public partial void UpdateEntity(QuoteDto src, Quote target);
 
     // ========== Nested types ==========
@@ -85,6 +88,9 @@ public partial class QuoteMapper
 
     public partial InventoryItemDto ToInventoryItemDto(InventoryItem src);
     public partial InventoryItem ToInventoryItem(InventoryItemDto src);
+
+    public partial QuoteAdditionalPaymentDto ToQuoteAdditionalPaymentDto(QuoteAdditionalPayment src);
+    public partial QuoteAdditionalPayment ToQuoteAdditionalPayment(QuoteAdditionalPaymentDto src);
 
     // ========== Small converters for nullability/asymmetry ==========
     // Entity has PaymentStatus?; DTO has non-null Status.

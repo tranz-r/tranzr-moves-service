@@ -32,6 +32,7 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
     {
         return await db.Set<Quote>()
             .Where(q => q.SessionId == guestId && q.Type == quoteType)
+            .Include(x => x.QuoteAdditionalPayments)
             .Include(q => q.InventoryItems)
             .FirstOrDefaultAsync(ct);
     }
@@ -40,6 +41,7 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
     {
         return await db.Set<Quote>()
             .Include(q => q.InventoryItems)
+            .Include(x => x.QuoteAdditionalPayments)
             .Where(q => q.Id == quoteId)
             .FirstOrDefaultAsync(ct);
     }
@@ -109,7 +111,16 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
     {
         return db.Set<Quote>()
             .Include(x => x.InventoryItems)
+            .Include(x => x.QuoteAdditionalPayments)
             .FirstOrDefaultAsync(q => q.QuoteReference == quoteReference && q.PaymentIntentId == paymentIntentId , cancellationToken);
+    }
+
+    public Task<Quote?> GetQuoteByReferenceAsync(string quoteReference, CancellationToken cancellationToken = default)
+    {
+        return db.Set<Quote>()
+            .Include(x => x.InventoryItems)
+            .Include(x => x.QuoteAdditionalPayments)
+            .FirstOrDefaultAsync(q => q.QuoteReference == quoteReference, cancellationToken);
     }
 
     private static string GenerateQuoteReference()
