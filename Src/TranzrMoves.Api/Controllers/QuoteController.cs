@@ -21,11 +21,11 @@ namespace TranzrMoves.Api.Controllers;
 /// - Response body ETags are maintained for backward compatibility
 /// </summary>
 [ApiController]
-[Route("api/guest")]
-public class GuestController(
+[Route("api/v1/[controller]")]
+public class QuoteController(
     IQuoteRepository quoteRepository,
     IMediator mediator,
-    ILogger<GuestController> logger) : ApiControllerBase
+    ILogger<QuoteController> logger) : ApiControllerBase
 {
     private const string CookieName = "tranzr_guest";
 
@@ -57,7 +57,7 @@ public class GuestController(
         return Ok(new { guestId });
     }
 
-    [HttpGet("quote")]
+    [HttpGet]
     public async Task<IActionResult> GetQuote([FromQuery(Name = "quoteType")] QuoteType quoteType, CancellationToken ct)
     {
         var guestId = Request.Cookies[CookieName];
@@ -98,7 +98,7 @@ public class GuestController(
         return Ok(quoteTypeDto);
     }
 
-    [HttpPost("quote")]
+    [HttpPost]
     public async Task<IActionResult> SaveQuote([FromBody] SaveQuoteRequest? body, CancellationToken ct)
     {
         var guestId = Request.Cookies[CookieName];
@@ -126,7 +126,7 @@ public class GuestController(
         return Ok(new { etag = result.Value.ETag });
     }
 
-    [HttpDelete("quote")]
+    [HttpDelete]
     public async Task<IActionResult> DeleteQuote([FromQuery] string type, CancellationToken ct)
     {
         var guestId = Request.Cookies[CookieName];
