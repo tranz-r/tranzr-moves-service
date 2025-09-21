@@ -41,7 +41,8 @@ public class JobAddress : JobAddressBase
     public bool HasElevator { get; set; }
 }
 
-public class PaymentSheetRequest
+
+public class PaymentSheetRequest // TODO: Remove this perhaps ?
 {
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public VanType Van { get; set; }
@@ -63,13 +64,12 @@ public class PaymentSheetRequest
 
 public class FuturePaymentRequest
 {
-    public string CustomerId { get; set; }
-    public decimal RemainingAmount { get; set; }
-    public string BookingId { get; set; }
-    public string CustomerEmail { get; set; }
-    public string CustomerName { get; set; }
-    public decimal OriginalTotalCost { get; set; }
-    public decimal OriginalDepositAmount { get; set; }
+    // public string CustomerId { get; set; }
+    // public decimal RemainingAmount { get; set; }
+    // public string CustomerEmail { get; set; }
+    // public string CustomerName { get; set; }
+    // public decimal OriginalTotalCost { get; set; }
+    // public decimal OriginalDepositAmount { get; set; }
     public decimal ExtraCharges { get; set; }
-    public string QuoteReference { get; set; }
+    public required string QuoteReference { get; set; }
 }

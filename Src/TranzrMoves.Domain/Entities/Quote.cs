@@ -15,7 +15,7 @@ public class Quote : IAuditable
     public Guid Id { get; set; }
     
     // Session Management
-    public string? SessionId { get; set; } = string.Empty; // Maps to guestId
+    public string SessionId { get; set; } = string.Empty; // Maps to guestId
     public QuoteType Type { get; set; } // send, receive, removals
     
     //Origin and Destination addresses

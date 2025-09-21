@@ -1,9 +1,9 @@
-namespace TranzrMoves.Domain.Entities;
+namespace TranzrMoves.Application.Contracts;
 
-public class Address
+public class AddressDto
 {
-    public Guid Id { get; set; }
-    public Guid UserId { get; set; }
+    // public Guid Id { get; set; }
+    // public Guid UserId { get; set; }
     public string? FullAddress { get; set; }
     public required string Line1 { get; set; }
     public string? Line2 { get; set; }
@@ -11,9 +11,8 @@ public class Address
     public string? County { get; set; }
     public required string PostCode { get; set; }
     public string? Country { get; set; }
-    
-    public bool? HasElevator { get; set; }
-    public int? Floor { get; set; }
+    public bool HasElevator { get; set; }
+    public int Floor { get; set; }
     
     // Extended Mapbox fields for complete address data
     public string? AddressNumber { get; set; }

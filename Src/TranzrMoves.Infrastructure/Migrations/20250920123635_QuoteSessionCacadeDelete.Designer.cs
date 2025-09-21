@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TranzrMoves.Infrastructure;
@@ -11,9 +12,11 @@ using TranzrMoves.Infrastructure;
 namespace TranzrMoves.Infrastructure.Migrations
 {
     [DbContext(typeof(TranzrMovesDbContext))]
-    partial class TranzrMovesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250920123635_QuoteSessionCacadeDelete")]
+    partial class QuoteSessionCacadeDelete
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -608,12 +611,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<Guid>("QuoteId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Accuracy")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("AddressNumber")
-                                .HasColumnType("text");
-
                             b1.Property<string>("City")
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)");
@@ -622,29 +619,17 @@ namespace TranzrMoves.Infrastructure.Migrations
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)");
 
-                            b1.Property<string>("CountryCode")
-                                .HasColumnType("text");
-
                             b1.Property<string>("County")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("District")
                                 .HasColumnType("text");
 
                             b1.Property<int?>("Floor")
                                 .HasColumnType("integer");
-
-                            b1.Property<string>("FullAddress")
-                                .HasColumnType("text");
 
                             b1.Property<bool?>("HasElevator")
                                 .HasColumnType("boolean");
 
                             b1.Property<Guid>("Id")
                                 .HasColumnType("uuid");
-
-                            b1.Property<double?>("Latitude")
-                                .HasColumnType("double precision");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
@@ -655,31 +640,10 @@ namespace TranzrMoves.Infrastructure.Migrations
                                 .HasMaxLength(200)
                                 .HasColumnType("character varying(200)");
 
-                            b1.Property<double?>("Longitude")
-                                .HasColumnType("double precision");
-
-                            b1.Property<string>("MapboxId")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Neighborhood")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("PlaceName")
-                                .HasColumnType("text");
-
                             b1.Property<string>("PostCode")
                                 .IsRequired()
                                 .HasMaxLength(10)
                                 .HasColumnType("character varying(10)");
-
-                            b1.Property<string>("Region")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("RegionCode")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Street")
-                                .HasColumnType("text");
 
                             b1.Property<Guid>("UserId")
                                 .HasColumnType("uuid");
@@ -697,12 +661,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<Guid>("QuoteId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Accuracy")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("AddressNumber")
-                                .HasColumnType("text");
-
                             b1.Property<string>("City")
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)");
@@ -711,29 +669,17 @@ namespace TranzrMoves.Infrastructure.Migrations
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)");
 
-                            b1.Property<string>("CountryCode")
-                                .HasColumnType("text");
-
                             b1.Property<string>("County")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("District")
                                 .HasColumnType("text");
 
                             b1.Property<int?>("Floor")
                                 .HasColumnType("integer");
-
-                            b1.Property<string>("FullAddress")
-                                .HasColumnType("text");
 
                             b1.Property<bool?>("HasElevator")
                                 .HasColumnType("boolean");
 
                             b1.Property<Guid>("Id")
                                 .HasColumnType("uuid");
-
-                            b1.Property<double?>("Latitude")
-                                .HasColumnType("double precision");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
@@ -744,31 +690,10 @@ namespace TranzrMoves.Infrastructure.Migrations
                                 .HasMaxLength(200)
                                 .HasColumnType("character varying(200)");
 
-                            b1.Property<double?>("Longitude")
-                                .HasColumnType("double precision");
-
-                            b1.Property<string>("MapboxId")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Neighborhood")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("PlaceName")
-                                .HasColumnType("text");
-
                             b1.Property<string>("PostCode")
                                 .IsRequired()
                                 .HasMaxLength(10)
                                 .HasColumnType("character varying(10)");
-
-                            b1.Property<string>("Region")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("RegionCode")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Street")
-                                .HasColumnType("text");
 
                             b1.Property<Guid>("UserId")
                                 .HasColumnType("uuid");
@@ -831,41 +756,23 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<Guid>("UserId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Accuracy")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("AddressNumber")
-                                .HasColumnType("text");
-
                             b1.Property<string>("City")
                                 .HasColumnType("text");
 
                             b1.Property<string>("Country")
                                 .HasColumnType("text");
 
-                            b1.Property<string>("CountryCode")
-                                .HasColumnType("text");
-
                             b1.Property<string>("County")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("District")
                                 .HasColumnType("text");
 
                             b1.Property<int?>("Floor")
                                 .HasColumnType("integer");
-
-                            b1.Property<string>("FullAddress")
-                                .HasColumnType("text");
 
                             b1.Property<bool?>("HasElevator")
                                 .HasColumnType("boolean");
 
                             b1.Property<Guid>("Id")
                                 .HasColumnType("uuid");
-
-                            b1.Property<double?>("Latitude")
-                                .HasColumnType("double precision");
 
                             b1.Property<string>("Line1")
                                 .IsRequired()
@@ -874,29 +781,8 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<string>("Line2")
                                 .HasColumnType("text");
 
-                            b1.Property<double?>("Longitude")
-                                .HasColumnType("double precision");
-
-                            b1.Property<string>("MapboxId")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Neighborhood")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("PlaceName")
-                                .HasColumnType("text");
-
                             b1.Property<string>("PostCode")
                                 .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Region")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("RegionCode")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Street")
                                 .HasColumnType("text");
 
                             b1.HasKey("UserId");

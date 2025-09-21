@@ -22,7 +22,7 @@ public class QuoteSessionConfiguration : IEntityTypeConfiguration<QuoteSession>
         builder.HasMany(x => x.Quotes)
             .WithOne()
             .HasForeignKey(q => q.SessionId)
-            .OnDelete(DeleteBehavior.NoAction);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 
