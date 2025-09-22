@@ -53,8 +53,8 @@ public class Quote : IAuditable
     public decimal? DepositAmount { get; set; }
     public string? ReceiptUrl { get; set; }
     public DateTime? DueDate { get; set; } // When full payment is due
-    
     public uint Version { get; set; }
+    public string? StripeSessionId { get; set; }
     
     // Note: Customer information is stored in User entity, not directly in Quote
     

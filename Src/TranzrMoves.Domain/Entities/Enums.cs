@@ -41,7 +41,8 @@ public enum PaymentType
     Full,
     Deposit,
     Later,
-    Balance
+    Balance,
+    Adhoc
 }
 
 public enum TimeSlot

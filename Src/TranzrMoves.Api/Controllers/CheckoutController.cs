@@ -12,6 +12,7 @@ using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.Services.EmailTemplates;
+using Quote = TranzrMoves.Domain.Entities.Quote;
 
 namespace TranzrMoves.Api.Controllers;
 
@@ -30,10 +31,10 @@ public class CheckoutController(
     private const string TaxCode = "txcd_20030000";
     private const string TaxBehavior = "inclusive";
     private const string Currency = "gbp";
-    
+
     [HttpPost("session")]
     public async Task<ActionResult<CreateCheckoutSessionResponse>> CreateCheckoutSession(
-        [FromBody] CreateCheckoutSessionRequest? request, CancellationToken ct)
+        [FromBody] CreateCheckoutSessionRequest? request, CancellationToken cancellationToken)
     {
         try
         {
@@ -42,127 +43,31 @@ public class CheckoutController(
                 return BadRequest("quoteReference and positive amount are required");
             }
 
-            var quote = await quoteRepository.GetQuoteByReferenceAsync(request.QuoteReference, ct);
+            var quote = await quoteRepository.GetQuoteByReferenceAsync(request.QuoteReference, cancellationToken);
             if (quote is null)
             {
                 return NotFound("Quote not found");
             }
 
-            var customerQuote = await userQuoteRepository.GetUserQuoteByQuoteIdAsync(quote.Id, ct);
+            var customerQuote = await userQuoteRepository.GetUserQuoteByQuoteIdAsync(quote.Id, cancellationToken);
             if (customerQuote is null)
             {
                 return BadRequest("Customer quote relationship not found");
             }
 
-            var user = await userRepository.GetUserAsync(customerQuote.UserId, ct);
+            var user = await userRepository.GetUserAsync(customerQuote.UserId, cancellationToken);
             if (user is null || string.IsNullOrEmpty(user.Email))
             {
                 return BadRequest("Customer email is required");
             }
 
-            // Create or find stripe customer
-            var sr = await stripeClient.V1.Customers.SearchAsync(
-                new CustomerSearchOptions { Query = $"email:'{user.Email}'" }, cancellationToken: ct);
-            var stripeCustomer = sr.Data.FirstOrDefault();
-            if (stripeCustomer is null)
-            {
-                stripeCustomer = await stripeClient.V1.Customers.CreateAsync(new CustomerCreateOptions
-                {
-                    Email = user.Email,
-                    Name = user.FullName,
-                    Address = user.BillingAddress != null
-                        ? new AddressOptions
-                        {
-                            Line1 = user.BillingAddress.Line1,
-                            Line2 = user.BillingAddress.Line2,
-                            City = user.BillingAddress.City,
-                            PostalCode = user.BillingAddress.PostCode,
-                            Country = user.BillingAddress.Country ?? "United Kingdom",
-                            // Enhanced with extended Mapbox fields
-                            State = user.BillingAddress.Region
-                        }
-                        : null
-                }, cancellationToken: ct);
-            }
-
-            // Create Price for this amount/description
-            var priceId = await CreateOrGetPriceAsync(request.Amount,
-                string.IsNullOrWhiteSpace(request.Description)
-                    ? $"Payment for quote #{quote.QuoteReference}"
-                    : request.Description, quote.QuoteReference);
-
-            // Create Checkout Session
-            var sessionOptions = new SessionCreateOptions
-            {
-                Mode = "payment",
-                Customer = stripeCustomer.Id,
-                ClientReferenceId = quote.QuoteReference,
-                LineItems =
-                [
-                    new SessionLineItemOptions
-                    {
-                        Price = priceId,
-                        Quantity = 1
-                    }
-                ],
-                AutomaticTax = new SessionAutomaticTaxOptions
-                {
-                    Enabled = true // Enable automatic tax calculation
-                },
-                Metadata = new Dictionary<string, string>
-                {
-                    { nameof(PaymentMetadata.QuoteReference), quote.QuoteReference },
-                    { nameof(PaymentMetadata.CustomerEmail), user.Email },
-                    { nameof(PaymentMetadata.PaymentAmount), request.Amount.ToString("F2") }
-                },
-                SuccessUrl = configuration["CHECKOUT_SUCCESS_URL"] ?? "https://tranzrmoves.com/checkout/success",
-                CancelUrl = configuration["CHECKOUT_CANCEL_URL"] ?? "https://tranzrmoves.com/checkout/cancel"
-            };
-
-            var sessionService = new SessionService(stripeClient);
-            var session = await sessionService.CreateAsync(sessionOptions, cancellationToken: ct);
-
-            // Email checkout URL to customer
-            bool emailSent = false;
-            try
-            {
-                var templateData = new
-                {
-                    customerName = user.FullName,
-                    paymentAmount = request.Amount.ToString("N2"),
-                    quoteReference = quote.QuoteReference,
-                    checkoutUrl = session.Url,
-                    description = string.IsNullOrWhiteSpace(request.Description)
-                        ? $"Payment for quote #{quote.QuoteReference}"
-                        : request.Description,
-                    currentYear = DateTime.UtcNow.Year
-                };
-
-                var subject = $"Checkout Link - #{quote.QuoteReference}";
-                var htmlEmail = templateService.GenerateEmail("checkout-session.html", templateData);
-                var textEmail = templateService.GenerateEmail("checkout-session.txt", templateData);
-                await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, user.Email, htmlEmail,
-                    textEmail);
-                emailSent = true;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to send checkout session email to {Email}", user.Email);
-            }
-
-            return Ok(new CreateCheckoutSessionResponse
-            {
-                SessionId = session.Id,
-                Url = session.Url,
-                QuoteReference = quote.QuoteReference,
-                Amount = request.Amount,
-                EmailSent = emailSent
-            });
+            return await CreateCheckoutSession(request, user, quote, 
+                "checkout-session", new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Adhoc)), cancellationToken);
         }
         catch (StripeException ex)
         {
             logger.LogError(ex, "Stripe error creating checkout session for quote {QuoteReference}",
-                request.QuoteReference);
+                request!.QuoteReference);
             return BadRequest($"Checkout session creation failed: {ex.StripeError?.Message}");
         }
         catch (Exception ex)
@@ -170,6 +75,114 @@ public class CheckoutController(
             logger.LogError(ex, "Failed to create checkout session for quote {QuoteReference}", request.QuoteReference);
             return StatusCode(500, "Failed to create checkout session");
         }
+    }
+
+    private async Task<ActionResult<CreateCheckoutSessionResponse>> CreateCheckoutSession(
+        CreateCheckoutSessionRequest request, User user,
+        Quote quote, string emailTemplateName, KeyValuePair<string, string> metadata, CancellationToken cancellationToken)
+    {
+        // Create or find stripe customer
+        var sr = await stripeClient.V1.Customers.SearchAsync(
+            new CustomerSearchOptions { Query = $"email:'{user.Email}'" }, cancellationToken: cancellationToken);
+        var stripeCustomer = sr.Data.FirstOrDefault();
+        if (stripeCustomer is null)
+        {
+            stripeCustomer = await stripeClient.V1.Customers.CreateAsync(new CustomerCreateOptions
+            {
+                Email = user.Email,
+                Name = user.FullName,
+                Address = user.BillingAddress != null
+                    ? new AddressOptions
+                    {
+                        Line1 = user.BillingAddress.Line1,
+                        Line2 = user.BillingAddress.Line2,
+                        City = user.BillingAddress.City,
+                        PostalCode = user.BillingAddress.PostCode,
+                        Country = user.BillingAddress.Country ?? "United Kingdom",
+                        // Enhanced with extended Mapbox fields
+                        State = user.BillingAddress.Region
+                    }
+                    : null
+            }, cancellationToken: cancellationToken);
+        }
+
+        // Create Price for this amount/description
+        var priceId = await CreateOrGetPriceAsync(request.Amount,
+            string.IsNullOrWhiteSpace(request.Description)
+                ? $"Payment for quote #{quote.QuoteReference}"
+                : request.Description, quote.QuoteReference);
+
+        // Create Checkout Session
+        var sessionOptions = new SessionCreateOptions
+        {
+            Mode = "payment",
+            Customer = stripeCustomer.Id,
+            ClientReferenceId = quote.QuoteReference,
+            LineItems =
+            [
+                new SessionLineItemOptions
+                {
+                    Price = priceId,
+                    Quantity = 1
+                }
+            ],
+            AutomaticTax = new SessionAutomaticTaxOptions
+            {
+                Enabled = true // Enable automatic tax calculation
+            },
+            Metadata = new Dictionary<string, string>
+            {
+                { nameof(PaymentMetadata.QuoteReference), quote.QuoteReference },
+                { nameof(PaymentMetadata.CustomerEmail), user.Email },
+                { nameof(PaymentMetadata.PaymentAmount), request.Amount.ToString("F2") },
+                { metadata.Key, metadata.Value }
+            },
+            SuccessUrl = configuration["CHECKOUT_SESSION_SUCCESS_URL"],
+            CancelUrl = configuration["CHECKOUT_SESSION_CANCEL_URL"]
+        };
+
+        var sessionService = new SessionService(stripeClient);
+        var session = await sessionService.CreateAsync(sessionOptions, cancellationToken: cancellationToken);
+        
+        quote.StripeSessionId = session.Id;
+        await quoteRepository.UpdateQuoteAsync(quote, cancellationToken);
+
+        // Email checkout URL to customer
+        bool emailSent = false;
+        try
+        {
+            var templateData = new
+            {
+                customerName = user.FullName,
+                paymentAmount = request.Amount.ToString("N2"),
+                quoteReference = quote.QuoteReference,
+                checkoutUrl = session.Url,
+                description = string.IsNullOrWhiteSpace(request.Description)
+                    ? $"Payment for quote #{quote.QuoteReference}"
+                    : request.Description,
+                currentYear = DateTime.UtcNow.Year
+            };
+
+            var subject = $"Checkout Link - #{quote.QuoteReference}";
+            var htmlEmail = templateService.GenerateEmail($"{emailTemplateName}.html", templateData);
+            var textEmail = templateService.GenerateEmail($"{emailTemplateName}.txt", templateData);
+            await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, user.Email, htmlEmail,
+                textEmail);
+            emailSent = true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send checkout session email to {Email}", user.Email);
+        }
+
+        return Ok(new CreateCheckoutSessionResponse
+        {
+            SessionId = session.Id,
+            Url = session.Url,
+            QuoteReference = quote.QuoteReference,
+            Amount = request.Amount,
+            EmailSent = emailSent
+        });
     }
 
     [HttpGet("session")]
@@ -399,7 +412,7 @@ public class CheckoutController(
         {
             logger.LogInformation("PaymentIntent created with automatic payment methods for {PaymentType}",
                 saveQuoteRequest.Quote.Payment.PaymentType);
-            
+
             paymentIntentOptions.AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
             {
                 Enabled = true,
@@ -569,7 +582,7 @@ public class CheckoutController(
                     request.QuoteReference);
                 return BadRequest("Customer not found");
             }
-            
+
             var extraCharges = request.ExtraCharges ?? 0m;
             var remainingAmount = quote.TotalCost!.Value - quote.DepositAmount!.Value + extraCharges * 1.2m;
             var amountInCurrencyUnit = (long)Math.Round(remainingAmount * 100, 0, MidpointRounding.AwayFromZero);
@@ -620,7 +633,8 @@ public class CheckoutController(
             if (request.ExtraCharges != null)
             {
                 paymentIntentOptions.Metadata.Add(nameof(PaymentMetadata.ExtraCharges), extraCharges.ToString("N"));
-                paymentIntentOptions.Metadata.Add(nameof(PaymentMetadata.ExtraChargesDescription), request.ExtraChargesDescription); 
+                paymentIntentOptions.Metadata.Add(nameof(PaymentMetadata.ExtraChargesDescription),
+                    request.ExtraChargesDescription);
             }
 
             var paymentIntent =
@@ -645,7 +659,7 @@ public class CheckoutController(
                 logger.LogWarning(
                     "Payment requires authentication for customer with Id {UserId}. Customer needs to complete 3D Secure for quote {QuoteReference}",
                     user!.Id, request.QuoteReference);
-                
+
                 return BadRequest(
                     "Payment requires additional authentication. Please contact customer to complete payment.");
             }
@@ -654,6 +668,172 @@ public class CheckoutController(
                 logger.LogError(ex,
                     "Stripe error creating future payment for customer {UserId}: {ErrorCode} - {ErrorMessage}",
                     user.Id, ex.StripeError.Code, ex.StripeError.Message);
+            return BadRequest($"Payment failed: {ex.StripeError.Message}");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to create future payment for customer {UserId}", user!.Id);
+            return StatusCode(500, "Failed to create future payment");
+        }
+    }
+
+
+    [HttpPost("pay-later-collection")]
+    public async Task<ActionResult<PaymentIntentResponse>> CollectLaterPayment([FromBody] FuturePaymentRequest request,
+        CancellationToken cancellationToken)
+    {
+        // This endpoint handles creating PaymentIntents for the remaining balance
+        // after a deposit has been paid, using saved payment methods
+
+        User? user = null;
+
+        var quote = await quoteRepository.GetQuoteByReferenceAsync(request.QuoteReference, cancellationToken);
+        if (quote == null)
+        {
+            logger.LogWarning("Quote not found for future payment: {QuoteReference}", request.QuoteReference);
+            return NotFound("Quote not found");
+        }
+
+        var customerQuote = await userQuoteRepository.GetUserQuoteByQuoteIdAsync(quote.Id, cancellationToken);
+        if (customerQuote == null)
+        {
+            logger.LogWarning("Customer quote relationship not found for quote {QuoteReference}",
+                request.QuoteReference);
+            return BadRequest("Customer quote relationship not found");
+        }
+
+        user = await userRepository.GetUserAsync(customerQuote.UserId, cancellationToken);
+
+        logger.LogInformation(
+            "Collecting payment for pay later for customer {CustomerId} for the full amount of £{Amount}",
+            user!.Id, quote.TotalCost - quote.DepositAmount);
+
+        var customerSearchResult = await stripeClient.V1.Customers.SearchAsync(new CustomerSearchOptions
+        {
+            Query = $"email:'{user.Email}'",
+        }, cancellationToken: cancellationToken);
+
+        var customer = customerSearchResult.Data.FirstOrDefault();
+
+        if (customer == null)
+        {
+            logger.LogWarning("Customer not found for future payment for quote: {QuoteReference}",
+                request.QuoteReference);
+            return BadRequest("Customer not found");
+        }
+
+        var amountInCurrencyUnit = (long)Math.Round(quote.TotalCost!.Value * 100, 0, MidpointRounding.AwayFromZero);
+
+        // 1. Create a tax calculation with tax-inclusive pricing
+        var calculationOptions = new CalculationCreateOptions
+        {
+            Currency = Currency,
+            LineItems =
+            [
+                new CalculationLineItemOptions
+                {
+                    Amount = amountInCurrencyUnit,
+                    Reference = request.QuoteReference,
+                    TaxCode = TaxCode,
+                    TaxBehavior = TaxBehavior // This specifies that the price already includes tax
+                }
+            ],
+            Customer = customer.Id
+        };
+
+        var taxCalculationService = stripeClient.V1.Tax.Calculations;
+        Calculation calculation =
+            await taxCalculationService.CreateAsync(calculationOptions, cancellationToken: cancellationToken);
+
+        var paymentIntentOptions = new PaymentIntentCreateOptions
+        {
+            Amount = calculation.AmountTotal,
+            Currency = Currency,
+            Customer = customer.Id,
+            PaymentMethod = quote.PaymentMethodId, // Use the saved payment method
+            Description = "Tranzr Moves - Remaining balance payment",
+            ReceiptEmail = customer.Email,
+            Confirm = true, // Automatically confirm the payment
+            OffSession = true, // This is an off-session payment (automatic)
+            AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+            {
+                Enabled = true,
+                AllowRedirects = "always"
+            },
+            Metadata = new Dictionary<string, string>
+            {
+                { nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Balance) },
+                { nameof(PaymentMetadata.QuoteReference), request.QuoteReference }
+            }
+        };
+
+        try
+        {
+            var paymentIntent =
+                await stripeClient.V1.PaymentIntents.CreateAsync(paymentIntentOptions,
+                    cancellationToken: cancellationToken);
+
+            logger.LogInformation(
+                "Future payment intent created {PaymentIntentId} for remaining amount {Amount} using saved payment method",
+                paymentIntent.Id, quote.TotalCost!.Value);
+
+            return new PaymentIntentResponse
+            {
+                ClientSecret = paymentIntent.ClientSecret,
+                PaymentIntentId = paymentIntent.Id,
+                PublishableKey = StripeConfiguration.ClientId,
+            };
+        }
+        catch (StripeException ex)
+        {
+            // Handle specific error types
+            switch (ex.StripeError.Code)
+            {
+                case "card_declined":
+                    // Card was declined
+                    string declineCode =
+                        ex.StripeError.DeclineCode; // specific reason: insufficient_funds, lost_card, etc.
+                    // Ask customer to try another card
+                    break;
+                case "expired_card":
+                    // Card is expired
+                    // Ask customer to provide a non-expired card
+                    break;
+                case "incorrect_cvc":
+                    // Incorrect CVC code
+                    // Ask customer to verify and re-enter CVC
+                    break;
+                case "processing_error":
+                    // Error occurred while processing the card
+                    // Ask customer to try again or use a different payment method
+                    break;
+                case "incorrect_number":
+                    // Card number is incorrect
+                    // Ask customer to verify and re-enter card number
+                    break;
+                case "authentication_required":
+                    // 3D Secure authentication is required but was not performed
+                    // Redirect customer to the URL for authentication
+                    logger.LogWarning(
+                        "Payment requires authentication for customer with Id {UserId}. Customer needs to complete 3D Secure for quote {QuoteReference}",
+                        user!.Id, request.QuoteReference);
+
+                    //Create a checkout session and send to customer to complete 3D secure or use another mode of payment
+                    await CreateCheckoutSession(new CreateCheckoutSessionRequest
+                    {
+                        Amount = quote.TotalCost!.Value,
+                        QuoteReference = quote.QuoteReference,
+                        Description = $"Full payment for quote #{quote.QuoteReference} - requires authentication"
+                    }, user, quote, "checkout_payment_authentication", 
+                        new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Full)), 
+                        cancellationToken);
+                    break;
+
+                default:
+                    // Handle other card errors
+                    break;
+            }
+
             return BadRequest($"Payment failed: {ex.StripeError.Message}");
         }
         catch (Exception ex)
@@ -1003,7 +1183,7 @@ public class CheckoutController(
                 {
                     decimal? extraCharges = null;
                     var extraChargesDescription = string.Empty;
-                    
+
                     // Check if there's extra charges metadata
                     if (paymentIntent.Metadata.TryGetValue(nameof(PaymentMetadata.ExtraCharges),
                             out var extraChargesStr) &&
@@ -1031,12 +1211,13 @@ public class CheckoutController(
                         PaymentIntentId = paymentIntent.Id,
                         ReceiptUrl = charge.ReceiptUrl
                     };
-                    
+
                     // Add to quote's additional payments collection (preserve existing payments)
                     if (quoteDto.QuoteAdditionalPayments is null)
                     {
                         quoteDto.QuoteAdditionalPayments = [];
-                        logger.LogInformation("Created new QuoteAdditionalPayments collection for quote {QuoteReference}",
+                        logger.LogInformation(
+                            "Created new QuoteAdditionalPayments collection for quote {QuoteReference}",
                             quoteReference);
                     }
                     else
@@ -1047,7 +1228,7 @@ public class CheckoutController(
                     }
 
                     quoteDto.QuoteAdditionalPayments.Add(additionalPayment);
-                    
+
                     quoteDto.Payment.Status = PaymentStatus.Paid;
                     await UpdateQuoteAsync(new SaveQuoteRequest
                     {
@@ -1068,7 +1249,9 @@ public class CheckoutController(
                         paymentTime = orderDate.ToString("HH:mm") + " GMT",
                         currentYear = DateTime.UtcNow.Year,
                         // Include extra charges details in the email when applicable
-                        extraCharges = extraCharges is > 0 ? extraCharges.Value.ToString("N2", CultureInfo.InvariantCulture) : null,
+                        extraCharges = extraCharges is > 0
+                            ? extraCharges.Value.ToString("N2", CultureInfo.InvariantCulture)
+                            : null,
                         extraChargesDescription = extraCharges is > 0 ? extraChargesDescription : null
                     };
 

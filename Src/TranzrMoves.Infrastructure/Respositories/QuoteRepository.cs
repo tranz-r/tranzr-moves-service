@@ -123,6 +123,14 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
             .FirstOrDefaultAsync(q => q.QuoteReference == quoteReference, cancellationToken);
     }
 
+    public Task<Quote?> GetQuoteByStripeCheckoutSessionIdAsync(string sessionId, CancellationToken cancellationToken)
+    {
+        return db.Set<Quote>()
+            .Include(x => x.InventoryItems)
+            .Include(x => x.QuoteAdditionalPayments)
+            .FirstOrDefaultAsync(q => q.StripeSessionId == sessionId, cancellationToken);
+    }
+
     private static string GenerateQuoteReference()
     {
         // Simple quote reference generation

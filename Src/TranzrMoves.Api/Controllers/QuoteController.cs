@@ -97,6 +97,27 @@ public class QuoteController(
         
         return Ok(quoteTypeDto);
     }
+    
+    [HttpGet("checkout-session")]
+    public async Task<IActionResult> GetQuote([FromQuery(Name = "session_id")] string sessionId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(sessionId))
+        {
+            return BadRequest("session_id is required");
+        }
+
+        var quote = await quoteRepository.GetQuoteByStripeCheckoutSessionIdAsync(sessionId, ct);
+        
+        if (quote is null)
+        {
+            return NotFound("Quote not found for the given session ID");
+        }
+        
+        var mapper = new QuoteMapper();
+        var quoteDto = mapper.ToDto(quote);
+        
+        return Ok(quoteDto);
+    }
 
     [HttpPost]
     public async Task<IActionResult> SaveQuote([FromBody] SaveQuoteRequest? body, CancellationToken ct)
