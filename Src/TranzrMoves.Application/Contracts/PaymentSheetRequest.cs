@@ -64,12 +64,7 @@ public class PaymentSheetRequest // TODO: Remove this perhaps ?
 
 public class FuturePaymentRequest
 {
-    // public string CustomerId { get; set; }
-    // public decimal RemainingAmount { get; set; }
-    // public string CustomerEmail { get; set; }
-    // public string CustomerName { get; set; }
-    // public decimal OriginalTotalCost { get; set; }
-    // public decimal OriginalDepositAmount { get; set; }
-    public decimal ExtraCharges { get; set; }
+    public decimal? ExtraCharges { get; set; }
+    public string? ExtraChargesDescription { get; set; }
     public required string QuoteReference { get; set; }
 }

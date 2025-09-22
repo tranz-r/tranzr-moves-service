@@ -173,6 +173,18 @@
                     <span class="payment-label">Total Amount:</span>
                     <span class="payment-value">£{{totalAmount}}</span>
                 </div>
+                {{#if extraCharges}}
+                <div class="payment-row">
+                    <span class="payment-label">Additional Charges:</span>
+                    <span class="payment-value">£{{extraCharges}}</span>
+                </div>
+                {{/if}}
+                {{#if extraChargesDescription}}
+                <div class="payment-row">
+                    <span class="payment-label">Additional Charges Description:</span>
+                    <span class="payment-value">{{extraChargesDescription}}</span>
+                </div>
+                {{/if}}
                 <div class="payment-row">
                     <span class="payment-label">Payment Date:</span>
                     <span class="payment-value">{{paymentDate}}</span>

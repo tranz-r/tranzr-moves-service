@@ -77,7 +77,9 @@ public enum PaymentMetadata
     PaymentDueDate,
     QuoteId,
     CustomerEmail,
-    PaymentAmount
+    PaymentAmount,
+    ExtraCharges,
+    ExtraChargesDescription
 }
 
 public enum LegalDocumentType

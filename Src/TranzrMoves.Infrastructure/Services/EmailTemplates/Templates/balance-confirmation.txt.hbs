@@ -10,6 +10,12 @@ PAYMENT DETAILS
 Quote Reference: #{{quoteReference}}
 Balance Paid: £{{balanceAmount}}
 Total Amount: £{{totalAmount}}
+{{#if extraCharges}}
+Additional Charges: £{{extraCharges}}
+{{/if}}
+{{#if extraChargesDescription}}
+Additional Charges Description: {{extraChargesDescription}}
+{{/if}}
 Payment Date: {{paymentDate}}
 
 PAYMENT COMPLETE!

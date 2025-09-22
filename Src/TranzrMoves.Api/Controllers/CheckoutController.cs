@@ -1,4 +1,5 @@
-﻿using Mediator;
+﻿using System.Globalization;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
 using Stripe.Checkout;
@@ -525,7 +526,7 @@ public class CheckoutController(
         };
     }
 
-    [HttpPost("future-payment", Name = "CreateFuturePayment")]
+    [HttpPost("deposit-balance-payment", Name = "CreateFuturePayment")]
     public async Task<ActionResult<PaymentIntentResponse>> CreateFuturePayment([FromBody] FuturePaymentRequest request,
         CancellationToken cancellationToken)
     {
@@ -569,7 +570,8 @@ public class CheckoutController(
                 return BadRequest("Customer not found");
             }
             
-            var remainingAmount = quote.TotalCost!.Value - quote.DepositAmount!.Value + (request.ExtraCharges * 1.2m);
+            var extraCharges = request.ExtraCharges ?? 0m;
+            var remainingAmount = quote.TotalCost!.Value - quote.DepositAmount!.Value + extraCharges * 1.2m;
             var amountInCurrencyUnit = (long)Math.Round(remainingAmount * 100, 0, MidpointRounding.AwayFromZero);
 
             // 1. Create a tax calculation with tax-inclusive pricing
@@ -614,6 +616,12 @@ public class CheckoutController(
                     { nameof(PaymentMetadata.QuoteReference), request.QuoteReference }
                 }
             };
+
+            if (request.ExtraCharges != null)
+            {
+                paymentIntentOptions.Metadata.Add(nameof(PaymentMetadata.ExtraCharges), extraCharges.ToString("N"));
+                paymentIntentOptions.Metadata.Add(nameof(PaymentMetadata.ExtraChargesDescription), request.ExtraChargesDescription); 
+            }
 
             var paymentIntent =
                 await stripeClient.V1.PaymentIntents.CreateAsync(paymentIntentOptions,
@@ -993,6 +1001,26 @@ public class CheckoutController(
 
                 if (paymentType == nameof(PaymentType.Balance) && quote!.PaymentStatus == PaymentStatus.PartiallyPaid)
                 {
+                    decimal? extraCharges = null;
+                    var extraChargesDescription = string.Empty;
+                    
+                    // Check if there's extra charges metadata
+                    if (paymentIntent.Metadata.TryGetValue(nameof(PaymentMetadata.ExtraCharges),
+                            out var extraChargesStr) &&
+                        decimal.TryParse(extraChargesStr, out var extraCharge) && extraCharge > 0)
+                    {
+                        extraCharges = extraCharge;
+                        extraChargesDescription =
+                            paymentIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.ExtraChargesDescription),
+                                "Additional charges");
+
+                        // Update quote with extra charges
+                        quoteDto.Pricing!.TotalCost += extraCharges;
+                        logger.LogInformation(
+                            "Added extra charges of {ExtraCharges} to quote {QuoteReference} for {chargesDescription}",
+                            extraCharges, quoteReference, extraChargesDescription);
+                    }
+
                     // Create QuoteAdditionalPayment record
                     var additionalPayment = new QuoteAdditionalPaymentDto
                     {
@@ -1038,7 +1066,10 @@ public class CheckoutController(
                         quoteReference,
                         paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
                         paymentTime = orderDate.ToString("HH:mm") + " GMT",
-                        currentYear = DateTime.UtcNow.Year
+                        currentYear = DateTime.UtcNow.Year,
+                        // Include extra charges details in the email when applicable
+                        extraCharges = extraCharges is > 0 ? extraCharges.Value.ToString("N2", CultureInfo.InvariantCulture) : null,
+                        extraChargesDescription = extraCharges is > 0 ? extraChargesDescription : null
                     };
 
                     var subject = $"Balance Payment Confirmation - #{quoteReference}";
