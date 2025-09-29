@@ -572,7 +572,7 @@ namespace TranzrMoves.Infrastructure.Migrations
 
                     b.OwnsMany("TranzrMoves.Domain.Entities.InventoryItem", "InventoryItems", b1 =>
                         {
-                            b1.Property<Guid>("JobId")
+                            b1.Property<Guid>("QuoteId")
                                 .HasColumnType("uuid");
 
                             b1.Property<Guid>("Id")
@@ -598,12 +598,12 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<int?>("Width")
                                 .HasColumnType("integer");
 
-                            b1.HasKey("JobId", "Id");
+                            b1.HasKey("QuoteId", "Id");
 
                             b1.ToTable("InventoryItems", (string)null);
 
                             b1.WithOwner()
-                                .HasForeignKey("JobId");
+                                .HasForeignKey("QuoteId");
                         });
 
                     b.OwnsOne("TranzrMoves.Domain.Entities.Address", "Destination", b1 =>

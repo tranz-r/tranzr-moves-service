@@ -61,7 +61,7 @@ public class CheckoutController(
                 return BadRequest("Customer email is required");
             }
 
-            return await CreateCheckoutSession(request, user, quote, 
+            return await CreateCheckoutSession(request, user, quote,
                 "checkout-session", new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Adhoc)), cancellationToken);
         }
         catch (StripeException ex)
@@ -135,6 +135,7 @@ public class CheckoutController(
                 { nameof(PaymentMetadata.QuoteReference), quote.QuoteReference },
                 { nameof(PaymentMetadata.CustomerEmail), user.Email },
                 { nameof(PaymentMetadata.PaymentAmount), request.Amount.ToString("F2") },
+                { nameof(PaymentMetadata.ExtraChargesDescription), request.Description },
                 { metadata.Key, metadata.Value }
             },
             SuccessUrl = configuration["CHECKOUT_SESSION_SUCCESS_URL"],
@@ -143,7 +144,7 @@ public class CheckoutController(
 
         var sessionService = new SessionService(stripeClient);
         var session = await sessionService.CreateAsync(sessionOptions, cancellationToken: cancellationToken);
-        
+
         quote.StripeSessionId = session.Id;
         await quoteRepository.UpdateQuoteAsync(quote, cancellationToken);
 
@@ -584,8 +585,9 @@ public class CheckoutController(
             }
 
             var extraCharges = request.ExtraCharges ?? 0m;
-            var remainingAmount = quote.TotalCost!.Value - quote.DepositAmount!.Value + extraCharges * 1.2m;
-            var amountInCurrencyUnit = (long)Math.Round(remainingAmount * 100, 0, MidpointRounding.AwayFromZero);
+            var remainingAmount = quote.TotalCost!.Value - quote.DepositAmount!.Value;
+            var chargeableAmount = remainingAmount + extraCharges * 1.2m;
+            var amountInCurrencyUnit = (long)Math.Round(chargeableAmount * 100, 0, MidpointRounding.AwayFromZero);
 
             // 1. Create a tax calculation with tax-inclusive pricing
             var calculationOptions = new CalculationCreateOptions
@@ -643,7 +645,7 @@ public class CheckoutController(
 
             logger.LogInformation(
                 "Future payment intent created {PaymentIntentId} for remaining amount {Amount} using saved payment method",
-                paymentIntent.Id, remainingAmount);
+                paymentIntent.Id, chargeableAmount);
 
             return new PaymentIntentResponse
             {
@@ -824,8 +826,8 @@ public class CheckoutController(
                         Amount = quote.TotalCost!.Value,
                         QuoteReference = quote.QuoteReference,
                         Description = $"Full payment for quote #{quote.QuoteReference} - requires authentication"
-                    }, user, quote, "checkout_payment_authentication", 
-                        new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Full)), 
+                    }, user, quote, "checkout_payment_authentication",
+                        new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Full)),
                         cancellationToken);
                     break;
 
@@ -1166,18 +1168,12 @@ public class CheckoutController(
                     return;
                 }
 
-                // Retrieve the latest charge
-                var charge = await stripeClient.V1.Charges.GetAsync(paymentIntent.LatestChargeId);
-
                 // Retrieve the quote from your database
                 var quote = await quoteRepository.GetQuoteByReferenceAsync(quoteReference);
 
                 var userMapper = new UserMapper();
                 var mapper = new QuoteMapper();
                 var quoteDto = mapper.ToDto(quote);
-
-                quoteDto.Payment!.ReceiptUrl = charge.ReceiptUrl;
-                quoteDto.Payment.PaymentMethodId = paymentIntent.PaymentMethodId;
 
                 if (paymentType == nameof(PaymentType.Balance) && quote!.PaymentStatus == PaymentStatus.PartiallyPaid)
                 {
@@ -1195,11 +1191,14 @@ public class CheckoutController(
                                 "Additional charges");
 
                         // Update quote with extra charges
-                        quoteDto.Pricing!.TotalCost += extraCharges;
+                        quoteDto.Pricing!.TotalCost = quote.DepositAmount + paymentIntent.Amount / 100.0m;
                         logger.LogInformation(
                             "Added extra charges of {ExtraCharges} to quote {QuoteReference} for {chargesDescription}",
                             extraCharges, quoteReference, extraChargesDescription);
                     }
+
+                    // Retrieve the latest charge
+                    var charge = await stripeClient.V1.Charges.GetAsync(paymentIntent.LatestChargeId);
 
                     // Create QuoteAdditionalPayment record
                     var additionalPayment = new QuoteAdditionalPaymentDto
@@ -1229,20 +1228,19 @@ public class CheckoutController(
 
                     quoteDto.QuoteAdditionalPayments.Add(additionalPayment);
 
-                    quoteDto.Payment.Status = PaymentStatus.Paid;
+                    quoteDto.Payment!.Status = PaymentStatus.Paid;
                     await UpdateQuoteAsync(new SaveQuoteRequest
                     {
                         Quote = quoteDto,
                         Customer = userMapper.ToDto(user!)
                     });
 
-                    var balanceAmount = paymentIntent.Amount / 100.0m;
-                    var totalCost = quoteDto.Pricing?.TotalCost ?? balanceAmount;
+                    var totalCost = (quoteDto.Pricing?.TotalCost!).Value;
 
                     var templateData = new
                     {
                         customerName = user?.FullName,
-                        balanceAmount = balanceAmount.ToString("N2"),
+                        balanceAmount = (paymentIntent.Amount / 100.0m).ToString("N2"),
                         totalAmount = totalCost.ToString("N2"),
                         quoteReference,
                         paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
@@ -1272,7 +1270,13 @@ public class CheckoutController(
                     logger.LogInformation("Sending deposit confirmation email for payment intent {PaymentIntentId}",
                         paymentIntent.Id);
 
-                    quoteDto.Payment.Status = PaymentStatus.PartiallyPaid;
+                    // Retrieve the latest charge
+                    var charge = await stripeClient.V1.Charges.GetAsync(paymentIntent.LatestChargeId);
+
+                    quoteDto.Payment!.ReceiptUrl = charge.ReceiptUrl;
+                    quoteDto.Payment.PaymentMethodId = paymentIntent.PaymentMethodId;
+
+                    quoteDto.Payment!.Status = PaymentStatus.PartiallyPaid;
 
                     var quoteDeposit = await UpdateQuoteAsync(new SaveQuoteRequest
                     {
@@ -1308,7 +1312,13 @@ public class CheckoutController(
                 }
                 else
                 {
-                    quoteDto.Payment.Status = PaymentStatus.Paid;
+                    // Retrieve the latest charge
+                    var charge = await stripeClient.V1.Charges.GetAsync(paymentIntent.LatestChargeId);
+
+                    quoteDto.Payment!.ReceiptUrl = charge.ReceiptUrl;
+                    quoteDto.Payment.PaymentMethodId = paymentIntent.PaymentMethodId;
+
+                    quoteDto.Payment!.Status = PaymentStatus.Paid;
                     await UpdateQuoteAsync(new SaveQuoteRequest
                     {
                         Quote = quoteDto,
@@ -1531,12 +1541,23 @@ public class CheckoutController(
                 }
 
                 // Create QuoteAdditionalPayment record
+
+                string additionalPaymentDescription;
+
+                if (session.Metadata.TryGetValue(nameof(PaymentMetadata.ExtraChargesDescription), out var description))
+                {
+                    additionalPaymentDescription = description + $" for quote #{quoteReference}";
+                }
+                else
+                {
+                    additionalPaymentDescription = $"Payment for quote #{quoteReference}";
+                }
+
                 var additionalPayment = new QuoteAdditionalPaymentDto
                 {
                     QuoteId = quote.Id,
                     Amount = paymentAmount,
-                    Description =
-                        session.Metadata.GetValueOrDefault("description", $"Payment for quote #{quoteReference}"),
+                    Description = additionalPaymentDescription,
                     PaymentMethodId = paymentMethodId,
                     PaymentIntentId = session.PaymentIntentId,
                     ReceiptUrl = receiptUrl
@@ -1595,7 +1616,7 @@ public class CheckoutController(
                     quoteReference,
                     paymentDate = paymentDate.ToString("dddd, MMMM dd, yyyy"),
                     paymentTime = paymentDate.ToString("HH:mm") + " GMT",
-                    description = additionalPayment.Description,
+                    description = additionalPaymentDescription,
                     receiptUrl = receiptUrl,
                     currentYear = DateTime.UtcNow.Year
                 };

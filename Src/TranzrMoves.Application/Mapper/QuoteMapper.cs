@@ -27,7 +27,7 @@ public partial class QuoteMapper
     [MapProperty(nameof(Quote.QuoteAdditionalPayments), nameof(QuoteDto.QuoteAdditionalPayments))]
     // Note: Customer properties are not part of Quote entity
     public partial QuoteDto ToDto(Quote? src);
-    
+
     public partial List<QuoteDto> ToDtoList(List<Quote> src);
 
     // ========== DTO ➜ ENTITY (create new) ==========
@@ -51,7 +51,7 @@ public partial class QuoteMapper
     [MapProperty(nameof(QuoteDto.QuoteAdditionalPayments), nameof(Quote.QuoteAdditionalPayments))]
     // Note: Customer properties are not part of Quote entity
     public partial Quote ToEntity(QuoteDto src);
-    
+
     public partial List<Quote> ToEntityList(List<QuoteDto> src);
 
     // ========== DTO ➜ ENTITY (update existing) ==========
@@ -63,7 +63,6 @@ public partial class QuoteMapper
     [MapperIgnoreTarget(nameof(Quote.CustomerQuotes))] // Navigation properties not handled here
     [MapperIgnoreTarget(nameof(Quote.DriverQuotes))]   // Navigation properties not handled here
     // Only specify the asymmetric pieces; everything else maps by name.
-    [MapProperty(nameof(QuoteDto.Items), nameof(Quote.InventoryItems))]
     [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.DateISO),         nameof(Quote.CollectionDate))]
     [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.DeliveryDateISO), nameof(Quote.DeliveryDate))]
     [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.Hours),           nameof(Quote.Hours))]
@@ -79,6 +78,12 @@ public partial class QuoteMapper
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.ReceiptUrl),     nameof(Quote.ReceiptUrl))]
     [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.DueDate),     nameof(Quote.DueDate))]
     [MapProperty(nameof(QuoteDto.QuoteAdditionalPayments), nameof(Quote.QuoteAdditionalPayments))]
+    [MapProperty(nameof(QuoteDto.Items), nameof(Quote.InventoryItems))]
+    [MapProperty(nameof(QuoteDto.Origin), nameof(Quote.Origin))]
+    [MapProperty(nameof(QuoteDto.Destination), nameof(Quote.Destination))]
+    [MapProperty(nameof(QuoteDto.DistanceMiles), nameof(Quote.DistanceMiles))]
+    [MapProperty(nameof(QuoteDto.NumberOfItemsToDismantle), nameof(Quote.NumberOfItemsToDismantle))]
+    [MapProperty(nameof(QuoteDto.NumberOfItemsToAssemble), nameof(Quote.NumberOfItemsToAssemble))]
     public partial void UpdateEntity(QuoteDto src, Quote target);
 
     // ========== Nested types ==========
@@ -91,6 +96,7 @@ public partial class QuoteMapper
 
     public partial QuoteAdditionalPaymentDto ToQuoteAdditionalPaymentDto(QuoteAdditionalPayment src);
     public partial QuoteAdditionalPayment ToQuoteAdditionalPayment(QuoteAdditionalPaymentDto src);
+
 
     // ========== Small converters for nullability/asymmetry ==========
     // Entity has PaymentStatus?; DTO has non-null Status.

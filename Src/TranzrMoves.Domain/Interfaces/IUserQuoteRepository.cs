@@ -13,8 +13,8 @@ public interface IUserQuoteRepository
         CancellationToken cancellationToken);
 
     Task<CustomerQuote?> GetUserQuoteAsync(Guid userQuoteId, CancellationToken cancellationToken);
-    Task<ImmutableList<CustomerQuote>> GetUserQuotesAsync(Guid userJobId, CancellationToken cancellationToken);
-    
+    Task<ImmutableList<CustomerQuote>> GetUserQuotesAsync(Guid userQuoteId, CancellationToken cancellationToken);
+
     // Get customer quote relationship by quote ID
     Task<CustomerQuote?> GetUserQuoteByQuoteIdAsync(Guid quoteId, CancellationToken cancellationToken);
 

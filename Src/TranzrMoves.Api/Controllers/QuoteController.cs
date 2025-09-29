@@ -4,6 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.Quote.SelectQuoteType;
 using TranzrMoves.Application.Features.Quote.Save;
+using TranzrMoves.Application.Features.Admin.Quote.List;
+using TranzrMoves.Application.Features.Admin.Quote.Details;
+using TranzrMoves.Application.Features.Admin.Quote.Status;
+using TranzrMoves.Application.Features.Admin.Quote.Driver;
+using TranzrMoves.Application.Features.Admin.Quote.Notes;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Application.Mapper;
@@ -12,7 +17,7 @@ namespace TranzrMoves.Api.Controllers;
 
 /// <summary>
 /// Guest Controller for quote management operations.
-/// 
+///
 /// ETag Pattern:
 /// - All endpoints that return quote data include ETag headers for consistency
 /// - ETags are derived from the quote's Version property (PostgreSQL xmin)
@@ -85,19 +90,19 @@ public class QuoteController(
 
         Response.Headers.ETag = quoteEtag;
         RefreshCookie(guestId);
-        
+
         var mapper = new QuoteMapper();
         var quoteDto = mapper.ToDto(quote);
-        
+
         var quoteTypeDto =  new QuoteTypeDto
         {
             Quote = quoteDto,
             Etag = quoteEtag
         };
-        
+
         return Ok(quoteTypeDto);
     }
-    
+
     [HttpGet("checkout-session")]
     public async Task<IActionResult> GetQuote([FromQuery(Name = "session_id")] string sessionId, CancellationToken ct)
     {
@@ -107,15 +112,15 @@ public class QuoteController(
         }
 
         var quote = await quoteRepository.GetQuoteByStripeCheckoutSessionIdAsync(sessionId, ct);
-        
+
         if (quote is null)
         {
             return NotFound("Quote not found for the given session ID");
         }
-        
+
         var mapper = new QuoteMapper();
         var quoteDto = mapper.ToDto(quote);
-        
+
         return Ok(quoteDto);
     }
 
@@ -132,18 +137,18 @@ public class QuoteController(
 
         var command = new SaveQuoteCommand(body.Quote, body.Customer, body.ETag);
         var result = await mediator.Send(command, ct);
-        
+
         if (result.IsError)
         {
             logger.LogError("Failed to save quote: {Error}", result.FirstError.Description);
             return Problem(result.Errors.ToList());
         }
-        
+
         // Set ETag header for consistency with other endpoints
         Response.Headers.ETag = result.Value.ETag;
-        
+
         RefreshCookie(guestId);
-        
+
         return Ok(new { etag = result.Value.ETag });
     }
 
@@ -178,27 +183,27 @@ public class QuoteController(
 
         var command = new SelectQuoteTypeCommand(guestId, quoteType);
         var result = await mediator.Send(command, ct);
-        
+
         if (result.IsError)
         {
             logger.LogError("Failed to select quote type: {Error}", result.FirstError.Description);
             return Problem(result.Errors.ToList());
         }
-        
+
         // Use the quote's Version (xmin) as the ETag for concurrency control
         var etag = result.Value.Version.ToString();
-        
+
         // Add ETag header for consistency with other endpoints
         Response.Headers.ETag = etag;
-        
+
         RefreshCookie(guestId);
-        
+
         var quoteTypeDto =  new QuoteTypeDto
         {
             Quote = result.Value,
             Etag = etag
         };
-        
+
         return Ok(quoteTypeDto);
     }
 
@@ -209,7 +214,7 @@ public class QuoteController(
         {
             return BadRequest("Invalid quote ID format");
         }
-        
+
         var guestId = Request.Cookies[CookieName];
         if (string.IsNullOrWhiteSpace(guestId)) return Unauthorized();
 
@@ -267,19 +272,223 @@ public class QuoteController(
         }
     }
 
+        [HttpGet("admin")]
+        public async Task<IActionResult> GetAdminQuotes(
+            [FromQuery] bool admin,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 50,
+            [FromQuery] string? search = null,
+            [FromQuery] string? sortBy = "createdAt",
+            [FromQuery] string? sortDir = "desc",
+            [FromQuery] string? status = null,
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null,
+            CancellationToken ct = default)
+    {
+        if (!admin)
+        {
+            return BadRequest("Admin flag is required for this endpoint");
+        }
+
+        try
+        {
+                var query = new AdminQuoteListQuery(
+                    page,
+                    pageSize,
+                    search,
+                    sortBy,
+                    sortDir,
+                    status,
+                    dateFrom,
+                    dateTo);
+
+            var result = await mediator.Send(query, ct);
+
+            if (result.IsError)
+            {
+                logger.LogError("Failed to retrieve admin quotes: {Error}", result.FirstError.Description);
+                return Problem(result.Errors.ToList());
+            }
+
+            return Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving admin quotes");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve quotes");
+        }
+    }
+
+    [HttpGet("{id}/details")]
+    public async Task<IActionResult> GetQuoteDetails(
+        [FromRoute] Guid id,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var query = new AdminQuoteDetailsQuery(id);
+            var result = await mediator.Send(query, ct);
+
+            if (result.IsError)
+            {
+                logger.LogError("Failed to retrieve quote details: {Error}", result.FirstError.Description);
+                return Problem(result.Errors.ToList());
+            }
+
+            return Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving quote details");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to retrieve quote details");
+        }
+    }
+
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateQuoteStatus(
+        [FromRoute] Guid id,
+        [FromBody] UpdateQuoteStatusRequest request,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var command = new UpdateQuoteStatusCommand(
+                id,
+                request.Status,
+                request.Reason,
+                request.AdminNote,
+                request.NotifyCustomer,
+                request.NotifyDriver);
+
+            var result = await mediator.Send(command, ct);
+
+            if (result.IsError)
+            {
+                logger.LogError("Failed to update quote status: {Error}", result.FirstError.Description);
+                return Problem(result.Errors.ToList());
+            }
+
+            return Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating quote status");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to update quote status");
+        }
+    }
+
+    [HttpPost("{id}/driver-assign/{driverId}")]
+    public async Task<IActionResult> AssignDriver(
+        [FromRoute] Guid id,
+        [FromRoute] Guid driverId,
+        [FromBody] AssignDriverRequest? request = null,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var command = new AssignDriverCommand(
+                id,
+                driverId,
+                request?.Reason,
+                request?.AdminNote,
+                request?.NotifyDriver ?? false,
+                request?.NotifyCustomer ?? false);
+
+            var result = await mediator.Send(command, ct);
+
+            if (result.IsError)
+            {
+                logger.LogError("Failed to assign driver: {Error}", result.FirstError.Description);
+                return Problem(result.Errors.ToList());
+            }
+
+            return Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error assigning driver");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to assign driver");
+        }
+    }
+
+    [HttpDelete("{id}/driver-unassign/{driverId}")]
+    public async Task<IActionResult> UnassignDriver(
+        [FromRoute] Guid id,
+        [FromRoute] Guid driverId,
+        [FromBody] UnassignDriverRequest? request = null,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var command = new UnassignDriverCommand(
+                id,
+                driverId,
+                request?.Reason,
+                request?.AdminNote,
+                request?.NotifyDriver ?? false,
+                request?.NotifyCustomer ?? false);
+
+            var result = await mediator.Send(command, ct);
+
+            if (result.IsError)
+            {
+                logger.LogError("Failed to unassign driver: {Error}", result.FirstError.Description);
+                return Problem(result.Errors.ToList());
+            }
+
+            return Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error unassigning driver");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to unassign driver");
+        }
+    }
+
+    [HttpPost("{id}/notes")]
+    public async Task<IActionResult> AddAdminNote(
+        [FromRoute] Guid id,
+        [FromBody] AddAdminNoteRequest request,
+        CancellationToken ct = default)
+    {
+        try
+        {
+            var command = new AddAdminNoteCommand(
+                id,
+                request.Note,
+                request.IsInternal,
+                request.Category);
+
+            var result = await mediator.Send(command, ct);
+
+            if (result.IsError)
+            {
+                logger.LogError("Failed to add admin note: {Error}", result.FirstError.Description);
+                return Problem(result.Errors.ToList());
+            }
+
+            return Ok(result.Value);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error adding admin note");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to add admin note");
+        }
+    }
+
     [HttpPost("cleanup-expired")]
     public async Task<IActionResult> CleanupExpired(CancellationToken ct)
     {
         // Clean up expired sessions (which will cascade to quotes)
         var db = HttpContext.RequestServices.GetRequiredService<Infrastructure.TranzrMovesDbContext>();
         var now = DateTimeOffset.UtcNow;
-            
+
         var expiredSessions = await db.Set<QuoteSession>()
             .Where(q => q.ExpiresUtc != null && q.ExpiresUtc < now)
             .ExecuteDeleteAsync(ct);
-            
+
         logger.LogInformation("Cleaned up {SessionCount} expired sessions", expiredSessions);
-            
+
         return Ok(new { expiredSessions });
     }
 
@@ -294,3 +503,28 @@ public class QuoteController(
         });
     }
 }
+
+// Request DTOs
+public record UpdateQuoteStatusRequest(
+    string Status,
+    string? Reason = null,
+    string? AdminNote = null,
+    bool NotifyCustomer = false,
+    bool NotifyDriver = false);
+
+public record AssignDriverRequest(
+    string? Reason = null,
+    string? AdminNote = null,
+    bool NotifyDriver = false,
+    bool NotifyCustomer = false);
+
+public record UnassignDriverRequest(
+    string? Reason = null,
+    string? AdminNote = null,
+    bool NotifyDriver = false,
+    bool NotifyCustomer = false);
+
+public record AddAdminNoteRequest(
+    string Note,
+    bool IsInternal = true,
+    string? Category = null);

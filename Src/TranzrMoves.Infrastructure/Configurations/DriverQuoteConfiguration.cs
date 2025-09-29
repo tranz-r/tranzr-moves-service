@@ -12,7 +12,7 @@ public class DriverQuoteConfiguration : IEntityTypeConfiguration<DriverQuote>
         builder.ToTable(Db.Tables.DriverQuotes);
         builder.HasKey(x => x.Id);
 
-        builder.HasIndex(x => new { x.UserId, JobId = x.QuoteId }).IsUnique();
+        builder.HasIndex(x => new { x.UserId, QuoteId = x.QuoteId }).IsUnique();
 
         builder.HasOne(uj => uj.User)
             .WithMany(u => u.DriverQuotes)

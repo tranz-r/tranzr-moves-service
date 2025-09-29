@@ -16,7 +16,7 @@ public class AssignDriverQuoteCommandHandler(
 {
     public async ValueTask<ErrorOr<bool>> Handle(AssignDriverQuoteCommand command, CancellationToken cancellationToken)
     {
-        var (driverId, quoteId) = (command.Request.DriverId, command.Request.JobId);
+        var (driverId, quoteId) = (command.Request.DriverId, command.Request.QuoteId);
 
         var user = await userRepository.GetUserAsync(driverId, cancellationToken);
         if (user is null)

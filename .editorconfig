@@ -1,0 +1,62 @@
+root = true
+
+[*.{cs,csx}]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+max_line_length = 120
+
+# New line & braces
+csharp_new_line_before_open_brace = all
+csharp_new_line_between_query_expression_clauses = true
+
+# var usage
+csharp_style_var_for_built_in_types = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:suggestion
+
+# using directives
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# Expression-bodied members
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+
+# Nullable
+dotnet_analyzer_diagnostic.category-NullableAnalysis.severity = warning
+
+# Naming
+dotnet_naming_rule.methods_properties_events_should_be_pascal.severity = warning
+dotnet_naming_rule.methods_properties_events_should_be_pascal.symbols = methods_properties_events
+dotnet_naming_rule.methods_properties_events_should_be_pascal.style = pascal_case
+
+dotnet_naming_symbols.methods_properties_events.applicable_kinds = method, property, event
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+dotnet_naming_rule.parameters_locals_camel.severity = warning
+dotnet_naming_rule.parameters_locals_camel.symbols = parameters_locals
+dotnet_naming_rule.parameters_locals_camel.style = camel_case
+
+dotnet_naming_symbols.parameters_locals.applicable_kinds = parameter, local
+dotnet_naming_style.camel_case.capitalization = camel_case
+
+dotnet_naming_rule.private_fields_underscore.severity = warning
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_camel.capitalization = camel_case
+dotnet_naming_style.underscore_camel.required_prefix = _
+
+dotnet_naming_rule.interfaces_start_with_i.severity = warning
+dotnet_naming_rule.interfaces_start_with_i.symbols = interfaces
+dotnet_naming_rule.interfaces_start_with_i.style = i_prefix
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_style.i_prefix.capitalization = pascal_case
+dotnet_naming_style.i_prefix.required_prefix = I

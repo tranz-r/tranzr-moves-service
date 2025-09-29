@@ -7,7 +7,7 @@ public interface IQuoteRepository
 {
     // Session Management
     Task CreateIfMissingAsync(string guestId, CancellationToken ct = default);
-    
+
     // Individual Quote Management
     Task<Quote?> GetQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default);
     Task<Quote?> GetQuoteAsync(Guid quoteId, CancellationToken ct = default);
@@ -17,6 +17,21 @@ public interface IQuoteRepository
     Task<Quote?> GetQuoteByReferenceAsync(string quoteReference, string paymentIntentId, CancellationToken cancellationToken = default);
     Task<Quote?> GetQuoteByReferenceAsync(string quoteReference, CancellationToken cancellationToken = default);
     Task<Quote?> GetQuoteByStripeCheckoutSessionIdAsync(string sessionId, CancellationToken cancellationToken);
+
+    // Admin Management
+    Task<(List<Quote> Quotes, int TotalCount)> GetAdminQuotesAsync(
+        int page,
+        int pageSize,
+        string? search = null,
+        string? sortBy = "createdAt",
+        string? sortDir = "desc",
+        string? status = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null,
+        CancellationToken ct = default);
+
+    // Admin Quote Details
+    Task<Quote?> GetAdminQuoteDetailsAsync(Guid quoteId, CancellationToken ct = default);
 }
 
 

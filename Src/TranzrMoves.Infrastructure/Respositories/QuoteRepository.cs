@@ -36,7 +36,7 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
             .Include(q => q.InventoryItems)
             .FirstOrDefaultAsync(ct);
     }
-    
+
     public async Task<Quote?> GetQuoteAsync(Guid quoteId, CancellationToken ct = default)
     {
         return await db.Set<Quote>()
@@ -51,7 +51,7 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
         var quote = await GetQuoteAsync(guestId, quoteType, ct);
 
         if (quote is not null && quote.PaymentStatus == PaymentStatus.Pending) return quote;
-        
+
         // Create new quote
         quote = new Quote
         {
@@ -76,12 +76,34 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
             logger.LogInformation("🔍 REPOSITORY TEST - Before save: Quote {QuoteId} Version = {Version}",
                 quote.Id, quote.Version);
 
+            // For owned entity collections, we need to handle them specially
+            // First, load the existing quote to get the current inventory items
+            var existingQuote = await db.Set<Quote>()
+                .FirstOrDefaultAsync(q => q.Id == quote.Id, ct);
+
+            if (existingQuote == null)
+            {
+                logger.LogError("Quote {QuoteId} not found for update", quote.Id);
+                return Error.NotFound("Quote.NotFound", $"Quote with ID {quote.Id} not found");
+            }
+
+            // 🔍 DEBUG: Log quote data before repository update
+            logger.LogInformation("🔍 REPOSITORY DEBUG - Before update: Quote {QuoteId}, TotalCost: {TotalCost}, PaymentStatus: {PaymentStatus}, PaymentIntentId: {PaymentIntentId}",
+                existingQuote.Id, existingQuote.TotalCost, existingQuote.PaymentStatus, existingQuote.PaymentIntentId);
+
             db.Set<Quote>().Update(quote);
+
+            // 🔍 DEBUG: Log quote data after repository update
+            logger.LogInformation("🔍 REPOSITORY DEBUG - After update: Quote {QuoteId}, TotalCost: {TotalCost}, PaymentStatus: {PaymentStatus}, PaymentIntentId: {PaymentIntentId}",
+                existingQuote.Id, existingQuote.TotalCost, existingQuote.PaymentStatus, existingQuote.PaymentIntentId);
+
             await db.SaveChangesAsync(ct);
 
             // 🔍 TEST: Log Version after saving to see if EF Core incremented it
             logger.LogInformation("🔍 REPOSITORY TEST - After save: Quote {QuoteId} Version = {Version}",
-                quote.Id, quote.Version);
+                existingQuote.Id, existingQuote.Version);
+
+            return existingQuote;
         }
         catch (DbUpdateConcurrencyException ex)
         {
@@ -90,9 +112,11 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
                 quote.Id, quote.QuoteReference);
             return Error.Conflict();
         }
-
-
-        return quote;
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating quote {QuoteId}", quote.Id);
+            return Error.Failure("Quote.UpdateError", "Failed to update quote");
+        }
     }
 
     public async Task<bool> DeleteQuoteAsync(string guestId, QuoteType quoteType, CancellationToken ct = default)
@@ -129,6 +153,129 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
             .Include(x => x.InventoryItems)
             .Include(x => x.QuoteAdditionalPayments)
             .FirstOrDefaultAsync(q => q.StripeSessionId == sessionId, cancellationToken);
+    }
+
+    public async Task<(List<Quote> Quotes, int TotalCount)> GetAdminQuotesAsync(
+        int page,
+        int pageSize,
+        string? search = null,
+        string? sortBy = "createdAt",
+        string? sortDir = "desc",
+        string? status = null,
+        DateTime? dateFrom = null,
+        DateTime? dateTo = null,
+        CancellationToken ct = default)
+    {
+        // Start with base query - NO includes yet for better performance
+        var baseQuery = db.Set<Quote>().AsQueryable();
+
+        // Apply filters first (most selective)
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            if (Enum.TryParse<PaymentStatus>(status, true, out var paymentStatus))
+            {
+                baseQuery = baseQuery.Where(q => q.PaymentStatus == paymentStatus);
+            }
+        }
+
+        if (dateFrom.HasValue)
+        {
+            baseQuery = baseQuery.Where(q => q.CreatedAt >= dateFrom.Value);
+        }
+        if (dateTo.HasValue)
+        {
+            baseQuery = baseQuery.Where(q => q.CreatedAt <= dateTo.Value);
+        }
+
+        // Note: Driver filtering removed for performance - will be handled in detail view
+        // if (driverId.HasValue) { ... } - REMOVED for performance
+
+        // Apply search filter - ONLY on Quote fields for maximum performance
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            baseQuery = baseQuery.Where(q =>
+                q.QuoteReference.Contains(search));
+            // Customer/Driver search removed for performance - will be handled in detail view
+        }
+
+        // Get total count BEFORE adding includes (much faster)
+        var totalCount = await baseQuery.CountAsync(ct);
+
+        // Apply sorting - ONLY on Quote fields for maximum performance
+        baseQuery = sortBy.ToLower() switch
+        {
+            "createdat" => sortDir.ToLower() == "asc"
+                ? baseQuery.OrderBy(q => q.CreatedAt)
+                : baseQuery.OrderByDescending(q => q.CreatedAt),
+            "amount" => sortDir.ToLower() == "asc"
+                ? baseQuery.OrderBy(q => q.TotalCost)
+                : baseQuery.OrderByDescending(q => q.TotalCost),
+            "status" => sortDir.ToLower() == "asc"
+                ? baseQuery.OrderBy(q => q.PaymentStatus)
+                : baseQuery.OrderByDescending(q => q.PaymentStatus),
+            // Driver name sorting removed for performance - will be handled in detail view
+            _ => baseQuery.OrderByDescending(q => q.CreatedAt) // Default sorting
+        };
+
+        // Apply pagination - Include QuoteAdditionalPayments for proper total cost calculation
+        var quotes = await baseQuery
+            .Include(q => q.QuoteAdditionalPayments) // Include additional payments for total cost calculation
+            .Select(q => new Quote
+            {
+                Id = q.Id,
+                QuoteReference = q.QuoteReference,
+                TotalCost = q.TotalCost,
+                PaymentStatus = q.PaymentStatus,
+                CreatedAt = q.CreatedAt,
+                Type = q.Type,
+                VanType = q.VanType,
+                PaymentType = q.PaymentType,
+                // Include QuoteAdditionalPayments for total cost calculation
+                QuoteAdditionalPayments = q.QuoteAdditionalPayments,
+                // Exclude other navigation properties for performance
+                SessionId = q.SessionId,
+                DistanceMiles = q.DistanceMiles,
+                NumberOfItemsToDismantle = q.NumberOfItemsToDismantle,
+                NumberOfItemsToAssemble = q.NumberOfItemsToAssemble,
+                DriverCount = q.DriverCount,
+                CollectionDate = q.CollectionDate,
+                DeliveryDate = q.DeliveryDate,
+                Hours = q.Hours,
+                FlexibleTime = q.FlexibleTime,
+                TimeSlot = q.TimeSlot,
+                PricingTier = q.PricingTier,
+                PaymentMethodId = q.PaymentMethodId,
+                PaymentIntentId = q.PaymentIntentId,
+                DepositAmount = q.DepositAmount,
+                ReceiptUrl = q.ReceiptUrl,
+                DueDate = q.DueDate,
+                Version = q.Version,
+                StripeSessionId = q.StripeSessionId,
+                CreatedBy = q.CreatedBy,
+                ModifiedAt = q.ModifiedAt,
+                ModifiedBy = q.ModifiedBy
+                // Origin, Destination, InventoryItems, CustomerQuotes, DriverQuotes excluded for performance
+            })
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (quotes, totalCount);
+    }
+
+    public async Task<Quote?> GetAdminQuoteDetailsAsync(Guid quoteId, CancellationToken ct = default)
+    {
+        return await db.Set<Quote>()
+            .Include(q => q.CustomerQuotes)
+                .ThenInclude(cq => cq.User)
+                    .ThenInclude(u => u.BillingAddress)
+            .Include(q => q.DriverQuotes)
+                .ThenInclude(dq => dq.User)
+            .Include(q => q.Origin)
+            .Include(q => q.Destination)
+            .Include(q => q.InventoryItems)
+            .Include(q => q.QuoteAdditionalPayments)
+            .FirstOrDefaultAsync(q => q.Id == quoteId, ct);
     }
 
     private static string GenerateQuoteReference()

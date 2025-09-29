@@ -13,7 +13,7 @@ public class UnassignDriverJobCommandHandler(
 {
     public async ValueTask<ErrorOr<bool>> Handle(UnassignDriverJobCommand command, CancellationToken cancellationToken)
     {
-        var (driverId, quoteId) = (command.Request.DriverId, JobId: command.Request.QuoteId);
+        var (driverId, quoteId) = (command.Request.DriverId, command.Request.QuoteId);
 
         var existing = await driverQuoteRepository.GetDriverQuoteAsync(driverId, quoteId, cancellationToken);
         if (existing is null)

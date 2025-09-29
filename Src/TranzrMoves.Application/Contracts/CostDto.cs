@@ -2,7 +2,7 @@ namespace TranzrMoves.Application.Contracts;
 
 public class CostDto
 {
-    public Guid JobId { get; set; }
+    public Guid QuoteId { get; set; }
     public long BaseVan { get; set; }
     public double Distance { get; set; }
     public long Floor { get; set; }
