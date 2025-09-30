@@ -34,43 +34,44 @@ try
                     .AllowCredentials();
             });
     });
-    
+
     builder.Services.Configure<JsonOptions>(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
-    
+
     builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
     builder.Services.AddOpenApi();
     builder.Services.AddHttpLogging(o => o.CombineLogs = true);
     builder.Services.AddHealthChecks();
+    builder.Services.AddMemoryCache();
     builder.Services.AddSingleton(new StripeClient(builder.Configuration["STRIPE_API_KEY"]));
-    
-    builder.Services.AddSingleton(s => new GetAddress.ApiKeys(builder.Configuration["ADDRESS_API_KEY"], 
+
+    builder.Services.AddSingleton(s => new GetAddress.ApiKeys(builder.Configuration["ADDRESS_API_KEY"],
         builder.Configuration["ADDRESS_ADMINISTRATION_KEY"]));
     builder.Services.AddHttpClient<GetAddress.Api>();
-    
+
     // Email service is handled by IAwsEmailService in Infrastructure layer
-    
+
     builder.Services.AddHttpClient<IMapBoxService, MapBoxService>(
         client =>
         {
             client.BaseAddress = new Uri(builder.Configuration["MAPBOX_BASE_URL"]);
         });
-    
+
     builder.Services.ConfigureTranzrMovesServices(builder.Configuration);
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddApplication();
 
-    
+
     builder.Services.AddSingleton( _ =>
     {
         var url = builder.Configuration["SUPABASE_URL"];
         var key = builder.Configuration["SUPABASE_KEY"];
 
-        
+
         var options = new SupabaseOptions
         {
             AutoRefreshToken = true,
@@ -90,7 +91,7 @@ try
 
     app.UseHttpLogging();
     app.UseHttpsRedirection();
-    
+
     app.MapHealthChecks("/healthz");
     app.MapHealthChecks("/ready");
     app.UseCors(Cors.TranzrMovesCorsPolicy);

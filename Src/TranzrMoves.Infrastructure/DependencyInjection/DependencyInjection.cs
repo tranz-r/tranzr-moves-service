@@ -3,6 +3,7 @@ using Amazon.SimpleEmailV2;
 using Azure.Communication.Email;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TranzrMoves.Application.Features.Admin.Dashboard;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.Respositories;
 using TranzrMoves.Infrastructure.Services;
@@ -17,8 +18,8 @@ public static class DependencyInjection
         var awsOption = configuration.GetAWSOptions();
         awsOption.Credentials = new BasicAWSCredentials(configuration["AWS_ACCESS_KEY_ID"], configuration["AWS_SECRET_ACCESS_KEY"]);
         services.AddDefaultAWSOptions(awsOption);
-        
-        
+
+
         // services.AddDefaultAWSOptions(configuration.GetAWSOptions());
         services.AddAWSService<IAmazonSimpleEmailServiceV2>();
         // services.AddSingleton<IEmailService, AwsEmailService>();
@@ -28,10 +29,10 @@ public static class DependencyInjection
             var connectionString = configuration["COMMUNICATION_SERVICES_CONNECTION_STRING"];
             return new EmailClient(connectionString);
         });
-        
+
         services.AddSingleton<IEmailService, AzureEmailService>();
         services.AddSingleton<ITemplateService, TemplateService>();
-        
+
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IUserQuoteRepository, UserQuoteRepository>();
         services.AddTransient<IDriverQuoteRepository, DriverQuoteRepository>();
@@ -45,6 +46,9 @@ public static class DependencyInjection
 
         // Azure Blob Storage Service
         services.AddTransient<IAzureBlobService, AzureBlobService>();
+
+        // Admin Services
+        services.AddTransient<IAdminMetricsService, AdminMetricsService>();
 
         return services;
     }

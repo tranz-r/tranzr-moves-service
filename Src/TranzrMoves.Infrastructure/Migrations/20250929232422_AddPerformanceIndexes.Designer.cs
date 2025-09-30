@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TranzrMoves.Infrastructure;
@@ -11,9 +12,11 @@ using TranzrMoves.Infrastructure;
 namespace TranzrMoves.Infrastructure.Migrations
 {
     [DbContext(typeof(TranzrMovesDbContext))]
-    partial class TranzrMovesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250929232422_AddPerformanceIndexes")]
+    partial class AddPerformanceIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -336,6 +339,15 @@ namespace TranzrMoves.Infrastructure.Migrations
 
                     b.HasIndex("StripeSessionId")
                         .HasDatabaseName("IX_Quotes_StripeSessionId");
+
+                    b.HasIndex("CreatedAt", "PaymentStatus")
+                        .HasDatabaseName("IX_Quotes_CreatedAt_PaymentStatus");
+
+                    b.HasIndex("PaymentStatus", "Type")
+                        .HasDatabaseName("IX_Quotes_PaymentStatus_Type");
+
+                    b.HasIndex("Type", "CreatedAt")
+                        .HasDatabaseName("IX_Quotes_Type_CreatedAt");
 
                     b.ToTable("Quotes", (string)null);
                 });
@@ -831,6 +843,9 @@ namespace TranzrMoves.Infrastructure.Migrations
 
                             b1.HasIndex("QuoteId")
                                 .HasDatabaseName("IX_QuoteAdditionalPayments_QuoteId");
+
+                            b1.HasIndex("QuoteId", "Amount")
+                                .HasDatabaseName("IX_QuoteAdditionalPayments_QuoteId_Amount");
 
                             b1.ToTable("QuoteAdditionalPayments", (string)null);
 

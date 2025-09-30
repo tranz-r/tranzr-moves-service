@@ -79,6 +79,10 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         {
             inventoryItem.ToTable(Db.Tables.InventoryItems);
             inventoryItem.WithOwner().HasForeignKey(e => e.QuoteId);
+
+            // Performance index for inventory queries
+            inventoryItem.HasIndex(x => x.QuoteId)
+                .HasDatabaseName("IX_InventoryItems_QuoteId");
         });
 
         // Quote Additional Payments
@@ -87,7 +91,24 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
             quoteAdditionalPayment.ToTable(Db.Tables.QuoteAdditionalPayments);
             quoteAdditionalPayment.HasKey(x => x.Id);
             quoteAdditionalPayment.WithOwner().HasForeignKey(e => e.QuoteId);
+
+            // Performance index for admin dashboard
+            quoteAdditionalPayment.HasIndex(x => x.QuoteId)
+                .HasDatabaseName("IX_QuoteAdditionalPayments_QuoteId");
         });
+
+        // Performance indexes for admin dashboard and quote management
+        builder.HasIndex(x => x.CreatedAt)
+            .HasDatabaseName("IX_Quotes_CreatedAt");
+
+        builder.HasIndex(x => x.QuoteReference)
+            .HasDatabaseName("IX_Quotes_QuoteReference");
+
+        builder.HasIndex(x => x.SessionId)
+            .HasDatabaseName("IX_Quotes_SessionId");
+
+        builder.HasIndex(x => x.StripeSessionId)
+            .HasDatabaseName("IX_Quotes_StripeSessionId");
 
         // Concurrency Token
         builder.Property(b => b.Version)
