@@ -6,4 +6,5 @@ public static class FromEmails
     public const string Support = "support@tranzrmoves.com";
     public const string NoReply = "no-reply@tranzrmoves.com";
     public const string Sales = "sales@tranzrmoves.com";
+    public const string Group = "tranzrgroup@tranzrmoves.com";
 }

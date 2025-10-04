@@ -1,12 +1,9 @@
 using HandlebarsDotNet;
 using Microsoft.Extensions.Logging;
 
-namespace TranzrMoves.Infrastructure.Services.EmailTemplates;
+using TranzrMoves.Domain.Interfaces;
 
-public interface ITemplateService
-{
-    string GenerateEmail(string templateName, object data);
-}
+namespace TranzrMoves.Infrastructure.Services.EmailTemplates;
 
 public class TemplateService : ITemplateService
 {
@@ -19,7 +16,7 @@ public class TemplateService : ITemplateService
         _logger = logger;
         _compiledTemplates = new Dictionary<string, HandlebarsTemplate<object, object>>();
         _templatesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Services", "EmailTemplates", "Templates");
-        
+
         RegisterHelpers();
         CompileTemplates();
     }
@@ -66,12 +63,12 @@ public class TemplateService : ITemplateService
             }
 
             var templateFiles = Directory.GetFiles(_templatesPath, "*.hbs", SearchOption.TopDirectoryOnly);
-            
+
             foreach (var templateFile in templateFiles)
             {
                 var templateName = Path.GetFileNameWithoutExtension(templateFile);
                 var templateContent = File.ReadAllText(templateFile);
-                
+
                 try
                 {
                     var compiledTemplate = Handlebars.Compile(templateContent);
