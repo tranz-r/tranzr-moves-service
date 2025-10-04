@@ -32,6 +32,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IEmailService, AzureEmailService>();
         services.AddSingleton<ITemplateService, TemplateService>();
+        services.AddSingleton<ITurnstileService, TurnstileService>();
 
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IUserQuoteRepository, UserQuoteRepository>();

@@ -13,7 +13,8 @@ public record SendContactFormCommand(
     string Email,
     string? Company,
     string Subject,
-    string Message) : IRequest<ErrorOr<SendContactFormResponse>>;
+    string Message,
+    string TurnstileToken) : IRequest<ErrorOr<SendContactFormResponse>>;
 
 public record SendContactFormResponse(
     bool Success,
@@ -22,6 +23,7 @@ public record SendContactFormResponse(
 public class SendContactFormCommandHandler(
     IEmailService emailService,
     ITemplateService templateService,
+    ITurnstileService turnstileService,
     ILogger<SendContactFormCommandHandler> logger)
     : IRequestHandler<SendContactFormCommand, ErrorOr<SendContactFormResponse>>
 {
@@ -32,6 +34,14 @@ public class SendContactFormCommandHandler(
         try
         {
             logger.LogInformation("Processing contact form submission from {Email}", command.Email);
+
+            // Validate Turnstile token
+            var turnstileValidation = await turnstileService.ValidateTokenAsync(command.TurnstileToken, cancellationToken: cancellationToken);
+            if (turnstileValidation.IsError)
+            {
+                logger.LogWarning("Turnstile validation failed for contact form submission from {Email}", command.Email);
+                return Error.Validation("ContactForm.TurnstileValidation", "Security verification failed. Please try again.");
+            }
 
             // Prepare template data
             var templateData = new

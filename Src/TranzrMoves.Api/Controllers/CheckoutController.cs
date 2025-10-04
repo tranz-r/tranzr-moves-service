@@ -11,7 +11,7 @@ using TranzrMoves.Application.Mapper;
 using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
-using TranzrMoves.Infrastructure.Services.EmailTemplates;
+
 using Quote = TranzrMoves.Domain.Entities.Quote;
 
 namespace TranzrMoves.Api.Controllers;
