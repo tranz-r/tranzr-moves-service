@@ -7,19 +7,15 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace TranzrMoves.IntegrationTests;
 
-public class GuestQuoteControllerTests : IClassFixture<TestingWebAppFactory>
+public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixture<TestServerFixture>, IAsyncLifetime
 {
-    private readonly TestingWebAppFactory _factory;
-
-    public GuestQuoteControllerTests(TestingWebAppFactory factory)
-    {
-        _factory = factory;
-    }
+    private readonly Func<Task> _resetDatabase = fixture.ResetDatabaseStateAsync;
+    private HttpClient Client => fixture.CreateClient();
 
     [Fact]
     public async Task Get_Then_Get_With_IfNoneMatch_Should_Return_304()
     {
-        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        var client = fixture.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false,
             HandleCookies = true
@@ -55,7 +51,7 @@ public class GuestQuoteControllerTests : IClassFixture<TestingWebAppFactory>
     [Fact]
     public async Task Save_With_Wrong_Etag_Should_Return_412()
     {
-        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        var client = fixture.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false,
             HandleCookies = true
@@ -69,6 +65,10 @@ public class GuestQuoteControllerTests : IClassFixture<TestingWebAppFactory>
         var save = await client.PostAsync("/api/guest/quote", new StringContent(body, Encoding.UTF8, "application/json"));
         save.StatusCode.Should().Be((HttpStatusCode)412);
     }
+
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public async Task DisposeAsync() => await _resetDatabase();
 }
 
 

@@ -32,6 +32,7 @@ public interface IQuoteRepository
 
     // Admin Quote Details
     Task<Quote?> GetAdminQuoteDetailsAsync(Guid quoteId, CancellationToken ct = default);
+    Task<List<Quote>> GetPayLaterQuotesForTodayAsync(DateOnly today, CancellationToken cancellationToken);
 }
 
 

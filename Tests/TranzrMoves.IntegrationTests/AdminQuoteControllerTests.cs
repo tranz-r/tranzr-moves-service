@@ -9,24 +9,19 @@ using TranzrMoves.Infrastructure;
 
 namespace TranzrMoves.IntegrationTests;
 
-public class AdminQuoteControllerTests : IClassFixture<TestingWebAppFactory>
+public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixture<TestServerFixture>, IAsyncLifetime
 {
-    private readonly TestingWebAppFactory _factory;
-
-    public AdminQuoteControllerTests(TestingWebAppFactory factory)
-    {
-        _factory = factory;
-    }
+    private readonly Func<Task> _resetDatabase = fixture.ResetDatabaseStateAsync;
+    private HttpClient Client => fixture.CreateClient();
 
     [Fact]
     public async Task GetAdminQuotes_WithValidParameters_ShouldReturnPaginatedResults()
     {
         // Arrange
-        var client = _factory.CreateClient();
         await SeedTestDataAsync();
 
         // Act
-        var response = await client.GetAsync("/api/v1/quote?admin=true&page=1&pageSize=10");
+        var response = await Client.GetAsync("/api/v1/quote?admin=true&page=1&pageSize=10");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -48,11 +43,10 @@ public class AdminQuoteControllerTests : IClassFixture<TestingWebAppFactory>
     public async Task GetAdminQuotes_WithSearch_ShouldFilterResults()
     {
         // Arrange
-        var client = _factory.CreateClient();
         await SeedTestDataAsync();
 
         // Act
-        var response = await client.GetAsync("/api/v1/quote?admin=true&search=TEST-REF-001");
+        var response = await Client.GetAsync("/api/v1/quote?admin=true&search=TEST-REF-001");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -72,11 +66,10 @@ public class AdminQuoteControllerTests : IClassFixture<TestingWebAppFactory>
     public async Task GetAdminQuotes_WithSorting_ShouldReturnSortedResults()
     {
         // Arrange
-        var client = _factory.CreateClient();
         await SeedTestDataAsync();
 
         // Act
-        var response = await client.GetAsync("/api/v1/quote?admin=true&sortBy=createdAt&sortDir=asc");
+        var response = await Client.GetAsync("/api/v1/quote?admin=true&sortBy=createdAt&sortDir=asc");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -99,11 +92,10 @@ public class AdminQuoteControllerTests : IClassFixture<TestingWebAppFactory>
     public async Task GetAdminQuotes_WithStatusFilter_ShouldFilterByStatus()
     {
         // Arrange
-        var client = _factory.CreateClient();
         await SeedTestDataAsync();
 
         // Act
-        var response = await client.GetAsync("/api/v1/quote?admin=true&status=Pending");
+        var response = await Client.GetAsync("/api/v1/quote?admin=true&status=Pending");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -122,14 +114,13 @@ public class AdminQuoteControllerTests : IClassFixture<TestingWebAppFactory>
     public async Task GetAdminQuotes_WithDateRange_ShouldFilterByDate()
     {
         // Arrange
-        var client = _factory.CreateClient();
         await SeedTestDataAsync();
 
         var dateFrom = DateTime.UtcNow.AddDays(-7).ToString("yyyy-MM-dd");
         var dateTo = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd");
 
         // Act
-        var response = await client.GetAsync($"/api/v1/quote?admin=true&dateFrom={dateFrom}&dateTo={dateTo}");
+        var response = await Client.GetAsync($"/api/v1/quote?admin=true&dateFrom={dateFrom}&dateTo={dateTo}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -150,11 +141,10 @@ public class AdminQuoteControllerTests : IClassFixture<TestingWebAppFactory>
     public async Task GetAdminQuotes_WithInvalidPageSize_ShouldUseDefault()
     {
         // Arrange
-        var client = _factory.CreateClient();
         await SeedTestDataAsync();
 
         // Act
-        var response = await client.GetAsync("/api/v1/quote?admin=true&pageSize=150"); // Exceeds max of 100
+        var response = await Client.GetAsync("/api/v1/quote?admin=true&pageSize=150"); // Exceeds max of 100
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -173,10 +163,9 @@ public class AdminQuoteControllerTests : IClassFixture<TestingWebAppFactory>
     public async Task GetAdminQuotes_WithoutAdminFlag_ShouldReturnBadRequest()
     {
         // Arrange
-        var client = _factory.CreateClient();
 
         // Act
-        var response = await client.GetAsync("/api/v1/quote?page=1&pageSize=10");
+        var response = await Client.GetAsync("/api/v1/quote?page=1&pageSize=10");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -184,7 +173,7 @@ public class AdminQuoteControllerTests : IClassFixture<TestingWebAppFactory>
 
     private async Task SeedTestDataAsync()
     {
-        using var scope = _factory.Services.CreateScope();
+        using var scope = fixture.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<TranzrMovesDbContext>();
 
         // Clear existing data
@@ -238,6 +227,10 @@ public class AdminQuoteControllerTests : IClassFixture<TestingWebAppFactory>
         dbContext.Set<Quote>().AddRange(quotes);
         await dbContext.SaveChangesAsync();
     }
+
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public async Task DisposeAsync() => await _resetDatabase();
 }
 
 // Response DTOs for testing

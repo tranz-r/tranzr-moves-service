@@ -62,8 +62,7 @@ public class SendContactFormCommandHandler(
 
             // Send email to TRANZR Group
             await emailService.SendBookingConfirmationEmailAsync(
-                // fromEMail: command.Email,
-                fromEMail: FromEmails.Group,
+                fromEmail: FromEmails.Group,
                 subject: $"Contact Form Submission: {command.Subject}",
                 toEmail: "info@tranzrgroup.com",
                 htmlEmail: htmlContent,

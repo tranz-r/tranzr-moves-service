@@ -1,9 +1,12 @@
 ﻿using System.Globalization;
+using ErrorOr;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
+
 using Stripe;
 using Stripe.Checkout;
 using Stripe.Tax;
+
 using TranzrMoves.Api.Dtos;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.Quote.Save;
@@ -62,7 +65,9 @@ public class CheckoutController(
             }
 
             return await CreateCheckoutSession(request, user, quote,
-                "checkout-session", new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Adhoc)), cancellationToken);
+                "checkout-session",
+                new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Adhoc)),
+                cancellationToken);
         }
         catch (StripeException ex)
         {
@@ -79,12 +84,15 @@ public class CheckoutController(
 
     private async Task<ActionResult<CreateCheckoutSessionResponse>> CreateCheckoutSession(
         CreateCheckoutSessionRequest request, User user,
-        Quote quote, string emailTemplateName, KeyValuePair<string, string> metadata, CancellationToken cancellationToken)
+        Quote quote, string emailTemplateName, KeyValuePair<string, string> metadata,
+        CancellationToken cancellationToken, string? cardErrorReason = null, List<string>? bbcRecipients = null)
     {
         // Create or find stripe customer
         var sr = await stripeClient.V1.Customers.SearchAsync(
             new CustomerSearchOptions { Query = $"email:'{user.Email}'" }, cancellationToken: cancellationToken);
+
         var stripeCustomer = sr.Data.FirstOrDefault();
+
         if (stripeCustomer is null)
         {
             stripeCustomer = await stripeClient.V1.Customers.CreateAsync(new CustomerCreateOptions
@@ -161,14 +169,15 @@ public class CheckoutController(
                 description = string.IsNullOrWhiteSpace(request.Description)
                     ? $"Payment for quote #{quote.QuoteReference}"
                     : request.Description,
-                currentYear = DateTime.UtcNow.Year
+                currentYear = DateTime.UtcNow.Year,
+                cardErrorReason
             };
 
             var subject = $"Checkout Link - #{quote.QuoteReference}";
             var htmlEmail = templateService.GenerateEmail($"{emailTemplateName}.html", templateData);
             var textEmail = templateService.GenerateEmail($"{emailTemplateName}.txt", templateData);
             await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, user.Email, htmlEmail,
-                textEmail);
+                textEmail, bbcRecipients);
             emailSent = true;
         }
         catch (Exception ex)
@@ -681,7 +690,23 @@ public class CheckoutController(
 
 
     [HttpPost("pay-later-collection")]
-    public async Task<ActionResult<PaymentIntentResponse>> CollectLaterPayment([FromBody] FuturePaymentRequest request,
+    public async Task<ActionResult<PaymentIntentResponse>> CollectLaterPayment(CancellationToken cancellationToken)
+    {
+        var payLaterQuotes = await quoteRepository
+            .GetPayLaterQuotesForTodayAsync(DateOnly.FromDateTime(DateTime.Today), cancellationToken);
+
+        foreach (var quote in payLaterQuotes)
+        {
+            _ = await ProcessLaterPayment(new FuturePaymentRequest
+            {
+                QuoteReference = quote.QuoteReference
+            }, cancellationToken);
+        }
+
+        return NoContent();
+    }
+
+    private async Task<ErrorOr<Success>> ProcessLaterPayment(FuturePaymentRequest request,
         CancellationToken cancellationToken)
     {
         // This endpoint handles creating PaymentIntents for the remaining balance
@@ -693,7 +718,7 @@ public class CheckoutController(
         if (quote == null)
         {
             logger.LogWarning("Quote not found for future payment: {QuoteReference}", request.QuoteReference);
-            return NotFound("Quote not found");
+            return Error.NotFound("Quote not found");
         }
 
         var customerQuote = await userQuoteRepository.GetUserQuoteByQuoteIdAsync(quote.Id, cancellationToken);
@@ -701,7 +726,7 @@ public class CheckoutController(
         {
             logger.LogWarning("Customer quote relationship not found for quote {QuoteReference}",
                 request.QuoteReference);
-            return BadRequest("Customer quote relationship not found");
+            return Error.Failure("Customer quote relationship not found");
         }
 
         user = await userRepository.GetUserAsync(customerQuote.UserId, cancellationToken);
@@ -721,7 +746,7 @@ public class CheckoutController(
         {
             logger.LogWarning("Customer not found for future payment for quote: {QuoteReference}",
                 request.QuoteReference);
-            return BadRequest("Customer not found");
+            return Error.Failure("Customer not found");
         }
 
         var amountInCurrencyUnit = (long)Math.Round(quote.TotalCost!.Value * 100, 0, MidpointRounding.AwayFromZero);
@@ -779,69 +804,121 @@ public class CheckoutController(
                 "Future payment intent created {PaymentIntentId} for remaining amount {Amount} using saved payment method",
                 paymentIntent.Id, quote.TotalCost!.Value);
 
-            return new PaymentIntentResponse
-            {
-                ClientSecret = paymentIntent.ClientSecret,
-                PaymentIntentId = paymentIntent.Id,
-                PublishableKey = StripeConfiguration.ClientId,
-            };
+            return new ErrorOr<Success>();
         }
         catch (StripeException ex)
         {
-            // Handle specific error types
-            switch (ex.StripeError.Code)
+            if (ex.StripeError.Type == "card_error")
             {
-                case "card_declined":
-                    // Card was declined
-                    string declineCode =
-                        ex.StripeError.DeclineCode; // specific reason: insufficient_funds, lost_card, etc.
-                    // Ask customer to try another card
-                    break;
-                case "expired_card":
-                    // Card is expired
-                    // Ask customer to provide a non-expired card
-                    break;
-                case "incorrect_cvc":
-                    // Incorrect CVC code
-                    // Ask customer to verify and re-enter CVC
-                    break;
-                case "processing_error":
-                    // Error occurred while processing the card
-                    // Ask customer to try again or use a different payment method
-                    break;
-                case "incorrect_number":
-                    // Card number is incorrect
-                    // Ask customer to verify and re-enter card number
-                    break;
-                case "authentication_required":
-                    // 3D Secure authentication is required but was not performed
-                    // Redirect customer to the URL for authentication
-                    logger.LogWarning(
-                        "Payment requires authentication for customer with Id {UserId}. Customer needs to complete 3D Secure for quote {QuoteReference}",
-                        user!.Id, request.QuoteReference);
+                var cardErrorReason = string.Empty;
+                var paymentMethod = await stripeClient.V1.PaymentMethods.GetAsync(quote.PaymentMethodId, cancellationToken: cancellationToken);
+                var cardLast4Digits = paymentMethod.Card.Last4;
+                var cardBrand = paymentMethod.Card.Brand;
 
-                    //Create a checkout session and send to customer to complete 3D secure or use another mode of payment
-                    await CreateCheckoutSession(new CreateCheckoutSessionRequest
+                switch (ex.StripeError.Code)
+                {
+                    case "card_declined" when ex.StripeError.DeclineCode == "insufficient_funds":
+                        cardErrorReason  = "the card was declined due to insufficient funds";
+                        logger.LogWarning(ex, "the was declined.");
+                        break;
+                    case "card_declined":
+                        cardErrorReason  = "the was declined.";
+                        logger.LogWarning(ex, "the was declined.");
+                        break;
+                    case "expired_card":
+                        cardErrorReason  = "the card has expired.";
+                        logger.LogWarning(ex, "the has expired.");
+                        break;
+                    case "incorrect_cvc":
+                        cardErrorReason = "the card's security code is incorrect.";
+                        logger.LogWarning(ex, "the card's security code is incorrect.");
+                        break;
+                    case "incorrect_number":
+                        cardErrorReason = "the card number is incorrect.";
+                        logger.LogWarning(ex, "the card's security code is incorrect.");
+                        break;
+                    case "invalid_cvc":
+                        cardErrorReason = "the card's security code is invalid.";
+                        logger.LogWarning(ex, "the card's security code is invalid.");
+                        break;
+                    case "invalid_expiry_month":
+                        cardErrorReason = "the expiry month is invalid.";
+                        logger.LogWarning(ex, "the expiry month is invalid.");
+                        break;
+                    case "invalid_expiry_year":
+                        cardErrorReason = "the expiry year is invalid.";
+                        logger.LogWarning(ex, "the expiry year is invalid.");
+                        break;
+                    case "processing_error":
+                        cardErrorReason = "an error occurred while processing the card.";
+                        logger.LogWarning(ex, "an error occurred while processing the card.");
+                        break;
+                    case "incorrect_zip":
+                        cardErrorReason = "the card's post code failed validation.";
+                        logger.LogWarning(ex, "the card's post code failed validation.");
+                        break;
+                    case "authentication_required":
+                        cardErrorReason = "the card's authorization is required";
+                        logger.LogWarning(ex, "the card's authorization is required.");
+                        break;
+                    case "approve_with_id":
+                        cardErrorReason = "the payment cannot be authorized";
+                        logger.LogWarning(ex, "the payment cannot be authorized.");
+                        break;
+                    case "call_issuer":
+                        cardErrorReason = "the card has been declined, call issuer";
+                        logger.LogWarning(ex, "the card has been declined.");
+                        break;
+                    case "do_not_honor":
+                        cardErrorReason = "the card has been declined";
+                        logger.LogWarning(ex, "the card has been declined.");
+                        break;
+                    case "insufficient_funds":
+                        cardErrorReason = "the card has insufficient funds.";
+                        logger.LogWarning(ex, "the card has insufficient funds.");
+                        break;
+                    case "invalid_account":
+                        cardErrorReason = "the card or account is invalid.";
+                        logger.LogWarning(ex, "the card or account is invalid.");
+                        break;
+                    case "currency_not_supported":
+                        cardErrorReason = "the card does not support this currency.";
+                        logger.LogWarning(ex, "the card does not support this currency.");
+                        break;
+                    case "lost_card":
+                        cardErrorReason = "the card has been reported lost.";
+                        logger.LogWarning(ex, "the card has been reported lost.");
+                        break;
+                    case "stolen_card":
+                        cardErrorReason = "the card has been reported stolen.";
+                        logger.LogWarning(ex, "the card has been reported stolen.");
+                        break;
+                    default:
+                        Console.WriteLine($"Other card error: {ex.StripeError.Message}");
+                        break;
+                }
+
+                var cardErrorDescription = $"<b>We couldn't charge your {cardBrand} card ending with {cardLast4Digits}, because {cardErrorReason}.</b> " +
+                                           $"<p>Please use the secure link below to complete the payment for your quotation {quote.QuoteReference} with Tranzr Moves.</p> " +
+                                           $"To avoid any delay or cancellation of your scheduled service on " +
+                                           $"{DateOnly.FromDateTime(quote.CollectionDate.Value)}, kindly make your payment as soon as possible or contact us to arrange an alternative payment option.";
+
+                await CreateCheckoutSession(new CreateCheckoutSessionRequest
                     {
                         Amount = quote.TotalCost!.Value,
                         QuoteReference = quote.QuoteReference,
-                        Description = $"Full payment for quote #{quote.QuoteReference} - requires authentication"
-                    }, user, quote, "checkout_payment_authentication",
-                        new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Full)),
-                        cancellationToken);
-                    break;
-
-                default:
-                    // Handle other card errors
-                    break;
+                        Description = $"Full payment for quote #{quote.QuoteReference}"
+                    }, user, quote, "checkout-session-payment-error",
+                    new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Full)),
+                    cancellationToken, cardErrorDescription, [ToBccEmails.PayLaterWarning]);
             }
 
-            return BadRequest($"Payment failed: {ex.StripeError.Message}");
+            return Error.Failure($"Payment failed: {ex.StripeError.Message}");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to create future payment for customer {UserId}", user!.Id);
-            return StatusCode(500, "Failed to create future payment");
+            return Error.Failure("500", "Failed to create future payment");
         }
     }
 

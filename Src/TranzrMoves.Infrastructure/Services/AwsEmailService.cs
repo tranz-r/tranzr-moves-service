@@ -14,7 +14,7 @@ public class AwsEmailService : IEmailService
     private readonly string _fromEmail;
 
     public AwsEmailService(
-        IConfiguration configuration, 
+        IConfiguration configuration,
         ILogger<AwsEmailService> logger, IAmazonSimpleEmailServiceV2 ses)
     {
         _configuration = configuration;
@@ -23,7 +23,7 @@ public class AwsEmailService : IEmailService
         _fromEmail = _configuration["FROM_EMAIL"] ?? "noreply@tranzrmoves.com";
     }
 
-    public async Task SendBookingConfirmationEmailAsync(string fromEmail, string subject, string toEmail, string htmlEmail, string textEmail)
+    public async Task SendBookingConfirmationEmailAsync(string fromEmail, string subject, string toEmail, string htmlEmail, string textEmail, List<string>? bccRecipients = null)
     {
         var emailRequest = new SendEmailRequest
         {
@@ -45,7 +45,7 @@ public class AwsEmailService : IEmailService
                 }
             }
         };
-        
+
         try
         {
             _logger.LogInformation("Sending email using Amazon SES...");
@@ -60,4 +60,4 @@ public class AwsEmailService : IEmailService
 
         }
     }
-} 
+}

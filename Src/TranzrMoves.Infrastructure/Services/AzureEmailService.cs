@@ -7,24 +7,32 @@ namespace TranzrMoves.Infrastructure.Services;
 
 public class AzureEmailService(ILogger<AzureEmailService> logger, EmailClient emailClient) : IEmailService
 {
-    public async Task SendBookingConfirmationEmailAsync(string fromEmail, string subject, string toEmail, string htmlEmail, string textEmail)
+    public async Task SendBookingConfirmationEmailAsync(string fromEmail, string subject, string toEmail,
+        string htmlEmail, string textEmail, List<string>? bccRecipients = null)
     {
         try
         {
             logger.LogInformation("Sending email using Azure communication email service...");
 
+            var toEmailAddresses = new List<EmailAddress>
+            {
+                new(toEmail)
+            };
+
+            List<EmailAddress>? bccRecipientList = [];
+            bccRecipients?.ForEach(x => bccRecipientList.Add(new EmailAddress(x)));
+
+            var emailRecipients = new EmailRecipients(to: toEmailAddresses, bcc: bccRecipientList);
+
             var emailMessage = new EmailMessage(
-                senderAddress: fromEmail, 
+                senderAddress: fromEmail,
                 content: new EmailContent(subject)
                 {
                     Html = htmlEmail,
                     PlainText = textEmail
                 },
-                recipients: new EmailRecipients(new List<EmailAddress>
-                {
-                    new(toEmail)
-                }));
-            
+                recipients: emailRecipients);
+
             _ = await emailClient.SendAsync(
                 WaitUntil.Completed,
                 emailMessage);
@@ -38,4 +46,4 @@ public class AzureEmailService(ILogger<AzureEmailService> logger, EmailClient em
             logger.LogError(ex, "Failed to send order confirmation email to {Email}", toEmail);
         }
     }
-} 
+}

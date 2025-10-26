@@ -278,6 +278,18 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
             .FirstOrDefaultAsync(q => q.Id == quoteId, ct);
     }
 
+    public Task<List<Quote>> GetPayLaterQuotesForTodayAsync(DateOnly today, CancellationToken cancellationToken)
+    {
+        IQueryable<Quote> quotes = db.Set<Quote>()
+            .Where(x => x.PaymentType == PaymentType.Later &&
+                        x.PaymentStatus == PaymentStatus.PaymentSetup &&
+                        x.DueDate.HasValue &&
+                        (today == DateOnly.FromDateTime(x.DueDate.Value) ||
+                         today > DateOnly.FromDateTime(x.DueDate.Value)));
+
+        return quotes.ToListAsync(cancellationToken);
+    }
+
     private static string GenerateQuoteReference()
     {
         // Simple quote reference generation

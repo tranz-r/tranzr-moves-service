@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="date=no">
+    <meta name="format-detection" content="address=no">
+    <meta name="format-detection" content="email=no">
+    <title>Checkout Link - {{quoteReference}}</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style type="text/css">
+        /* Reset styles */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+        
+        /* Base styles */
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.4;
+            color: #333333;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        
+        .header {
+            background-color: #9568b0;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 30px 20px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            color: #9568b0;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .main-text {
+            font-size: 16px;
+            color: #333333;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .payment-details {
+            background-color: #f8f8f8;
+            border: 1px solid #dddddd;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .payment-row {
+            margin-bottom: 10px;
+        }
+        
+        .payment-label {
+            font-weight: bold;
+            color: #666666;
+        }
+        
+        .payment-value {
+            color: #333333;
+        }
+        
+        .amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #9568b0;
+        }
+        
+        .button {
+            display: inline-block;
+            background-color: #9568b0;
+            color: #ffffff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .security-notice {
+            background-color: #f0f9fa;
+            border: 1px solid #b8e3e9;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .footer {
+            background-color: #f8f8f8;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+            border-top: 1px solid #dddddd;
+        }
+        
+        .unsubscribe {
+            font-size: 11px;
+            color: #999999;
+            margin-top: 15px;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            .content {
+                padding: 20px 15px !important;
+            }
+            .header {
+                padding: 20px 15px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>Checkout Link Ready</h1>
+            <p>Quote #{{quoteReference}}</p>
+        </div>
+        <div class="content">
+            <div class="greeting">Hello {{customerName}},</div>
+            
+            <div class="main-text">
+                {{#if cardErrorReason}}
+                    <p>{{{cardErrorReason}}}</p>
+                {{/if}}
+<!--                <p>Your secure checkout link is ready. Click the button below to complete your payment for your Tranzr Moves service.</p>-->
+            </div>
+            
+            <div class="payment-details">
+                <div class="payment-row">
+                    <span class="payment-label">Quote Reference:</span>
+                    <span class="payment-value">#{{quoteReference}}</span>
+                </div>
+                <div class="payment-row">
+                    <span class="payment-label">Amount:</span>
+                    <span class="payment-value amount">£{{paymentAmount}}</span>
+                </div>
+                <div class="payment-row">
+                    <span class="payment-label">Description:</span>
+                    <span class="payment-value">{{description}}</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{checkoutUrl}}" class="button">Complete Payment</a>
+            </div>
+            
+            <div class="security-notice">
+                <h3>Secure Checkout</h3>
+                <p>This checkout link is secured by Stripe and will expire after 24 hours for your security.</p>
+            </div>
+            
+            <div class="main-text">
+                <p><strong>What happens next?</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Click the checkout button above to complete your payment</li>
+                    <li>You'll be redirected to our secure checkout page</li>
+                    <li>Once payment is confirmed, you'll receive a confirmation email</li>
+                    <li>Our team will contact you to finalize your moving details</li>
+                </ul>
+            </div>
+            
+            <div class="main-text">
+                <p><strong>Need help?</strong> If you have any questions about this checkout or your quote, please contact our support team at support@tranzrmoves.com or call us at 0800 123 4567.</p>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Tranzr Moves</strong></p>
+                <p>Professional Moving Services</p>
+                <p>Email: support@tranzrmoves.com | Phone: 0800 123 4567</p>
+                <p>© {{currentYear}} Tranzr Moves. All rights reserved.</p>
+                
+                <div class="unsubscribe">
+                    <p>You received this email because you requested a checkout link for quote #{{quoteReference}}. If you have any concerns about this email, please contact us at support@tranzrmoves.com.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
