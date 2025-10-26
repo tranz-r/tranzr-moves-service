@@ -57,11 +57,6 @@ public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
 
             builder.ConfigureAppConfiguration(configBuilder =>
             {
-                // var defaults = new Dictionary<string, string?>
-                // {
-                // };
-                //
-                // configBuilder.AddInMemoryCollection(defaults);
             });
 
             builder.ConfigureServices(services =>
