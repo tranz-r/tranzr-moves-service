@@ -57,12 +57,11 @@ public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
 
             builder.ConfigureAppConfiguration(configBuilder =>
             {
-                var defaults = new Dictionary<string, string?>
-                {
-                    ["STRIPE_API_KEY"] = "sk_test_51RUsSF4Eg1kVsmJlrD3DlxUxzsSW657e6vBJxps9TnQESbxAw3QzyOru91gWi3KGZPlknXGOawW7eeUduhtZoUQZ00XaJNJU9c",
-                };
-
-                configBuilder.AddInMemoryCollection(defaults);
+                // var defaults = new Dictionary<string, string?>
+                // {
+                // };
+                //
+                // configBuilder.AddInMemoryCollection(defaults);
             });
 
             builder.ConfigureServices(services =>
