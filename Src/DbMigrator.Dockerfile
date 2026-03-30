@@ -1,20 +1,20 @@
-# Use the official .NET 8 SDK image to build the project
+# Use the official .NET SDK image to build the project
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
 
 # Set the working directory
 WORKDIR /src
 
-# Copy the rest of the project files
-COPY Src/TranzrMoves.Domain src/TranzrMoves.Domain
-COPY Src/TranzrMoves.Application src/TranzrMoves.Application
-COPY Src/TranzrMoves.Infrastructure src/TranzrMoves.Infrastructure
+# Copy required project files
+COPY Src/TranzrMoves.Domain Src/TranzrMoves.Domain
+COPY Src/TranzrMoves.Application Src/TranzrMoves.Application
+COPY Src/TranzrMoves.Infrastructure Src/TranzrMoves.Infrastructure
 
 
 ENV PATH="$PATH:/root/.dotnet/tools"
 RUN dotnet tool install --global dotnet-ef && \
-    dotnet restore src/TranzrMoves.Infrastructure/TranzrMoves.Infrastructure.csproj && \
+    dotnet restore Src/TranzrMoves.Infrastructure/TranzrMoves.Infrastructure.csproj && \
     mkdir /migrations && \
-    dotnet-ef migrations bundle --self-contained -r linux-x64 --project src/TranzrMoves.Infrastructure -o /migrations/migrator --force
+    dotnet-ef migrations bundle --self-contained -r linux-x64 --project Src/TranzrMoves.Infrastructure -o /migrations/migrator --force
 
 # Copy the migration script
 COPY Src/db-migration.sh /migrations/db-migration.sh
