@@ -9,9 +9,9 @@ public sealed class LegalDocumentConfiguration : IEntityTypeConfiguration<LegalD
 {
     public void Configure(EntityTypeBuilder<LegalDocument> builder)
     {
-        builder.ToTable(Db.Tables.LegalDocuments);
+        builder.ToTable(Db.Tables.LegalDocuments, Db.SCHEMA);
         builder.HasKey(d => d.Id);
-        
+
         builder.Property(x => x.DocumentType).IsRequired()
             .HasConversion(
                 v => v.ToString(),

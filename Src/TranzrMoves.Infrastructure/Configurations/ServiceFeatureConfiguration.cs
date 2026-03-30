@@ -9,14 +9,14 @@ public sealed class ServiceFeatureConfiguration : IEntityTypeConfiguration<Servi
 {
     public void Configure(EntityTypeBuilder<ServiceFeature> builder)
     {
-        builder.ToTable(Db.Tables.ServiceFeatures);
+        builder.ToTable(Db.Tables.ServiceFeatures, Db.SCHEMA);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.ServiceLevel).IsRequired()
             .HasConversion(
                 v => v.ToString(),
                 v => (ServiceLevel)Enum.Parse(typeof(ServiceLevel), v));
-        
+
         builder.Property(x => x.Text).IsRequired();
 
         builder.Property(x => x.EffectiveFrom).IsRequired();
@@ -24,7 +24,7 @@ public sealed class ServiceFeatureConfiguration : IEntityTypeConfiguration<Servi
         builder.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
 
         builder.HasIndex(x => new { x.ServiceLevel, x.IsActive, x.EffectiveFrom, x.EffectiveTo, x.DisplayOrder });
-        
+
         // Concurrency Token
         builder.Property(b => b.Version)
             .IsRowVersion()

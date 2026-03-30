@@ -3,6 +3,7 @@ namespace TranzrMoves.Domain.Constants;
 public static class Db
 {
     public const string CONNECTION_STRING_NAME = "TranzrMovesDatabaseConnection";
+    public const string SCHEMA = "tranzrmoves";
 
     public static class Tables
     {

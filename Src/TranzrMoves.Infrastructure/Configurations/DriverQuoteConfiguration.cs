@@ -9,7 +9,7 @@ public class DriverQuoteConfiguration : IEntityTypeConfiguration<DriverQuote>
 {
     public void Configure(EntityTypeBuilder<DriverQuote> builder)
     {
-        builder.ToTable(Db.Tables.DriverQuotes);
+        builder.ToTable(Db.Tables.DriverQuotes, Db.SCHEMA);
         builder.HasKey(x => x.Id);
 
         builder.HasIndex(x => new { x.UserId, QuoteId = x.QuoteId }).IsUnique();

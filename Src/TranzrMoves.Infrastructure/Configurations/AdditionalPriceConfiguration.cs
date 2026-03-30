@@ -9,9 +9,9 @@ public sealed class AdditionalPriceConfiguration : IEntityTypeConfiguration<Addi
 {
     public void Configure(EntityTypeBuilder<AdditionalPrice> builder)
     {
-        builder.ToTable(Db.Tables.AdditionalPrices);
+        builder.ToTable(Db.Tables.AdditionalPrices, Db.SCHEMA);
         builder.HasKey(x => x.Id);
-        
+
         builder.Property(x => x.Type).IsRequired()
             .HasConversion(
                 v => v.ToString(),
@@ -26,7 +26,7 @@ public sealed class AdditionalPriceConfiguration : IEntityTypeConfiguration<Addi
         builder.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
 
         builder.HasIndex(x => new { x.Type, x.IsActive, x.EffectiveFrom, x.EffectiveTo });
-        
+
         // Concurrency Token
         builder.Property(b => b.Version)
             .IsRowVersion()

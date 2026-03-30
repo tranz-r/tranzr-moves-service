@@ -9,7 +9,7 @@ namespace TranzrMoves.Infrastructure.Configurations
     {
         public void Configure(EntityTypeBuilder<User> builder)
         {
-            builder.ToTable(Db.Tables.Users);
+            builder.ToTable(Db.Tables.Users, Db.SCHEMA);
             builder.HasKey(x => x.Id);
 
             builder.Property(x => x.Role).IsRequired(false)

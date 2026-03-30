@@ -9,7 +9,7 @@ public sealed class RateCardConfiguration : IEntityTypeConfiguration<RateCard>
 {
     public void Configure(EntityTypeBuilder<RateCard> builder)
     {
-        builder.ToTable(Db.Tables.RateCards);
+        builder.ToTable(Db.Tables.RateCards, Db.SCHEMA);
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Movers).IsRequired();
@@ -29,7 +29,7 @@ public sealed class RateCardConfiguration : IEntityTypeConfiguration<RateCard>
         builder.Property(x => x.IsActive).HasDefaultValue(true).IsRequired();
 
         builder.HasIndex(x => new { x.Movers, x.ServiceLevel, x.IsActive, x.EffectiveFrom, x.EffectiveTo });
-        
+
         // Concurrency Token
         builder.Property(b => b.Version)
             .IsRowVersion()

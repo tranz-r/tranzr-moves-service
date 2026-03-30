@@ -9,7 +9,7 @@ public class CustomerQuoteConfiguration : IEntityTypeConfiguration<CustomerQuote
 {
     public void Configure(EntityTypeBuilder<CustomerQuote> builder)
     {
-        builder.ToTable(Db.Tables.CustomerQuotes);
+        builder.ToTable(Db.Tables.CustomerQuotes, Db.SCHEMA);
         builder.HasKey(x => x.Id);
 
         builder.HasIndex(x => new { x.UserId, x.QuoteId }).IsUnique();

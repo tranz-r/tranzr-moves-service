@@ -19,7 +19,7 @@ namespace TranzrMoves.Api.Configuration
 
             string? dbConnectionString = configuration.GetConnectionString(Db.CONNECTION_STRING_NAME);
             services.AddDbContext<TranzrMovesDbContext>((sp, options) =>
-                options.UseNpgsql(dbConnectionString)
+                options.UseNpgsql(x => x.MigrationsHistoryTable("__MigrationHistory", Db.SCHEMA))
                     .AddInterceptors(sp.GetRequiredService<AuditableInterceptor>()));
         }
     }

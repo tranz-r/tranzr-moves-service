@@ -9,15 +9,15 @@ public class QuoteSessionConfiguration : IEntityTypeConfiguration<QuoteSession>
 {
     public void Configure(EntityTypeBuilder<QuoteSession> builder)
     {
-        builder.ToTable(Db.Tables.QuoteSessions);
+        builder.ToTable(Db.Tables.QuoteSessions, Db.SCHEMA);
         builder.HasKey(x => x.SessionId);
-        
+
         // Session Management
         builder.Property(x => x.SessionId).IsRequired();
         builder.Property(x => x.ExpiresUtc);
-        
+
         // Customer Info is now stored per quote, not in session
-        
+
         // Quotes (One-to-Many relationship)
         builder.HasMany(x => x.Quotes)
             .WithOne()

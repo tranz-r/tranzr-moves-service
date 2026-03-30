@@ -9,7 +9,7 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
 {
     public void Configure(EntityTypeBuilder<Quote> builder)
     {
-        builder.ToTable(Db.Tables.Quotes);
+        builder.ToTable(Db.Tables.Quotes, Db.SCHEMA);
         builder.HasKey(x => x.Id);
 
         // Session Management
