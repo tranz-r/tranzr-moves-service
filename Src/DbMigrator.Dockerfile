@@ -12,6 +12,7 @@ COPY Src/TranzrMoves.Infrastructure src/TranzrMoves.Infrastructure
 
 ENV PATH="$PATH:/root/.dotnet/tools"
 RUN dotnet tool install --global dotnet-ef && \
+    dotnet restore src/TranzrMoves.Infrastructure/TranzrMoves.Infrastructure.csproj && \
     mkdir /migrations && \
     dotnet-ef migrations bundle --self-contained -r linux-x64 --project src/TranzrMoves.Infrastructure -o /migrations/migrator --force
 
