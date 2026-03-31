@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
+using TranzrMoves.Domain.Constants;
+using TranzrMoves.Infrastructure.Interceptors;
+
 namespace TranzrMoves.Infrastructure;
 
 public class ServiceDbContextFactory : IDesignTimeDbContextFactory<TranzrMovesDbContext>
@@ -10,11 +13,15 @@ public class ServiceDbContextFactory : IDesignTimeDbContextFactory<TranzrMovesDb
         var localDockerDbConnectionString =
             "Server=localhost;Port=5432;Database=tranzr;User Id=tranzr;Password=tranzr;";
             // "Server=admin-client-db;Port=5433;Database=admin-client-handler-service;User Id=postgres;Password=postgres;";
-        
+
         var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ?? localDockerDbConnectionString;
-        
+
         var optionsBuilder = new DbContextOptionsBuilder<TranzrMovesDbContext>();
         optionsBuilder.UseNpgsql(connectionString);
+
+        optionsBuilder.UseNpgsql(connectionString, x =>
+                    x.MigrationsHistoryTable("__MigrationHistory", Db.SCHEMA));
+
         return new TranzrMovesDbContext(optionsBuilder.Options);
     }
 }
