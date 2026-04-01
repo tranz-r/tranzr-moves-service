@@ -6,6 +6,7 @@ using TranzrMoves.Application.Common.CustomErrors;
 
 namespace TranzrMoves.Api.Controllers;
 
+[ApiController]
 public class ApiControllerBase : ControllerBase
 {
     internal const string ApplicationJson = "application/json";
@@ -24,7 +25,7 @@ public class ApiControllerBase : ControllerBase
         }
 
         HttpContext.Items[HttpContextItemKeys.Errors] = errors;
-        
+
         return Problem(errors.FirstOrDefault());
     }
 

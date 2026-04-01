@@ -1,6 +1,8 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
+
+using TranzrMoves.Application.Common.CustomErrors;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Mapper;
 using TranzrMoves.Domain.Entities;
@@ -10,7 +12,7 @@ namespace TranzrMoves.Application.Features.RateCards.Create;
 
 public class CreateRateCardCommandHandler(
     IRateCardRepository rateCardRepository,
-    ILogger<CreateRateCardCommandHandler> logger) 
+    ILogger<CreateRateCardCommandHandler> logger)
     : IRequestHandler<CreateRateCardCommand, ErrorOr<RateCardDto>>
 {
     public async ValueTask<ErrorOr<RateCardDto>> Handle(
@@ -33,7 +35,7 @@ public class CreateRateCardCommandHandler(
             };
 
             var result = await rateCardRepository.AddRateCardAsync(rateCard, cancellationToken);
-            
+
             if (result.IsError)
             {
                 logger.LogError("Failed to create rate card: {Error}", result.FirstError.Description);
@@ -42,8 +44,8 @@ public class CreateRateCardCommandHandler(
 
             var mapper = new RateCardMapper();
             var rateCardDto = mapper.ToDto(result.Value);
-            
-            logger.LogInformation("Successfully created rate card {Id} for {Movers} movers with {ServiceLevel} service level", 
+
+            logger.LogInformation("Successfully created rate card {Id} for {Movers} movers with {ServiceLevel} service level",
                 rateCardDto.Id, rateCardDto.Movers, rateCardDto.ServiceLevel);
 
             return rateCardDto;

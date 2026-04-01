@@ -26,8 +26,13 @@ public class RateCardsController(IMediator mediator) : ApiControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateRateCardCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([FromBody] CreateRateCardCommand? command, CancellationToken cancellationToken)
     {
+        if (command is null)
+        {
+            return BadRequest("Request body is required");
+        }
+
         var result = await mediator.Send(command, cancellationToken);
         return result.Match(
             rateCard => CreatedAtAction(nameof(Get), new { id = rateCard.Id }, rateCard), Problem);
