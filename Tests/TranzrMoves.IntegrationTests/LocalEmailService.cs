@@ -1,6 +1,3 @@
-using Azure;
-using Azure.Communication.Email;
-
 using MailKit.Net.Smtp;
 using MailKit.Security;
 

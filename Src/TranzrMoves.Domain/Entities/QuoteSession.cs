@@ -11,12 +11,12 @@ public class QuoteSession : IAuditable
     
     // Session metadata
     public string ETag { get; set; } = string.Empty; // W/"<sha256>"
-    public DateTimeOffset? ExpiresUtc { get; set; }
+    public Instant? ExpiresUtc { get; set; }
     
     // Audit
-    public DateTimeOffset CreatedAt { get; set; }
+    public Instant CreatedAt { get; set; }
     public string CreatedBy { get; set; } = "System";
-    public DateTimeOffset ModifiedAt { get; set; }
+    public Instant ModifiedAt { get; set; }
     public string ModifiedBy { get; set; } = "System";
 }
 

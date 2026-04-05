@@ -1,5 +1,8 @@
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
+using NodaTime;
+using NodaTime.Text;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.LegalDocuments.Create;
 using TranzrMoves.Application.Features.LegalDocuments.Get;
@@ -9,8 +12,11 @@ using TranzrMoves.Domain.Entities;
 namespace TranzrMoves.Api.Controllers;
 
 [Route("api/v1/[controller]")]
-public class LegalController(IMediator mediator) : ApiControllerBase
+public class LegalController(IMediator mediator, ITimeService timeService) : ApiControllerBase
 {
+    private static readonly InstantPattern HttpLastModifiedPattern =
+        InstantPattern.CreateWithInvariantCulture("ddd, dd MMM yyyy HH:mm:ss 'GMT'");
+
     [HttpPost("terms-and-conditions")]
     public async Task<IActionResult> CreateTermsAndConditions(
         [FromBody] CreateLegalDocumentRequest request, 
@@ -25,7 +31,7 @@ public class LegalController(IMediator mediator) : ApiControllerBase
 
     [HttpGet("terms-and-conditions")]
     public async Task<IActionResult> GetTermsAndConditions(
-        [FromQuery] DateTimeOffset? asOfDate, 
+        [FromQuery] Instant? asOfDate, 
         CancellationToken cancellationToken)
     {
         var request = new GetLegalDocumentRequest(LegalDocumentType.TermsAndConditions, asOfDate);
@@ -44,8 +50,8 @@ public class LegalController(IMediator mediator) : ApiControllerBase
                 }
                 
                 // If client's cached version is newer or same, return 304 Not Modified
-                if (!string.IsNullOrEmpty(ifModifiedSince) && 
-                    DateTime.TryParse(ifModifiedSince, out var clientModified) &&
+                if (!string.IsNullOrEmpty(ifModifiedSince) &&
+                    TryParseHttpInstant(ifModifiedSince, out var clientModified) &&
                     clientModified >= response.CreatedAt)
                 {
                     return StatusCode(304); // Not Modified
@@ -54,11 +60,12 @@ public class LegalController(IMediator mediator) : ApiControllerBase
                 // Set intelligent cache control headers for legal documents
                 // Cache until the next document becomes effective (when EffectiveTo is set),
                 // or 24 hours minimum for current documents (EffectiveTo is null)
-                var cacheUntil = response.EffectiveTo ?? DateTimeOffset.UtcNow.AddDays(1);
-                var maxAge = Math.Max(86400, (int)(cacheUntil - DateTimeOffset.UtcNow).TotalSeconds);
+                var now = timeService.Now();
+                var cacheUntil = response.EffectiveTo ?? now.Plus(Duration.FromDays(1));
+                var maxAge = Math.Max(86400, (int)(cacheUntil - now).ToTimeSpan().TotalSeconds);
                 Response.Headers.CacheControl = $"public, max-age={maxAge}"; // Cache until next effective date
                 Response.Headers.ETag = $"\"{response.Version}\""; // Use document version as ETag
-                Response.Headers.LastModified = response.CreatedAt.ToString("R"); // RFC 1123 format
+                Response.Headers.LastModified = HttpLastModifiedPattern.Format(response.CreatedAt);
                 return Ok(response);
             },
             Problem);
@@ -86,7 +93,7 @@ public class LegalController(IMediator mediator) : ApiControllerBase
 
     [HttpGet("privacy-policy")]
     public async Task<IActionResult> GetPrivacyPolicy(
-        [FromQuery] DateTimeOffset? asOfDate, 
+        [FromQuery] Instant? asOfDate, 
         CancellationToken cancellationToken)
     {
         var request = new GetLegalDocumentRequest(LegalDocumentType.PrivacyPolicy, asOfDate);
@@ -105,8 +112,8 @@ public class LegalController(IMediator mediator) : ApiControllerBase
                 }
                 
                 // If client's cached version is newer or same, return 304 Not Modified
-                if (!string.IsNullOrEmpty(ifModifiedSince) && 
-                    DateTime.TryParse(ifModifiedSince, out var clientModified) &&
+                if (!string.IsNullOrEmpty(ifModifiedSince) &&
+                    TryParseHttpInstant(ifModifiedSince, out var clientModified) &&
                     clientModified >= response.CreatedAt)
                 {
                     return StatusCode(304); // Not Modified
@@ -115,11 +122,12 @@ public class LegalController(IMediator mediator) : ApiControllerBase
                 // Set intelligent cache control headers for legal documents
                 // Cache until the next document becomes effective (when EffectiveTo is set),
                 // or 24 hours minimum for current documents (EffectiveTo is null)
-                var cacheUntil = response.EffectiveTo ?? DateTimeOffset.UtcNow.AddDays(1);
-                var maxAge = Math.Max(86400, (int)(cacheUntil - DateTimeOffset.UtcNow).TotalSeconds);
+                var now = timeService.Now();
+                var cacheUntil = response.EffectiveTo ?? now.Plus(Duration.FromDays(1));
+                var maxAge = Math.Max(86400, (int)(cacheUntil - now).ToTimeSpan().TotalSeconds);
                 Response.Headers.CacheControl = $"public, max-age={maxAge}"; // Cache until next effective date
                 Response.Headers.ETag = $"\"{response.Version}\""; // Use document version as ETag
-                Response.Headers.LastModified = response.CreatedAt.ToString("R"); // RFC 1123 format
+                Response.Headers.LastModified = HttpLastModifiedPattern.Format(response.CreatedAt);
                 return Ok(response);
             },
             Problem);
@@ -131,5 +139,18 @@ public class LegalController(IMediator mediator) : ApiControllerBase
         var query = new GetLegalDocumentHistoryQuery(LegalDocumentType.PrivacyPolicy);
         var result = await mediator.Send(query, cancellationToken);
         return result.Match(Ok, Problem);
+    }
+
+    private static bool TryParseHttpInstant(string header, out Instant instant)
+    {
+        var parsed = HttpLastModifiedPattern.Parse(header);
+        if (!parsed.Success)
+        {
+            instant = default;
+            return false;
+        }
+
+        instant = parsed.Value;
+        return true;
     }
 }

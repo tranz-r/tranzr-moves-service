@@ -12,7 +12,7 @@ public record JobDto
     public required PaymentStatus PaymentStatus { get; set; }
     public string? ReceiptUrl { get; set; }
     public required PricingTier PricingTier { get; set; }
-    public DateTime CollectionDate { get; set; }
+    public LocalDate CollectionDate { get; set; }
     public long DriverCount { get; set; }
     public long DistanceMiles { get; set; }
     public CostDto Cost { get; set; }

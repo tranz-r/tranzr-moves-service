@@ -1,6 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
+
+using NodaTime;
+using NodaTime.Serialization.SystemTextJson;
+
 using Serilog;
 using Stripe;
 using Supabase;
@@ -9,6 +13,7 @@ using TranzrMoves.Application.DependencyInjection;
 using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.DependencyInjection;
+using TranzrMoves.Infrastructure.Helper;
 using TranzrMoves.Infrastructure.Services;
 
 Log.Logger = new LoggerConfiguration()
@@ -35,13 +40,26 @@ try
             });
     });
 
+    var configureNodaTime = new Action<JsonSerializerOptions>(opts =>
+    {
+        opts.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+    });
+
     builder.Services.Configure<JsonOptions>(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        configureNodaTime(options.JsonSerializerOptions);
     });
 
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            configureNodaTime(options.JsonSerializerOptions);
+        });
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
     builder.Services.AddOpenApi();
     builder.Services.AddHttpLogging(o => o.CombineLogs = true);
@@ -62,8 +80,8 @@ try
         });
 
     builder.Services.ConfigureTranzrMovesServices(builder.Configuration);
-    builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddApplication();
+    builder.Services.AddInfrastructure(builder.Configuration);
 
 
     builder.Services.AddSingleton( _ =>
@@ -82,6 +100,8 @@ try
     });
 
     var app = builder.Build();
+
+    await app.Services.SeedAsync();
 
 // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -102,6 +122,11 @@ try
     app.Run();
 }
 catch (Exception ex)
+{
+    Log.Fatal(ex, "Application failed to start or stopped due to an unhandled exception.");
+    throw;
+}
+finally
 {
     Log.CloseAndFlush();
 }

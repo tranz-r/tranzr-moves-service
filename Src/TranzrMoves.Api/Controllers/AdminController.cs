@@ -2,6 +2,8 @@ using Mediator;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using NodaTime;
+using NodaTime.Text;
 
 using TranzrMoves.Application.Features.Admin.Dashboard;
 
@@ -31,13 +33,14 @@ public class AdminController(
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetDashboardMetrics(
-        [FromQuery] DateTime? fromDate = null,
-        [FromQuery] DateTime? toDate = null)
+        [FromQuery] LocalDate? fromDate = null,
+        [FromQuery] LocalDate? toDate = null)
     {
         try
         {
+
             // Validate date range
-            if (fromDate.HasValue && toDate.HasValue && fromDate > toDate)
+            if (fromDate.HasValue && toDate.HasValue && fromDate.Value > toDate.Value)
             {
                 return BadRequest("From date must be before or equal to to date");
             }
@@ -140,11 +143,11 @@ public class AdminController(
         }
     }
 
-    private static string GenerateCacheKey(DateTime? fromDate, DateTime? toDate)
+    private static string GenerateCacheKey(LocalDate? fromDate, LocalDate? toDate)
     {
         if (fromDate.HasValue && toDate.HasValue)
         {
-            return $"admin_dashboard_metrics_{fromDate.Value:yyyy-MM-dd}_{toDate.Value:yyyy-MM-dd}";
+            return $"admin_dashboard_metrics_{LocalDatePattern.Iso.Format(fromDate.Value)}_{LocalDatePattern.Iso.Format(toDate.Value)}";
         }
 
         return "admin_dashboard_metrics";

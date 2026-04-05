@@ -10,13 +10,13 @@ public sealed class ServiceFeature : IAuditable
     public string Text { get; set; } = default!;
     public int DisplayOrder { get; set; } = 1;           // 1..N
 
-    public DateTimeOffset EffectiveFrom { get; set; }
-    public DateTimeOffset? EffectiveTo { get; set; }
+    public Instant EffectiveFrom { get; set; }
+    public Instant? EffectiveTo { get; set; }
     public bool IsActive { get; set; } = true;
 
-    public DateTimeOffset CreatedAt { get; set; }
+    public Instant CreatedAt { get; set; }
     public string CreatedBy { get; set; } = "System";
-    public DateTimeOffset ModifiedAt { get; set; }
+    public Instant ModifiedAt { get; set; }
     public string ModifiedBy { get; set; } = "System";
     public uint Version { get; set; }
 }

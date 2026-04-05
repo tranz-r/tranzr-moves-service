@@ -1,7 +1,9 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
+
 using TranzrMoves.Application.Common.CustomErrors;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Interfaces;
 
@@ -10,6 +12,7 @@ namespace TranzrMoves.Application.Features.LegalDocuments.Get;
 public class GetLegalDocumentQueryHandler(
     ILegalDocumentRepository legalDocumentRepository,
     IAzureBlobService azureBlobService,
+    ITimeService timeService,
     ILogger<GetLegalDocumentQueryHandler> logger)
     : IRequestHandler<GetLegalDocumentQuery, ErrorOr<GetLegalDocumentResponse>>
 {
@@ -20,7 +23,7 @@ public class GetLegalDocumentQueryHandler(
         try
         {
             var request = query.Request;
-            var asOfDate = request.AsOfDate ?? DateTimeOffset.UtcNow;
+            var asOfDate = request.AsOfDate ?? timeService.Now();
 
             // Get current document from database
             var document = await legalDocumentRepository.GetCurrentAsync(

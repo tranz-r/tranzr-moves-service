@@ -1,13 +1,14 @@
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.Prices.Removals;
 
 namespace TranzrMoves.Api.Controllers;
 
 [Route("api/v1/[controller]")]
-public class PricesController(IMediator mediator) : ApiControllerBase
+public class PricesController(IMediator mediator, ITimeService timeService) : ApiControllerBase
 {
     [HttpPost]
     public async Task<ActionResult<RemovalPricingDto>> GetPickUpDropOffPricingAsync([FromBody] QuoteRequest req, CancellationToken cancellationToken)
@@ -79,7 +80,7 @@ public class PricesController(IMediator mediator) : ApiControllerBase
             stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount, 
             req.VatRegistered, cfg);
         
-        var basePriceCalculationResult = await mediator.Send(new RemovalPricesRequest(DateTimeOffset.UtcNow), cancellationToken);
+        var basePriceCalculationResult = await mediator.Send(new RemovalPricesRequest(timeService.Now()), cancellationToken);
 
 
         var basePriceCalculation = basePriceCalculationResult.Value;
@@ -99,7 +100,7 @@ public class PricesController(IMediator mediator) : ApiControllerBase
     [HttpGet("removal-prices")]
     public async Task<ActionResult<RemovalPricingDto>> GetRemovalPricesAsync(CancellationToken ct)
     {
-        var response = await mediator.Send(new RemovalPricesRequest(DateTimeOffset.UtcNow), ct);
+        var response = await mediator.Send(new RemovalPricesRequest(timeService.Now()), ct);
         
         var removalPricing = response.Value;
         

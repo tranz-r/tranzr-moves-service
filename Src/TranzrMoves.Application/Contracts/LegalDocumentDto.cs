@@ -10,21 +10,21 @@ public record CreateLegalDocumentResponse(
     Guid Id,
     LegalDocumentType DocumentType,
     string Version,
-    DateTimeOffset EffectiveFrom,
-    DateTimeOffset? EffectiveTo);
+    Instant EffectiveFrom,
+    Instant? EffectiveTo);
 
 public record GetLegalDocumentRequest(
     LegalDocumentType DocumentType,
-    DateTimeOffset? AsOfDate = null);
+    Instant? AsOfDate = null);
 
 public record GetLegalDocumentResponse(
     Guid Id,
     LegalDocumentType DocumentType,
     string MarkdownContent,
     string Version,
-    DateTimeOffset EffectiveFrom,
-    DateTimeOffset? EffectiveTo,
-    DateTimeOffset CreatedAt,
+    Instant EffectiveFrom,
+    Instant? EffectiveTo,
+    Instant CreatedAt,
     string CreatedBy);
 
 public record LegalDocumentDto
@@ -34,11 +34,11 @@ public record LegalDocumentDto
     public string BlobName { get; init; } = string.Empty;
     public string ContainerName { get; init; } = string.Empty;
     public string Version { get; init; } = string.Empty;
-    public DateTimeOffset EffectiveFrom { get; init; }
-    public DateTimeOffset? EffectiveTo { get; init; }
+    public Instant EffectiveFrom { get; init; }
+    public Instant? EffectiveTo { get; init; }
     public bool IsActive { get; init; }
     public int ContentLength { get; init; }
-    public DateTimeOffset CreatedAt { get; init; }
+    public Instant CreatedAt { get; init; }
     public string CreatedBy { get; init; } = string.Empty;
     public uint RowVersion { get; init; }
 }

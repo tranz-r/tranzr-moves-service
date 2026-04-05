@@ -9,8 +9,8 @@ public class LegalDocument : IAuditable
     public string BlobName { get; set; } = string.Empty; // Azure blob name
     public string ContainerName { get; set; } = string.Empty;
     public string Version { get; set; } = string.Empty; // SHA256 hash of content
-    public DateTimeOffset EffectiveFrom { get; set; }
-    public DateTimeOffset? EffectiveTo { get; set; }
+    public Instant EffectiveFrom { get; set; }
+    public Instant? EffectiveTo { get; set; }
     public bool IsActive { get; set; } = true;
     public int ContentLength { get; set; } // Content size in bytes
     public string ContentHash { get; set; } = string.Empty; // MD5 hash for integrity
@@ -19,8 +19,8 @@ public class LegalDocument : IAuditable
     public uint RowVersion { get; set; }
     
     // Audit properties
-    public DateTimeOffset CreatedAt { get; set; }
+    public Instant CreatedAt { get; set; }
     public string CreatedBy { get; set; } = "System";
-    public DateTimeOffset ModifiedAt { get; set; }
+    public Instant ModifiedAt { get; set; }
     public string ModifiedBy { get; set; } = "System";
 }

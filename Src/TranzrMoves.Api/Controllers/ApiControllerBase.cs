@@ -38,6 +38,7 @@ public class ApiControllerBase : ControllerBase
             ErrorType.Validation => StatusCodes.Status400BadRequest,
             ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
             ErrorType.Forbidden => StatusCodes.Status403Forbidden,
+            ErrorType.Conflict when error.Code == "Quote.ConcurrencyConflict" => StatusCodes.Status412PreconditionFailed,
             ErrorType.Conflict => StatusCodes.Status409Conflict,
             CustomErrorType.ServiceUnavailable => StatusCodes.Status503ServiceUnavailable,
             CustomErrorType.RemoteFileOperationFailed => StatusCodes.Status424FailedDependency,

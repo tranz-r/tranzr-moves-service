@@ -13,6 +13,6 @@ public record UpdateRateCardCommand(
     decimal BaseBlockPrice,
     decimal HourlyRateAfter,
     string CurrencyCode,
-    DateTimeOffset EffectiveFrom,
-    DateTimeOffset? EffectiveTo,
+    Instant EffectiveFrom,
+    Instant? EffectiveTo,
     bool IsActive) : IRequest<ErrorOr<RateCardDto>>;

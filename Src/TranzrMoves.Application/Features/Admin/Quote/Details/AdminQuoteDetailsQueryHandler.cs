@@ -2,6 +2,7 @@ using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
@@ -9,6 +10,7 @@ namespace TranzrMoves.Application.Features.Admin.Quote.Details;
 
 public class AdminQuoteDetailsQueryHandler(
     IQuoteRepository quoteRepository,
+    ITimeService timeService,
     ILogger<AdminQuoteDetailsQueryHandler> logger) : IQueryHandler<AdminQuoteDetailsQuery, ErrorOr<AdminQuoteDetailsResponse>>
 {
     public async ValueTask<ErrorOr<AdminQuoteDetailsResponse>> Handle(AdminQuoteDetailsQuery request, CancellationToken cancellationToken)
@@ -25,7 +27,7 @@ public class AdminQuoteDetailsQueryHandler(
                 return Error.NotFound("Quote.NotFound", $"Quote with ID {request.QuoteId} not found");
             }
 
-            var quoteDto = MapToAdminQuoteDetailsDto(quote);
+            var quoteDto = MapToAdminQuoteDetailsDto(quote, timeService);
 
             logger.LogInformation("Successfully retrieved admin quote details for quote {QuoteId}", request.QuoteId);
 
@@ -38,7 +40,7 @@ public class AdminQuoteDetailsQueryHandler(
         }
     }
 
-    private static AdminQuoteDetailsDto MapToAdminQuoteDetailsDto(Domain.Entities.Quote quote)
+    private static AdminQuoteDetailsDto MapToAdminQuoteDetailsDto(Domain.Entities.Quote quote, ITimeService time)
     {
         // Calculate total cost including additional payments
         var baseCost = quote.TotalCost ?? 0;
@@ -115,7 +117,7 @@ public class AdminQuoteDetailsQueryHandler(
             payment.PaymentMethodId,
             payment.PaymentIntentId,
             payment.ReceiptUrl,
-            DateTimeOffset.UtcNow, // CreatedAt not available in QuoteAdditionalPayment entity
+            time.Now(), // CreatedAt not available in QuoteAdditionalPayment entity
             "Completed")).ToList() ?? new List<AdminAdditionalPaymentDto>();
 
         // Map payment history (placeholder - would need actual payment history entity)
@@ -126,8 +128,8 @@ public class AdminQuoteDetailsQueryHandler(
             quote.VanType.ToString(),
             (int)quote.DriverCount,
             quote.Hours,
-            quote.CollectionDate,
-            quote.DeliveryDate,
+            MapLocalDateToUtcInstant(quote.CollectionDate),
+            MapLocalDateToUtcInstant(quote.DeliveryDate),
             quote.FlexibleTime ?? false,
             quote.TimeSlot?.ToString(),
             quote.DistanceMiles,
@@ -162,6 +164,11 @@ public class AdminQuoteDetailsQueryHandler(
             serviceDetails,
             adminNotes);
     }
+
+    private static Instant? MapLocalDateToUtcInstant(LocalDate? date) =>
+        date.HasValue
+            ? date.Value.AtStartOfDayInZone(DateTimeZone.Utc).ToInstant()
+            : null;
 
     private static AdminAddressDto MapToAdminAddressDto(Domain.Entities.Address address)
     {

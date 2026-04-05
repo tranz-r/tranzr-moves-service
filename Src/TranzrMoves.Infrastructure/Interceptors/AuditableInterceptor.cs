@@ -1,11 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using NodaTime;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Infrastructure.Interceptors;
 
-public class AuditableInterceptor() : SaveChangesInterceptor
+public class AuditableInterceptor(ITimeService timeService) : SaveChangesInterceptor
 {
     public override ValueTask<InterceptionResult<int>> SavingChangesAsync(DbContextEventData eventData,
         InterceptionResult<int> result,
@@ -21,7 +23,7 @@ public class AuditableInterceptor() : SaveChangesInterceptor
 
     private void UpdateAuditableEntities(DbContext context)
     {
-        DateTimeOffset utcNow = DateTimeOffset.UtcNow;
+        var utcNow = timeService.Now();
         var entities = context.ChangeTracker.Entries<IAuditable>().ToList();
 
         foreach (EntityEntry<IAuditable> entry in entities)
@@ -48,7 +50,7 @@ public class AuditableInterceptor() : SaveChangesInterceptor
         static void SetCurrentPropertyDateTimeValue(
             EntityEntry entry,
             string propertyName,
-            DateTimeOffset utcNow) =>
+            Instant utcNow) =>
             entry.Property(propertyName).CurrentValue = utcNow;
 
         static void SetCurrentPropertyValue(

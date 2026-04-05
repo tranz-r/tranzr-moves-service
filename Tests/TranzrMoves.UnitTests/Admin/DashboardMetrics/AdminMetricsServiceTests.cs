@@ -1,8 +1,10 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Infrastructure;
 using TranzrMoves.Infrastructure.Services;
@@ -23,7 +25,7 @@ public class AdminMetricsServiceTests : IDisposable
 
         _context = new TranzrMovesDbContext(options);
         _loggerMock = Substitute.For<ILogger<AdminMetricsService>>();
-        _service = new AdminMetricsService(_context, _loggerMock);
+        _service = new AdminMetricsService(_context, new TimeService(SystemClock.Instance), _loggerMock);
     }
 
     [Fact]
@@ -45,8 +47,9 @@ public class AdminMetricsServiceTests : IDisposable
         metrics.Drivers.Should().NotBeNull();
         metrics.Revenue.Should().NotBeNull();
         metrics.Operational.Should().NotBeNull();
-        metrics.LastUpdated.Should().BeCloseTo(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1));
-        metrics.CacheExpiry.Should().BeCloseTo(DateTimeOffset.UtcNow.AddMinutes(5), TimeSpan.FromMinutes(1));
+        var now = SystemClock.Instance.GetCurrentInstant();
+        (metrics.LastUpdated - now).ToTimeSpan().Duration().Should().BeLessThan(TimeSpan.FromMinutes(1));
+        (metrics.CacheExpiry - now).ToTimeSpan().Should().BeCloseTo(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(1));
     }
 
     [Fact]
@@ -54,8 +57,9 @@ public class AdminMetricsServiceTests : IDisposable
     {
         // Arrange
         await SeedTestDataAsync();
-        var fromDate = DateTime.UtcNow.AddDays(-30);
-        var toDate = DateTime.UtcNow.AddDays(-1);
+        var today = SystemClock.Instance.GetCurrentInstant().InUtc().Date;
+        var fromDate = today.PlusDays(-30);
+        var toDate = today.PlusDays(-1);
 
         // Act
         var result = await _service.GetDashboardMetricsAsync(fromDate, toDate, CancellationToken.None);
@@ -165,9 +169,9 @@ public class AdminMetricsServiceTests : IDisposable
         // Add test users
         var users = new List<User>
         {
-            new() { Id = Guid.NewGuid(), Email = "customer1@test.com", Role = Role.customer, CreatedAt = DateTimeOffset.UtcNow.AddDays(-10) },
-            new() { Id = Guid.NewGuid(), Email = "driver1@test.com", Role = Role.driver, CreatedAt = DateTimeOffset.UtcNow.AddDays(-5) },
-            new() { Id = Guid.NewGuid(), Email = "admin1@test.com", Role = Role.admin, CreatedAt = DateTimeOffset.UtcNow.AddDays(-1) }
+            new() { Id = Guid.NewGuid(), Email = "customer1@test.com", Role = Role.customer, CreatedAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromDays(-10)) },
+            new() { Id = Guid.NewGuid(), Email = "driver1@test.com", Role = Role.driver, CreatedAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromDays(-5)) },
+            new() { Id = Guid.NewGuid(), Email = "admin1@test.com", Role = Role.admin, CreatedAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromDays(-1)) }
         };
 
         _context.Set<User>().AddRange(users);
@@ -182,7 +186,7 @@ public class AdminMetricsServiceTests : IDisposable
                 PaymentStatus = PaymentStatus.Succeeded,
                 PaymentType = PaymentType.Full,
                 TotalCost = 1000m,
-                CreatedAt = DateTimeOffset.UtcNow.AddDays(-5)
+                CreatedAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromDays(-5))
             },
             new()
             {
@@ -191,7 +195,7 @@ public class AdminMetricsServiceTests : IDisposable
                 PaymentStatus = PaymentStatus.Pending,
                 PaymentType = PaymentType.Deposit,
                 TotalCost = 500m,
-                CreatedAt = DateTimeOffset.UtcNow.AddDays(-3)
+                CreatedAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromDays(-3))
             },
             new()
             {
@@ -200,7 +204,7 @@ public class AdminMetricsServiceTests : IDisposable
                 PaymentStatus = PaymentStatus.Paid,
                 PaymentType = PaymentType.Later,
                 TotalCost = 750m,
-                CreatedAt = DateTimeOffset.UtcNow.AddDays(-1)
+                CreatedAt = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromDays(-1))
             }
         };
 

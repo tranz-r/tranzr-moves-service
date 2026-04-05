@@ -19,8 +19,8 @@ public record AdminQuoteDetailsDto(
     decimal AdditionalPaymentsTotal,
     string? PaymentStatus,
     string? PaymentMethod,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset ModifiedAt,
+    Instant CreatedAt,
+    Instant ModifiedAt,
     string CreatedBy,
     string ModifiedBy,
     AdminCustomerDto? Customer,
@@ -41,8 +41,8 @@ public record AdminCustomerDto(
     string Email,
     string Phone,
     string Role,
-    DateTimeOffset CreatedAt,
-    DateTimeOffset? LastLoginAt,
+    Instant CreatedAt,
+    Instant? LastLoginAt,
     AdminAddressDto? BillingAddress);
 
 public record AdminDriverDto(
@@ -54,7 +54,7 @@ public record AdminDriverDto(
     string Phone,
     string Role,
     string Availability,
-    DateTimeOffset? AssignedAt,
+    Instant? AssignedAt,
     string? VehicleInfo);
 
 public record AdminAddressDto(
@@ -108,7 +108,7 @@ public record AdminAdditionalPaymentDto(
     string? PaymentMethodId,
     string? PaymentIntentId,
     string? ReceiptUrl,
-    DateTimeOffset CreatedAt,
+    Instant CreatedAt,
     string Status);
 
 public record AdminPaymentHistoryDto(
@@ -118,15 +118,15 @@ public record AdminPaymentHistoryDto(
     string? PaymentMethod,
     string? PaymentIntentId,
     string? ReceiptUrl,
-    DateTimeOffset ProcessedAt,
+    Instant ProcessedAt,
     string? FailureReason);
 
 public record AdminServiceDetailsDto(
     string VanType,
     int DriverCount,
     decimal? Hours,
-    DateTimeOffset? CollectionDate,
-    DateTimeOffset? DeliveryDate,
+    Instant? CollectionDate,
+    Instant? DeliveryDate,
     bool FlexibleTime,
     string? TimeSlot,
     decimal? DistanceMiles,
@@ -136,7 +136,7 @@ public record AdminNoteDto(
     Guid Id,
     string Note,
     string CreatedBy,
-    DateTimeOffset CreatedAt,
+    Instant CreatedAt,
     bool IsInternal,
     string? Category);
 

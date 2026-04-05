@@ -10,6 +10,6 @@ public record UpdateServiceFeatureCommand(
     ServiceLevel ServiceLevel,
     string Text,
     int DisplayOrder,
-    DateTimeOffset EffectiveFrom,
-    DateTimeOffset? EffectiveTo,
+    Instant EffectiveFrom,
+    Instant? EffectiveTo,
     bool IsActive) : IRequest<ErrorOr<ServiceFeatureDto>>;

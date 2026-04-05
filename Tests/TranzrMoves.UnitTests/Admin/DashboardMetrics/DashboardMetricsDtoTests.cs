@@ -1,11 +1,24 @@
 using System.Text.Json;
 using FluentAssertions;
+using NodaTime;
+using NodaTime.Serialization.SystemTextJson;
 using TranzrMoves.Application.Features.Admin.Dashboard;
 
 namespace TranzrMoves.UnitTests.Admin.DashboardMetrics;
 
 public class DashboardMetricsDtoTests
 {
+    private static JsonSerializerOptions CreateJsonOptions()
+    {
+        var opts = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true
+        };
+        opts.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+        return opts;
+    }
+
     [Fact]
     public void DashboardMetricsDto_ShouldSerializeCorrectly()
     {
@@ -81,16 +94,12 @@ public class DashboardMetricsDtoTests
                 AverageCompletionTime = 2.5,
                 CustomerSatisfactionScore = 4.2
             },
-            LastUpdated = DateTimeOffset.UtcNow,
-            CacheExpiry = DateTimeOffset.UtcNow.AddMinutes(5)
+            LastUpdated = SystemClock.Instance.GetCurrentInstant(),
+            CacheExpiry = SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromMinutes(5))
         };
 
         // Act
-        var json = JsonSerializer.Serialize(dto, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
-        });
+        var json = JsonSerializer.Serialize(dto, CreateJsonOptions());
 
         // Assert
         json.Should().NotBeNullOrEmpty();
@@ -176,10 +185,9 @@ public class DashboardMetricsDtoTests
         """;
 
         // Act
-        var dto = JsonSerializer.Deserialize<DashboardMetricsDto>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var opts = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        opts.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+        var dto = JsonSerializer.Deserialize<DashboardMetricsDto>(json, opts);
 
         // Assert
         dto.Should().NotBeNull();
@@ -204,7 +212,7 @@ public class DashboardMetricsDtoTests
         dto.Drivers.Should().NotBeNull();
         dto.Revenue.Should().NotBeNull();
         dto.Operational.Should().NotBeNull();
-        dto.LastUpdated.Should().Be(default(DateTimeOffset));
-        dto.CacheExpiry.Should().Be(default(DateTimeOffset));
+        dto.LastUpdated.Should().Be(default);
+        dto.CacheExpiry.Should().Be(default);
     }
 }

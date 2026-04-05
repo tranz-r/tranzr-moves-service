@@ -1,17 +1,29 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using Npgsql;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Infrastructure.Helper;
 
+/// <summary>
+/// Runs at API startup (after <c>WebApplication.Build</c>) so removal pricing exists once the DB schema is current.
+/// Seeds rate cards, service features, and additional prices (assembly / dismantle). Migrations are applied separately; this only inserts missing rows (idempotent).
+/// </summary>
 public static class RemovalPricingSeeder
 {
+    /// <summary>Matches seeded API payloads: <c>2025-08-29T00:00:00Z</c>.</summary>
+    private static readonly Instant AdditionalPricesSeedEffectiveFrom =
+        new LocalDate(2025, 8, 29).AtStartOfDayInZone(DateTimeZone.Utc).ToInstant();
+
     public static async Task SeedAsync(this IServiceProvider services, CancellationToken ct = default)
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<TranzrMovesDbContext>();
+        var timeService = scope.ServiceProvider.GetRequiredService<ITimeService>();
         var logger = scope.ServiceProvider.GetService<ILoggerFactory>()?.CreateLogger("RemovalPricingSeeder");
 
         // If DB can't be reached, bail quietly
@@ -21,38 +33,40 @@ public static class RemovalPricingSeeder
             return;
         }
 
-        // Ensure target tables exist (no migrations)
-        if (!await TableExistsAsync(db, "rate_cards", ct) || !await TableExistsAsync(db, "service_features", ct))
+        // Ensure target tables exist (schema + names come from the EF model, not hard-coded public.* guesses)
+        if (!await TableExistsAsync(db, typeof(RateCard), ct) ||
+            !await TableExistsAsync(db, typeof(ServiceFeature), ct))
         {
-            logger?.LogWarning("Tables not found (rate_cards/service_features); skipping pricing seed.");
+            logger?.LogWarning("Tables not found (RateCards/ServiceFeatures); skipping pricing seed.");
             return;
         }
 
-        var today = DateTimeOffset.UtcNow.Date;
-        var now   = DateTimeOffset.UtcNow;
+        var additionalPricesTableOk = await TableExistsAsync(db, typeof(AdditionalPrice), ct);
+        if (!additionalPricesTableOk)
+            logger?.LogWarning("Table not found (AdditionalPrices); skipping additional price seed.");
+
+        var utc = DateTimeZone.Utc;
+        var now = timeService.Now();
+        var today = timeService.TodayInUtc().AtStartOfDayInZone(utc).ToInstant();
 
         // ---- helpers ----
-        static RateCard RC(int movers, ServiceLevel level, int hours, decimal block, decimal after,
-            DateTimeOffset from, DateTimeOffset now) => new()
-        {
-            Id = Guid.NewGuid(),
-            Movers = movers,
-            ServiceLevel = level,
-            BaseBlockHours = hours,
-            BaseBlockPrice = block,
-            HourlyRateAfter = after,
-            CurrencyCode = "GBP",
-            EffectiveFrom = from,
-            EffectiveTo = null,
-            IsActive = true,
-            CreatedAt = now,
-            CreatedBy = "Seed",
-            ModifiedAt = now,
-            ModifiedBy = "Seed"
-        };
+        // Auditable timestamps / CreatedBy are applied by AuditableInterceptor on SaveChanges.
+        static RateCard RC(int movers, ServiceLevel level, int hours, decimal block, decimal after, Instant from) =>
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Movers = movers,
+                ServiceLevel = level,
+                BaseBlockHours = hours,
+                BaseBlockPrice = block,
+                HourlyRateAfter = after,
+                CurrencyCode = "GBP",
+                EffectiveFrom = from,
+                EffectiveTo = null,
+                IsActive = true
+            };
 
-        static ServiceFeature SF(ServiceLevel level, int order, string text,
-            DateTimeOffset from, DateTimeOffset now) => new()
+        static ServiceFeature SF(ServiceLevel level, int order, string text, Instant from) => new()
         {
             Id = Guid.NewGuid(),
             ServiceLevel = level,
@@ -60,12 +74,21 @@ public static class RemovalPricingSeeder
             Text = text,
             EffectiveFrom = from,
             EffectiveTo = null,
-            IsActive = true,
-            CreatedAt = now,
-            CreatedBy = "Seed",
-            ModifiedAt = now,
-            ModifiedBy = "Seed"
+            IsActive = true
         };
+
+        static AdditionalPrice AP(AdditionalPriceType type, string description, decimal price, string currency, Instant from) =>
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Type = type,
+                Description = description,
+                Price = price,
+                CurrencyCode = currency,
+                EffectiveFrom = from,
+                EffectiveTo = null,
+                IsActive = true
+            };
 
         // ---- idempotent inserts ----
         async Task EnsureRateAsync(int movers, ServiceLevel level, int hours, decimal block, decimal after)
@@ -78,7 +101,7 @@ public static class RemovalPricingSeeder
                 (r.EffectiveTo == null || r.EffectiveTo > now), ct);
 
             if (!exists)
-                db.Add(RC(movers, level, hours, block, after, today, now));
+                db.Add(RC(movers, level, hours, block, after, today));
         }
 
         await EnsureRateAsync(1, ServiceLevel.Standard, 3, 250, 65);
@@ -99,7 +122,7 @@ public static class RemovalPricingSeeder
                 (f.EffectiveTo == null || f.EffectiveTo > now), ct);
 
             if (!exists)
-                db.Add(SF(level, order, text, today, now));
+                db.Add(SF(level, order, text, today));
         }
 
         // Standard features
@@ -117,18 +140,68 @@ public static class RemovalPricingSeeder
         await EnsureFeatureAsync(ServiceLevel.Premium, 5, "Satisfaction guarantee");
         await EnsureFeatureAsync(ServiceLevel.Premium, 6, "Dismantling and reassembly included");
 
-        await db.SaveChangesAsync(ct);
-        logger?.LogInformation("Removal pricing seed completed.");
+        if (additionalPricesTableOk)
+        {
+            async Task EnsureAdditionalAsync(AdditionalPriceType type, string description, decimal price, string currency)
+            {
+                var exists = await db.Set<AdditionalPrice>().AnyAsync(p =>
+                    p.Type == type &&
+                    p.IsActive &&
+                    p.EffectiveFrom <= now &&
+                    (p.EffectiveTo == null || p.EffectiveTo > now), ct);
+
+                if (!exists)
+                    db.Add(AP(type, description, price, currency, AdditionalPricesSeedEffectiveFrom));
+            }
+
+            await EnsureAdditionalAsync(
+                AdditionalPriceType.Assembly,
+                "Professional Assembly Service",
+                25.00m,
+                "GBP");
+            await EnsureAdditionalAsync(
+                AdditionalPriceType.Dismantle,
+                "Professional Dismantling Service",
+                18.00m,
+                "GBP");
+        }
+
+        if (db.ChangeTracker.HasChanges())
+        {
+            await db.SaveChangesAsync(ct);
+            logger?.LogInformation("Removal pricing seed inserted new rate cards, features, or additional prices.");
+        }
+        else
+            logger?.LogInformation("Removal pricing seed skipped inserts (current data already present).");
     }
 
-    private static async Task<bool> TableExistsAsync(DbContext db, string table, CancellationToken ct)
+    private static async Task<bool> TableExistsAsync(DbContext db, Type entityClrType, CancellationToken ct)
     {
-        await using var conn = (NpgsqlConnection)db.Database.GetDbConnection();
-        if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync(ct);
+        var entityType = db.Model.FindEntityType(entityClrType);
+        if (entityType == null) return false;
 
-        // checks current schema ('public' by default); adjust schema if you use another
-        await using var cmd = new NpgsqlCommand("select to_regclass(@p1) is not null;", conn);
-        cmd.Parameters.AddWithValue("p1", $"public.{table}");
+        var table = entityType.GetTableName();
+        var schema = entityType.GetSchema() ?? "public";
+        if (string.IsNullOrEmpty(table)) return false;
+
+        // Do not dispose: this is the DbContext's shared connection; disposing breaks subsequent use.
+        var conn = (NpgsqlConnection)db.Database.GetDbConnection();
+        if (conn.State != ConnectionState.Open)
+            await conn.OpenAsync(ct);
+
+        await using var cmd = new NpgsqlCommand(
+            """
+            select exists (
+              select 1
+              from pg_catalog.pg_class c
+              join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+              where n.nspname = @schema
+                and c.relname = @table
+                and c.relkind = 'r');
+            """,
+            conn);
+        cmd.Parameters.AddWithValue("schema", schema);
+        cmd.Parameters.AddWithValue("table", table);
         var result = await cmd.ExecuteScalarAsync(ct);
         return result is bool b && b;
     }

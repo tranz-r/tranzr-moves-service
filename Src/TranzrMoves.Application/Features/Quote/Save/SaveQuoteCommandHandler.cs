@@ -36,6 +36,14 @@ public class SaveQuoteCommandHandler(
                 return Error.Custom((int)CustomErrorType.NotFound, "Quote.NotFound", "Quote not found");
             }
 
+            if (!string.IsNullOrWhiteSpace(command.ETag)
+                && !EntityTagsMatch(command.ETag, existingQuote.Version.ToString()))
+            {
+                logger.LogInformation("ETag mismatch for guest {SessionId}", command.Quote.SessionId);
+                return Error.Custom((int)ErrorType.Conflict, "Quote.ConcurrencyConflict",
+                    "Quote was modified by another request");
+            }
+
             // Update quote entity
             var mapper = new QuoteMapper();
 
@@ -55,8 +63,8 @@ public class SaveQuoteCommandHandler(
             {
                 if (result.FirstError.Type == ErrorType.Conflict)
                 {
-                    logger.LogInformation("ETag mismatch for guest {SessionId}", command.Quote.SessionId);
-                    return Error.Custom((int)ErrorType.Conflict, "Quote.ConcurrencyConflict", "Quote was modified by another request");
+                    return Error.Custom((int)ErrorType.Conflict, "Quote.ConcurrencyConflict",
+                        "Quote was modified by another request");
                 }
 
                 logger.LogWarning("Failed to update quote for guest {SessionId}: {Error}",
@@ -230,5 +238,22 @@ public class SaveQuoteCommandHandler(
             logger.LogError(ex, "Error mapping QuoteDto to Quote entity for guest {SessionId}", command.Quote.SessionId);
             return Error.Custom((int)CustomErrorType.BadRequest, "Quote.InvalidFormat", "Invalid quote data format");
         }
+    }
+
+    private static bool EntityTagsMatch(string? headerValue, string candidate)
+    {
+        if (string.IsNullOrWhiteSpace(headerValue))
+        {
+            return false;
+        }
+
+        var trimmed = headerValue.Trim();
+        if (trimmed.StartsWith("W/", StringComparison.OrdinalIgnoreCase))
+        {
+            trimmed = trimmed[2..].Trim();
+        }
+
+        trimmed = trimmed.Trim('"');
+        return string.Equals(trimmed, candidate, StringComparison.Ordinal);
     }
 }

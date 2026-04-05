@@ -1,4 +1,5 @@
 using ErrorOr;
+
 using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Domain.Interfaces;
@@ -26,13 +27,13 @@ public interface IQuoteRepository
         string? sortBy = "createdAt",
         string? sortDir = "desc",
         string? status = null,
-        DateTime? dateFrom = null,
-        DateTime? dateTo = null,
+        LocalDate? dateFrom = null,
+        LocalDate? dateTo = null,
         CancellationToken ct = default);
 
     // Admin Quote Details
     Task<Quote?> GetAdminQuoteDetailsAsync(Guid quoteId, CancellationToken ct = default);
-    Task<List<Quote>> GetPayLaterQuotesForTodayAsync(DateOnly today, CancellationToken cancellationToken);
+    Task<List<Quote>> GetPayLaterQuotesForTodayAsync(LocalDate today, CancellationToken cancellationToken);
 }
 
 

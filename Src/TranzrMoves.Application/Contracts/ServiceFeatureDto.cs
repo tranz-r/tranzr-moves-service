@@ -9,8 +9,8 @@ public class ServiceFeatureDto
     public required string Text { get; set; }
     public int DisplayOrder { get; set; }
 
-    public DateTimeOffset EffectiveFrom { get; set; }
-    public DateTimeOffset? EffectiveTo { get; set; }
+    public Instant EffectiveFrom { get; set; }
+    public Instant? EffectiveTo { get; set; }
     public bool IsActive { get; set; } = true;
     public uint Version { get; set; }
 }

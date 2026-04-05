@@ -2,6 +2,7 @@ using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using System.Collections.ObjectModel;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
@@ -24,12 +25,13 @@ public record AssignedDriverDto(
     Guid QuoteId,
     Guid DriverId,
     string DriverName,
-    DateTimeOffset AssignedAt,
+    Instant AssignedAt,
     string AssignedBy);
 
 public class AssignDriverCommandHandler(
     IQuoteRepository quoteRepository,
     IUserRepository userRepository,
+    ITimeService timeService,
     ILogger<AssignDriverCommandHandler> logger) : ICommandHandler<AssignDriverCommand, ErrorOr<AssignDriverResponse>>
 {
     public async ValueTask<ErrorOr<AssignDriverResponse>> Handle(AssignDriverCommand request, CancellationToken cancellationToken)
@@ -67,13 +69,14 @@ public class AssignDriverCommandHandler(
                 quote.DriverQuotes.Clear();
             }
 
+            var assignedAt = timeService.Now();
             // Create new driver assignment
             var driverQuote = new DriverQuote
             {
                 Id = Guid.NewGuid(),
                 QuoteId = quote.Id,
                 UserId = driver.Id,
-                CreatedAt = DateTimeOffset.UtcNow,
+                CreatedAt = assignedAt,
                 CreatedBy = "Admin" // TODO: Get actual admin user
             };
 
@@ -83,7 +86,7 @@ public class AssignDriverCommandHandler(
             }
             quote.DriverQuotes.Add(driverQuote);
 
-            quote.ModifiedAt = DateTimeOffset.UtcNow;
+            quote.ModifiedAt = timeService.Now();
             quote.ModifiedBy = "Admin"; // TODO: Get actual admin user
 
             await quoteRepository.UpdateQuoteAsync(quote, cancellationToken);
@@ -97,7 +100,7 @@ public class AssignDriverCommandHandler(
                     quote.Id,
                     driver.Id,
                     driver.FullName ?? "",
-                    DateTimeOffset.UtcNow,
+                    assignedAt,
                     "Admin"));
         }
         catch (Exception ex)

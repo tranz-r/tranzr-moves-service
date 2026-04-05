@@ -1,6 +1,9 @@
 using HandlebarsDotNet;
 using Microsoft.Extensions.Logging;
+using NodaTime;
+using NodaTime.Text;
 
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Infrastructure.Services.EmailTemplates;
@@ -8,12 +11,14 @@ namespace TranzrMoves.Infrastructure.Services.EmailTemplates;
 public class TemplateService : ITemplateService
 {
     private readonly ILogger<TemplateService> _logger;
+    private readonly ITimeService _timeService;
     private readonly Dictionary<string, HandlebarsTemplate<object, object>> _compiledTemplates;
     private readonly string _templatesPath;
 
-    public TemplateService(ILogger<TemplateService> logger)
+    public TemplateService(ILogger<TemplateService> logger, ITimeService timeService)
     {
         _logger = logger;
+        _timeService = timeService;
         _compiledTemplates = new Dictionary<string, HandlebarsTemplate<object, object>>();
         _templatesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Services", "EmailTemplates", "Templates");
 
@@ -35,21 +40,53 @@ public class TemplateService : ITemplateService
 
         Handlebars.RegisterHelper("formatDate", (context, arguments) =>
         {
-            if (arguments.Length > 0 && DateTime.TryParse(arguments[0]?.ToString(), out var date))
+            if (arguments.Length > 0 && TryParseTemplateInstant(arguments[0]?.ToString(), out var instant))
             {
-                return date.ToString("dddd, MMMM dd, yyyy");
+                var z = instant.InZone(DateTimeZoneProviders.Tzdb.GetSystemDefault());
+                return LocalDatePattern.CreateWithCurrentCulture("dddd, MMMM dd, yyyy").Format(z.Date);
             }
-            return DateTime.Now.ToString("dddd, MMMM dd, yyyy");
+
+            var localNow = _timeService.Now()
+                .InZone(DateTimeZoneProviders.Tzdb.GetSystemDefault());
+            return LocalDatePattern.CreateWithCurrentCulture("dddd, MMMM dd, yyyy").Format(localNow.Date);
         });
 
         Handlebars.RegisterHelper("formatTime", (context, arguments) =>
         {
-            if (arguments.Length > 0 && DateTime.TryParse(arguments[0]?.ToString(), out var date))
+            if (arguments.Length > 0 && TryParseTemplateInstant(arguments[0]?.ToString(), out var instant))
             {
-                return date.ToString("HH:mm") + " GMT";
+                return LocalTimePattern.CreateWithInvariantCulture("HH:mm").Format(instant.InUtc().TimeOfDay) + " GMT";
             }
-            return DateTime.Now.ToString("HH:mm") + " GMT";
+
+            var utcNow = _timeService.NowInUtc();
+            return LocalTimePattern.CreateWithInvariantCulture("HH:mm").Format(utcNow.TimeOfDay) + " GMT";
         });
+    }
+
+    private static bool TryParseTemplateInstant(string? text, out Instant instant)
+    {
+        instant = default;
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        var s = text.Trim();
+        var extended = InstantPattern.ExtendedIso.Parse(s);
+        if (extended.Success)
+        {
+            instant = extended.Value;
+            return true;
+        }
+
+        var localDate = LocalDatePattern.Iso.Parse(s);
+        if (localDate.Success)
+        {
+            instant = localDate.Value.AtStartOfDayInZone(DateTimeZone.Utc).ToInstant();
+            return true;
+        }
+
+        return false;
     }
 
     private void CompileTemplates()

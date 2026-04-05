@@ -2,6 +2,9 @@ using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 
+using NodaTime.Text;
+
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Interfaces;
 
@@ -24,6 +27,7 @@ public class SendContactFormCommandHandler(
     IEmailService emailService,
     ITemplateService templateService,
     ITurnstileService turnstileService,
+    ITimeService timeService,
     ILogger<SendContactFormCommandHandler> logger)
     : IRequestHandler<SendContactFormCommand, ErrorOr<SendContactFormResponse>>
 {
@@ -52,8 +56,8 @@ public class SendContactFormCommandHandler(
                 company = command.Company ?? "Not provided",
                 subject = command.Subject,
                 message = command.Message,
-                submittedAt = DateTimeOffset.Now,
-                currentYear = DateTime.Now.Year
+                submittedAt = InstantPattern.ExtendedIso.Format(timeService.Now()),
+                currentYear = timeService.NowInUtc().Year
             };
 
             // Generate HTML and text email content

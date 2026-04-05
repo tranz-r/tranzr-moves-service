@@ -9,5 +9,5 @@ namespace TranzrMoves.Application.Features.Admin.Dashboard;
 /// <param name="FromDate">Optional start date for filtering metrics</param>
 /// <param name="ToDate">Optional end date for filtering metrics</param>
 public record GetDashboardMetricsQuery(
-    DateTime? FromDate = null,
-    DateTime? ToDate = null) : IQuery<ErrorOr<DashboardMetricsDto>>;
+    LocalDate? FromDate = null,
+    LocalDate? ToDate = null) : IQuery<ErrorOr<DashboardMetricsDto>>;

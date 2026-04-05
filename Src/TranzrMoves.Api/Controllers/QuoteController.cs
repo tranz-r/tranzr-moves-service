@@ -1,6 +1,8 @@
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.Quote.SelectQuoteType;
 using TranzrMoves.Application.Features.Quote.Save;
@@ -30,6 +32,7 @@ namespace TranzrMoves.Api.Controllers;
 public class QuoteController(
     IQuoteRepository quoteRepository,
     IMediator mediator,
+    ITimeService timeService,
     ILogger<QuoteController> logger) : ApiControllerBase
 {
     private const string CookieName = "tranzr_guest";
@@ -53,9 +56,9 @@ public class QuoteController(
         Response.Cookies.Append(CookieName, guestId, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = Request.IsHttps,
             SameSite = SameSiteMode.Lax,
-            Expires = DateTimeOffset.UtcNow.AddDays(60)
+            MaxAge = TimeSpan.FromDays(60)
         });
 
         await quoteRepository.CreateIfMissingAsync(guestId, ct);
@@ -80,9 +83,9 @@ public class QuoteController(
         // Use the quote's Version (xmin) as the ETag for concurrency control
         var quoteEtag = quote.Version.ToString();
 
-        // Check If-None-Match
+        // Check If-None-Match (strip weak prefix / quotes — clients send RFC 7232 forms)
         var ifNoneMatch = Request.Headers["If-None-Match"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(ifNoneMatch) && string.Equals(ifNoneMatch, quoteEtag, StringComparison.Ordinal))
+        if (EntityTagsMatch(ifNoneMatch, quoteEtag))
         {
             Response.Headers.ETag = quoteEtag;
             return StatusCode(StatusCodes.Status304NotModified);
@@ -281,8 +284,8 @@ public class QuoteController(
             [FromQuery] string? sortBy = "createdAt",
             [FromQuery] string? sortDir = "desc",
             [FromQuery] string? status = null,
-            [FromQuery] DateTime? dateFrom = null,
-            [FromQuery] DateTime? dateTo = null,
+            [FromQuery] LocalDate? dateFrom = null,
+            [FromQuery] LocalDate? dateTo = null,
             CancellationToken ct = default)
     {
         if (!admin)
@@ -481,7 +484,7 @@ public class QuoteController(
     {
         // Clean up expired sessions (which will cascade to quotes)
         var db = HttpContext.RequestServices.GetRequiredService<Infrastructure.TranzrMovesDbContext>();
-        var now = DateTimeOffset.UtcNow;
+        var now = timeService.Now();
 
         var expiredSessions = await db.Set<QuoteSession>()
             .Where(q => q.ExpiresUtc != null && q.ExpiresUtc < now)
@@ -492,14 +495,31 @@ public class QuoteController(
         return Ok(new { expiredSessions });
     }
 
+    private static bool EntityTagsMatch(string? headerValue, string candidate)
+    {
+        if (string.IsNullOrWhiteSpace(headerValue))
+        {
+            return false;
+        }
+
+        var trimmed = headerValue.Trim();
+        if (trimmed.StartsWith("W/", StringComparison.OrdinalIgnoreCase))
+        {
+            trimmed = trimmed[2..].Trim();
+        }
+
+        trimmed = trimmed.Trim('"');
+        return string.Equals(trimmed, candidate, StringComparison.Ordinal);
+    }
+
     private void RefreshCookie(string guestId)
     {
         Response.Cookies.Append(CookieName, guestId, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
+            Secure = Request.IsHttps,
             SameSite = SameSiteMode.Lax,
-            Expires = DateTimeOffset.UtcNow.AddDays(60)
+            MaxAge = TimeSpan.FromDays(60)
         });
     }
 }

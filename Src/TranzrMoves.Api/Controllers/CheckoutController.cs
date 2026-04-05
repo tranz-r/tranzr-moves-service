@@ -1,13 +1,16 @@
-﻿using System.Globalization;
+using System.Globalization;
 using ErrorOr;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
+using NodaTime;
+using NodaTime.Text;
 
 using Stripe;
 using Stripe.Checkout;
 using Stripe.Tax;
 
 using TranzrMoves.Api.Dtos;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.Quote.Save;
 using TranzrMoves.Application.Mapper;
@@ -29,11 +32,27 @@ public class CheckoutController(
     IUserQuoteRepository userQuoteRepository,
     IMediator mediator,
     IEmailService emailService,
-    ITemplateService templateService) : ApiControllerBase
+    ITemplateService templateService,
+    ITimeService timeService) : ApiControllerBase
 {
     private const string TaxCode = "txcd_20030000";
     private const string TaxBehavior = "inclusive";
     private const string Currency = "gbp";
+
+    private static readonly LocalDatePattern UtcEmailDatePattern =
+        LocalDatePattern.CreateWithInvariantCulture("dddd, MMMM dd, yyyy");
+
+    private static readonly LocalTimePattern UtcEmailTimePattern =
+        LocalTimePattern.CreateWithInvariantCulture("HH:mm");
+
+    private static string FormatInstantAsEmailDate(Instant instant) =>
+        UtcEmailDatePattern.Format(instant.InUtc().Date);
+
+    private static string FormatInstantAsEmailTimeUtc(Instant instant) =>
+        UtcEmailTimePattern.Format(instant.InUtc().TimeOfDay) + " GMT";
+
+    private static string FormatLocalDateIso(LocalDate? d) =>
+        d is { } v ? LocalDatePattern.Iso.Format(v) : string.Empty;
 
     [HttpPost("session")]
     public async Task<ActionResult<CreateCheckoutSessionResponse>> CreateCheckoutSession(
@@ -169,7 +188,7 @@ public class CheckoutController(
                 description = string.IsNullOrWhiteSpace(request.Description)
                     ? $"Payment for quote #{quote.QuoteReference}"
                     : request.Description,
-                currentYear = DateTime.UtcNow.Year,
+                currentYear = timeService.NowInUtc().Year,
                 cardErrorReason
             };
 
@@ -320,7 +339,8 @@ public class CheckoutController(
         // Handle different payment types
         if (saveQuoteRequest is { Quote.Payment.PaymentType: PaymentType.Later })
         {
-            var paymentDueDate = saveQuoteRequest!.Quote.Schedule!.DateISO!.Value.AddHours(-72);
+            var moveDate = saveQuoteRequest!.Quote.Schedule!.DateISO!.Value;
+            var paymentDueDate = moveDate.PlusDays(-3); // calendar analogue to 72h before date-only move
 
             // Create Setup Intent for "pay later" option
             var setupIntentOptions = new SetupIntentCreateOptions
@@ -340,12 +360,12 @@ public class CheckoutController(
                         nameof(PaymentMetadata.DepositPercentage),
                         saveQuoteRequest.Quote.Payment.DepositPercentage?.ToString() ?? "0"
                     },
-                    { nameof(PaymentMetadata.DueDate), paymentDueDate.ToString("yyyy-MM-dd") ?? "" },
+                    { nameof(PaymentMetadata.DueDate), FormatLocalDateIso(paymentDueDate) },
                     { nameof(PaymentMetadata.QuoteReference), saveQuoteRequest.Quote.QuoteReference ?? "" },
                     { nameof(PaymentMetadata.QuoteId), saveQuoteRequest.Quote.Id.ToString() },
                     {
                         nameof(PaymentMetadata.PaymentDueDate),
-                        saveQuoteRequest.Quote.Payment.DueDate?.ToString("yyyy-MM-dd") ?? ""
+                        FormatLocalDateIso(saveQuoteRequest.Quote.Payment.DueDate)
                     }
                 }
             };
@@ -356,7 +376,7 @@ public class CheckoutController(
                 saveQuoteRequest.Quote.Payment.PaymentType);
 
             saveQuoteRequest.Quote.Payment.PaymentIntentId = setupIntent.Id;
-            saveQuoteRequest.Quote.Payment.DueDate = paymentDueDate; // Due 72 hours before move date
+            saveQuoteRequest.Quote.Payment.DueDate = paymentDueDate; // ~72h before move (calendar days)
 
             _ = await UpdateQuoteAsync(saveQuoteRequest, ct);
 
@@ -410,7 +430,7 @@ public class CheckoutController(
                 },
                 {
                     nameof(PaymentMetadata.DueDate),
-                    saveQuoteRequest.Quote.Payment.DueDate?.ToString("yyyy-MM-dd") ?? ""
+                    FormatLocalDateIso(saveQuoteRequest.Quote.Payment.DueDate)
                 },
                 { nameof(PaymentMetadata.QuoteReference), saveQuoteRequest.Quote.QuoteReference ?? "" },
                 { nameof(PaymentMetadata.QuoteId), saveQuoteRequest.Quote.Id.ToString() }
@@ -693,7 +713,7 @@ public class CheckoutController(
     public async Task<ActionResult<PaymentIntentResponse>> CollectLaterPayment(CancellationToken cancellationToken)
     {
         var payLaterQuotes = await quoteRepository
-            .GetPayLaterQuotesForTodayAsync(DateOnly.FromDateTime(DateTime.Today), cancellationToken);
+            .GetPayLaterQuotesForTodayAsync(timeService.TodayInUtc(), cancellationToken);
 
         foreach (var quote in payLaterQuotes)
         {
@@ -901,7 +921,7 @@ public class CheckoutController(
                 var cardErrorDescription = $"<b>We couldn't charge your {cardBrand} card ending with {cardLast4Digits}, because {cardErrorReason}.</b> " +
                                            $"<p>Please use the secure link below to complete the payment for your quotation {quote.QuoteReference} with Tranzr Moves.</p> " +
                                            $"To avoid any delay or cancellation of your scheduled service on " +
-                                           $"{DateOnly.FromDateTime(quote.CollectionDate.Value)}, kindly make your payment as soon as possible or contact us to arrange an alternative payment option.";
+                                           $"{FormatLocalDateIso(quote.CollectionDate)}, kindly make your payment as soon as possible or contact us to arrange an alternative payment option.";
 
                 await CreateCheckoutSession(new CreateCheckoutSessionRequest
                     {
@@ -1065,7 +1085,7 @@ public class CheckoutController(
                     { nameof(PaymentMetadata.PaymentType), request.PaymentType.ToString() },
                     { nameof(PaymentMetadata.TotalCost), (quote.TotalCost ?? 0).ToString("F2") },
                     { nameof(PaymentMetadata.DepositPercentage), "25" }, // Default deposit percentage
-                    { nameof(PaymentMetadata.DueDate), quote.DueDate?.ToString("yyyy-MM-dd") ?? "" },
+                    { nameof(PaymentMetadata.DueDate), FormatLocalDateIso(quote.DueDate) },
                     { nameof(PaymentMetadata.QuoteReference), quote.QuoteReference },
                     { nameof(PaymentMetadata.QuoteId), quote.Id.ToString() },
                     { nameof(PaymentMetadata.CustomerEmail), customer.Email },
@@ -1107,7 +1127,7 @@ public class CheckoutController(
                     paymentLinkUrl = paymentLink.Url,
                     paymentType = request.PaymentType.ToString(),
                     description,
-                    currentYear = DateTime.UtcNow.Year
+                    currentYear = timeService.NowInUtc().Year
                 };
 
                 var subject = $"Payment Link - #{quote.QuoteReference}";
@@ -1224,7 +1244,7 @@ public class CheckoutController(
 
             if (!string.IsNullOrEmpty(customer.Email))
             {
-                var orderDate = DateTime.UtcNow;
+                var orderInstant = timeService.Now();
 
                 var hasPaymentType =
                     paymentIntent.Metadata.TryGetValue(nameof(PaymentMetadata.PaymentType), out var paymentType);
@@ -1320,9 +1340,9 @@ public class CheckoutController(
                         balanceAmount = (paymentIntent.Amount / 100.0m).ToString("N2"),
                         totalAmount = totalCost.ToString("N2"),
                         quoteReference,
-                        paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
-                        paymentTime = orderDate.ToString("HH:mm") + " GMT",
-                        currentYear = DateTime.UtcNow.Year,
+                        paymentDate = FormatInstantAsEmailDate(orderInstant),
+                        paymentTime = FormatInstantAsEmailTimeUtc(orderInstant),
+                        currentYear = timeService.NowInUtc().Year,
                         // Include extra charges details in the email when applicable
                         extraCharges = extraCharges is > 0
                             ? extraCharges.Value.ToString("N2", CultureInfo.InvariantCulture)
@@ -1372,9 +1392,9 @@ public class CheckoutController(
                         totalAmount = totalCost.ToString("N2"),
                         remainingAmount = remainingAmount.ToString("N2"),
                         quoteReference,
-                        paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
-                        paymentTime = orderDate.ToString("HH:mm") + " GMT",
-                        currentYear = DateTime.UtcNow.Year
+                        paymentDate = FormatInstantAsEmailDate(orderInstant),
+                        paymentTime = FormatInstantAsEmailTimeUtc(orderInstant),
+                        currentYear = timeService.NowInUtc().Year
                     };
 
                     var subject = $"Deposit Confirmation - #{quoteReference}";
@@ -1409,9 +1429,9 @@ public class CheckoutController(
                         customerName = user?.FullName,
                         totalAmount = fullAmount.ToString("N2"),
                         quoteReference,
-                        paymentDate = orderDate.ToString("dddd, MMMM dd, yyyy"),
-                        paymentTime = orderDate.ToString("HH:mm") + " GMT",
-                        currentYear = DateTime.UtcNow.Year
+                        paymentDate = FormatInstantAsEmailDate(orderInstant),
+                        paymentTime = FormatInstantAsEmailTimeUtc(orderInstant),
+                        currentYear = timeService.NowInUtc().Year
                     };
 
                     var subject = $"Order Confirmation - #{quoteReference}";
@@ -1451,7 +1471,7 @@ public class CheckoutController(
 
             if (!string.IsNullOrEmpty(customer.Email))
             {
-                var setupDate = DateTime.UtcNow;
+                var setupInstant = timeService.Now();
 
                 // Get quote by QuoteReference from metadata if available
                 var quoteReference = setupIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.QuoteReference), "");
@@ -1504,9 +1524,9 @@ public class CheckoutController(
                         customerName = user?.FullName,
                         totalAmount = totalCost.ToString("N2"),
                         quoteReference,
-                        setupDate = setupDate.ToString("dddd, MMMM dd, yyyy"),
-                        setupTime = setupDate.ToString("HH:mm") + " GMT",
-                        currentYear = DateTime.UtcNow.Year
+                        setupDate = FormatInstantAsEmailDate(setupInstant),
+                        setupTime = FormatInstantAsEmailTimeUtc(setupInstant),
+                        currentYear = timeService.NowInUtc().Year
                     };
 
                     var subject = $"Payment Setup Confirmation - #{quoteReference}";
@@ -1559,7 +1579,7 @@ public class CheckoutController(
 
             if (user is not null)
             {
-                var paymentDate = DateTime.UtcNow;
+                var paymentInstant = timeService.Now();
 
                 // Retrieve the quote from your database
                 var quote = await quoteRepository.GetQuoteByReferenceAsync(quoteReference);
@@ -1691,11 +1711,11 @@ public class CheckoutController(
                     customerName = user.FullName,
                     paymentAmount = paymentAmount.ToString("N2"),
                     quoteReference,
-                    paymentDate = paymentDate.ToString("dddd, MMMM dd, yyyy"),
-                    paymentTime = paymentDate.ToString("HH:mm") + " GMT",
+                    paymentDate = FormatInstantAsEmailDate(paymentInstant),
+                    paymentTime = FormatInstantAsEmailTimeUtc(paymentInstant),
                     description = additionalPaymentDescription,
                     receiptUrl = receiptUrl,
-                    currentYear = DateTime.UtcNow.Year
+                    currentYear = timeService.NowInUtc().Year
                 };
 
                 var subject = $"Payment Confirmation - #{quoteReference}";
@@ -1739,7 +1759,7 @@ public class CheckoutController(
                 paymentTime = "14:30 GMT",
                 setupDate = "Monday, January 15, 2024",
                 setupTime = "14:30 GMT",
-                currentYear = DateTime.UtcNow.Year
+                currentYear = timeService.NowInUtc().Year
             };
 
             var result = templateService.GenerateEmail(templateName, testData);

@@ -1,13 +1,18 @@
 using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NodaTime;
+using TranzrMoves.Application.Common.Time;
+using TranzrMoves.Application.Helpers;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Infrastructure.Respositories;
 
-public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> logger) : IQuoteRepository
+public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, ILogger<QuoteRepository> logger) : IQuoteRepository
 {
+    private static readonly DateTimeZone Utc = DateTimeZone.Utc;
+
     public async Task CreateIfMissingAsync(string guestId, CancellationToken ct = default)
     {
         var session = await db.Set<QuoteSession>()
@@ -15,12 +20,13 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
 
         if (session is null)
         {
+            var now = timeService.Now();
             session = new QuoteSession
             {
                 SessionId = guestId,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddDays(60),
-                CreatedAt = DateTime.UtcNow,
-                ModifiedAt = DateTime.UtcNow
+                ExpiresUtc = now.Plus(Duration.FromDays(60)),
+                CreatedAt = now,
+                ModifiedAt = now
             };
 
             db.Set<QuoteSession>().Add(session);
@@ -57,7 +63,7 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
         {
             SessionId = guestId,
             Type = quoteType,
-            QuoteReference = GenerateQuoteReference(),
+            QuoteReference = QuoteReferenceHelper.GenerateQuoteReference(timeService),
             VanType = VanType.largeVan, // Default
             DriverCount = 1, // Default
         };
@@ -162,8 +168,8 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
         string? sortBy = "createdAt",
         string? sortDir = "desc",
         string? status = null,
-        DateTime? dateFrom = null,
-        DateTime? dateTo = null,
+        LocalDate? dateFrom = null,
+        LocalDate? dateTo = null,
         CancellationToken ct = default)
     {
         // Start with base query - NO includes yet for better performance
@@ -180,11 +186,14 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
 
         if (dateFrom.HasValue)
         {
-            baseQuery = baseQuery.Where(q => q.CreatedAt >= dateFrom.Value);
+            var fromInclusive = dateFrom.Value.AtStartOfDayInZone(Utc).ToInstant();
+            baseQuery = baseQuery.Where(q => q.CreatedAt >= fromInclusive);
         }
+
         if (dateTo.HasValue)
         {
-            baseQuery = baseQuery.Where(q => q.CreatedAt <= dateTo.Value);
+            var toExclusive = dateTo.Value.PlusDays(1).AtStartOfDayInZone(Utc).ToInstant();
+            baseQuery = baseQuery.Where(q => q.CreatedAt < toExclusive);
         }
 
         // Note: Driver filtering removed for performance - will be handled in detail view
@@ -278,21 +287,14 @@ public class QuoteRepository(TranzrMovesDbContext db, ILogger<QuoteRepository> l
             .FirstOrDefaultAsync(q => q.Id == quoteId, ct);
     }
 
-    public Task<List<Quote>> GetPayLaterQuotesForTodayAsync(DateOnly today, CancellationToken cancellationToken)
+    public Task<List<Quote>> GetPayLaterQuotesForTodayAsync(LocalDate today, CancellationToken cancellationToken)
     {
-        IQueryable<Quote> quotes = db.Set<Quote>()
+        return db.Set<Quote>()
             .Where(x => x.PaymentType == PaymentType.Later &&
                         x.PaymentStatus == PaymentStatus.PaymentSetup &&
                         x.DueDate.HasValue &&
-                        (today == DateOnly.FromDateTime(x.DueDate.Value) ||
-                         today > DateOnly.FromDateTime(x.DueDate.Value)));
-
-        return quotes.ToListAsync(cancellationToken);
+                        today >= x.DueDate.Value)
+            .ToListAsync(cancellationToken);
     }
 
-    private static string GenerateQuoteReference()
-    {
-        // Simple quote reference generation
-        return $"TRZ-{DateTime.UtcNow:yyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 6).ToUpper()}";
-    }
 }

@@ -1,6 +1,8 @@
 using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NodaTime;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Features.Admin.Dashboard;
 using TranzrMoves.Domain.Entities;
 
@@ -8,16 +10,26 @@ namespace TranzrMoves.Infrastructure.Services;
 
 public class AdminMetricsService : IAdminMetricsService
 {
+    private static readonly DateTimeZone Utc = DateTimeZone.Utc;
+
+    private static Instant StartOfUtcDay(LocalDate d) =>
+        d.AtStartOfDayInZone(Utc).ToInstant();
+
+    private static Instant StartOfNextUtcDay(LocalDate d) =>
+        d.PlusDays(1).AtStartOfDayInZone(Utc).ToInstant();
+
     private readonly TranzrMovesDbContext _context;
+    private readonly ITimeService _timeService;
     private readonly ILogger<AdminMetricsService> _logger;
 
-    public AdminMetricsService(TranzrMovesDbContext context, ILogger<AdminMetricsService> logger)
+    public AdminMetricsService(TranzrMovesDbContext context, ITimeService timeService, ILogger<AdminMetricsService> logger)
     {
         _context = context;
+        _timeService = timeService;
         _logger = logger;
     }
 
-    public async Task<ErrorOr<DashboardMetricsDto>> GetDashboardMetricsAsync(DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    public async Task<ErrorOr<DashboardMetricsDto>> GetDashboardMetricsAsync(LocalDate? fromDate, LocalDate? toDate, CancellationToken ct)
     {
         try
         {
@@ -39,8 +51,8 @@ public class AdminMetricsService : IAdminMetricsService
                 Drivers = drivers,
                 Revenue = revenue,
                 Operational = operational,
-                LastUpdated = DateTimeOffset.UtcNow,
-                CacheExpiry = DateTimeOffset.UtcNow.AddMinutes(5)
+                LastUpdated = _timeService.Now(),
+                CacheExpiry = _timeService.Now().Plus(Duration.FromMinutes(5))
             };
         }
         catch (Exception ex)
@@ -50,14 +62,21 @@ public class AdminMetricsService : IAdminMetricsService
         }
     }
 
-    private async Task<QuoteMetricsDto> GetQuoteMetricsAsync(DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    private async Task<QuoteMetricsDto> GetQuoteMetricsAsync(LocalDate? fromDate, LocalDate? toDate, CancellationToken ct)
     {
         var query = _context.Set<Quote>().AsNoTracking().AsQueryable();
 
         if (fromDate.HasValue)
-            query = query.Where(q => q.CreatedAt >= fromDate.Value.ToUniversalTime());
+        {
+            var from = StartOfUtcDay(fromDate!.Value);
+            query = query.Where(q => q.CreatedAt >= from);
+        }
+
         if (toDate.HasValue)
-            query = query.Where(q => q.CreatedAt <= toDate.Value.ToUniversalTime());
+        {
+            var toExclusive = StartOfNextUtcDay(toDate.Value);
+            query = query.Where(q => q.CreatedAt < toExclusive);
+        }
 
         var quotes = await query.ToListAsync(ct);
 
@@ -78,7 +97,7 @@ public class AdminMetricsService : IAdminMetricsService
         };
     }
 
-    private async Task<PaymentMetricsDto> GetPaymentMetricsAsync(DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    private async Task<PaymentMetricsDto> GetPaymentMetricsAsync(LocalDate? fromDate, LocalDate? toDate, CancellationToken ct)
     {
         var query = _context.Set<Quote>()
             .AsNoTracking()
@@ -86,9 +105,16 @@ public class AdminMetricsService : IAdminMetricsService
             .AsQueryable();
 
         if (fromDate.HasValue)
-            query = query.Where(q => q.CreatedAt >= fromDate.Value.ToUniversalTime());
+        {
+            var from = StartOfUtcDay(fromDate!.Value);
+            query = query.Where(q => q.CreatedAt >= from);
+        }
+
         if (toDate.HasValue)
-            query = query.Where(q => q.CreatedAt <= toDate.Value.ToUniversalTime());
+        {
+            var toExclusive = StartOfNextUtcDay(toDate.Value);
+            query = query.Where(q => q.CreatedAt < toExclusive);
+        }
 
         var quotes = await query.ToListAsync(ct);
 
@@ -121,17 +147,25 @@ public class AdminMetricsService : IAdminMetricsService
         };
     }
 
-    private async Task<UserMetricsDto> GetUserMetricsAsync(DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    private async Task<UserMetricsDto> GetUserMetricsAsync(LocalDate? fromDate, LocalDate? toDate, CancellationToken ct)
     {
         var query = _context.Set<User>().AsNoTracking().AsQueryable();
 
         if (fromDate.HasValue)
-            query = query.Where(u => u.CreatedAt >= fromDate.Value.ToUniversalTime());
+        {
+            var from = StartOfUtcDay(fromDate!.Value);
+            query = query.Where(u => u.CreatedAt >= from);
+        }
+
         if (toDate.HasValue)
-            query = query.Where(u => u.CreatedAt <= toDate.Value.ToUniversalTime());
+        {
+            var toExclusive = StartOfNextUtcDay(toDate.Value);
+            query = query.Where(u => u.CreatedAt < toExclusive);
+        }
 
         var users = await query.ToListAsync(ct);
-        var thisMonthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var today = _timeService.TodayInUtc();
+        var thisMonthStart = new LocalDate(today.Year, today.Month, 1).AtStartOfDayInZone(Utc).ToInstant();
 
         return new UserMetricsDto
         {
@@ -144,7 +178,7 @@ public class AdminMetricsService : IAdminMetricsService
         };
     }
 
-    private async Task<DriverMetricsDto> GetDriverMetricsAsync(DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    private async Task<DriverMetricsDto> GetDriverMetricsAsync(LocalDate? fromDate, LocalDate? toDate, CancellationToken ct)
     {
         var driverQuery = _context.Set<User>()
             .AsNoTracking()
@@ -154,9 +188,16 @@ public class AdminMetricsService : IAdminMetricsService
             .AsQueryable();
 
         if (fromDate.HasValue)
-            driverQuery = driverQuery.Where(u => u.CreatedAt >= fromDate.Value.ToUniversalTime());
+        {
+            var from = StartOfUtcDay(fromDate!.Value);
+            driverQuery = driverQuery.Where(u => u.CreatedAt >= from);
+        }
+
         if (toDate.HasValue)
-            driverQuery = driverQuery.Where(u => u.CreatedAt <= toDate.Value.ToUniversalTime());
+        {
+            var toExclusive = StartOfNextUtcDay(toDate.Value);
+            driverQuery = driverQuery.Where(u => u.CreatedAt < toExclusive);
+        }
 
         var drivers = await driverQuery.ToListAsync(ct);
 
@@ -178,7 +219,7 @@ public class AdminMetricsService : IAdminMetricsService
         };
     }
 
-    private async Task<RevenueMetricsDto> GetRevenueMetricsAsync(DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    private async Task<RevenueMetricsDto> GetRevenueMetricsAsync(LocalDate? fromDate, LocalDate? toDate, CancellationToken ct)
     {
         var query = _context.Set<Quote>()
             .AsNoTracking()
@@ -186,22 +227,29 @@ public class AdminMetricsService : IAdminMetricsService
             .AsQueryable();
 
         if (fromDate.HasValue)
-            query = query.Where(q => q.CreatedAt >= fromDate.Value.ToUniversalTime());
+        {
+            var from = StartOfUtcDay(fromDate!.Value);
+            query = query.Where(q => q.CreatedAt >= from);
+        }
+
         if (toDate.HasValue)
-            query = query.Where(q => q.CreatedAt <= toDate.Value.ToUniversalTime());
+        {
+            var toExclusive = StartOfNextUtcDay(toDate.Value);
+            query = query.Where(q => q.CreatedAt < toExclusive);
+        }
 
         var quotes = await query.ToListAsync(ct);
 
-        var thisMonthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
-        var lastMonthStart = thisMonthStart.AddMonths(-1);
-        var lastMonthEnd = thisMonthStart.AddDays(-1);
+        var today = _timeService.TodayInUtc();
+        var thisMonthStart = new LocalDate(today.Year, today.Month, 1).AtStartOfDayInZone(Utc).ToInstant();
+        var lastMonthStart = today.PlusMonths(-1).AtStartOfDayInZone(Utc).ToInstant();
 
         var thisMonthRevenue = quotes
             .Where(q => q.CreatedAt >= thisMonthStart)
             .Sum(q => q.TotalCost ?? 0);
 
         var lastMonthRevenue = quotes
-            .Where(q => q.CreatedAt >= lastMonthStart && q.CreatedAt <= lastMonthEnd)
+            .Where(q => q.CreatedAt >= lastMonthStart && q.CreatedAt < thisMonthStart)
             .Sum(q => q.TotalCost ?? 0);
 
         return new RevenueMetricsDto
@@ -220,17 +268,25 @@ public class AdminMetricsService : IAdminMetricsService
         };
     }
 
-    private async Task<OperationalMetricsDto> GetOperationalMetricsAsync(DateTime? fromDate, DateTime? toDate, CancellationToken ct)
+    private async Task<OperationalMetricsDto> GetOperationalMetricsAsync(LocalDate? fromDate, LocalDate? toDate, CancellationToken ct)
     {
         var query = _context.Set<Quote>().AsNoTracking().AsQueryable();
 
         if (fromDate.HasValue)
-            query = query.Where(q => q.CreatedAt >= fromDate.Value.ToUniversalTime());
+        {
+            var from = StartOfUtcDay(fromDate!.Value);
+            query = query.Where(q => q.CreatedAt >= from);
+        }
+
         if (toDate.HasValue)
-            query = query.Where(q => q.CreatedAt <= toDate.Value.ToUniversalTime());
+        {
+            var toExclusive = StartOfNextUtcDay(toDate.Value);
+            query = query.Where(q => q.CreatedAt < toExclusive);
+        }
 
         var quotes = await query.ToListAsync(ct);
-        var thisMonthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var today = _timeService.TodayInUtc();
+        var thisMonthStart = new LocalDate(today.Year, today.Month, 1).AtStartOfDayInZone(Utc).ToInstant();
 
         return new OperationalMetricsDto
         {
@@ -243,13 +299,12 @@ public class AdminMetricsService : IAdminMetricsService
         };
     }
 
-    private static double CalculateGrowthRate(List<User> users, DateTime thisMonthStart)
+    private static double CalculateGrowthRate(List<User> users, Instant thisMonthStart)
     {
-        var lastMonthStart = thisMonthStart.AddMonths(-1);
-        var lastMonthEnd = thisMonthStart.AddDays(-1);
+        var lastMonthStart = thisMonthStart.InUtc().Date.PlusMonths(-1).AtStartOfDayInZone(Utc).ToInstant();
 
         var thisMonthUsers = users.Count(u => u.CreatedAt >= thisMonthStart);
-        var lastMonthUsers = users.Count(u => u.CreatedAt >= lastMonthStart && u.CreatedAt <= lastMonthEnd);
+        var lastMonthUsers = users.Count(u => u.CreatedAt >= lastMonthStart && u.CreatedAt < thisMonthStart);
 
         return lastMonthUsers > 0 ? (double)(thisMonthUsers - lastMonthUsers) / lastMonthUsers * 100 : 0;
     }

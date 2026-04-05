@@ -1,6 +1,7 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Application.Features.Admin.Quote.Driver;
@@ -22,12 +23,13 @@ public record UnassignedDriverDto(
     Guid QuoteId,
     Guid DriverId,
     string DriverName,
-    DateTimeOffset UnassignedAt,
+    Instant UnassignedAt,
     string UnassignedBy);
 
 public class UnassignDriverCommandHandler(
     IQuoteRepository quoteRepository,
     IUserRepository userRepository,
+    ITimeService timeService,
     ILogger<UnassignDriverCommandHandler> logger) : ICommandHandler<UnassignDriverCommand, ErrorOr<UnassignDriverResponse>>
 {
     public async ValueTask<ErrorOr<UnassignDriverResponse>> Handle(UnassignDriverCommand request, CancellationToken cancellationToken)
@@ -63,7 +65,8 @@ public class UnassignDriverCommandHandler(
 
             quote.DriverQuotes?.Remove(driverQuote);
 
-            quote.ModifiedAt = DateTimeOffset.UtcNow;
+            var unassignedAt = timeService.Now();
+            quote.ModifiedAt = unassignedAt;
             quote.ModifiedBy = "Admin"; // TODO: Get actual admin user
 
             await quoteRepository.UpdateQuoteAsync(quote, cancellationToken);
@@ -77,7 +80,7 @@ public class UnassignDriverCommandHandler(
                     quote.Id,
                     driver.Id,
                     driver.FullName ?? "",
-                    DateTimeOffset.UtcNow,
+                    unassignedAt,
                     "Admin"));
         }
         catch (Exception ex)

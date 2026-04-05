@@ -1,6 +1,7 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Application.Features.Admin.Quote.Notes;
@@ -20,12 +21,13 @@ public record AdminNoteDto(
     Guid Id,
     string Note,
     string CreatedBy,
-    DateTimeOffset CreatedAt,
+    Instant CreatedAt,
     bool IsInternal,
     string? Category);
 
 public class AddAdminNoteCommandHandler(
     IQuoteRepository quoteRepository,
+    ITimeService timeService,
     ILogger<AddAdminNoteCommandHandler> logger) : ICommandHandler<AddAdminNoteCommand, ErrorOr<AddAdminNoteResponse>>
 {
     public async ValueTask<ErrorOr<AddAdminNoteResponse>> Handle(AddAdminNoteCommand request, CancellationToken cancellationToken)
@@ -51,7 +53,7 @@ public class AddAdminNoteCommandHandler(
 
             // Create admin note (placeholder - would need actual AdminNote entity)
             var noteId = Guid.NewGuid();
-            var createdAt = DateTimeOffset.UtcNow;
+            var createdAt = timeService.Now();
             var createdBy = "Admin"; // TODO: Get actual admin user
 
             // Update quote modification info

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Application.Contracts;
@@ -51,14 +52,14 @@ public class PaymentSheetRequest // TODO: Remove this perhaps ?
     public JobAddress Origin { get; set; }
     public JobAddress Destination { get; set; }
     public string PricingTier { get; set; }
-    public DateTime CollectionDate { get; set; }
+    public LocalDate CollectionDate { get; set; }
     public Customer Customer { get; set; }
     public Cost Cost { get; set; }
-    
+
     // New properties for payment options
     public PaymentType PaymentType { get; set; } = PaymentType.Full; // Default to full payment
     public decimal? DepositPercentage { get; set; } // e.g., 25 for 25%
-    public DateTime? DueDate { get; set; } // When full payment is due
+    public LocalDate? DueDate { get; set; } // When full payment is due
     public string? BookingId { get; set; } // For tracking the booking
 }
 

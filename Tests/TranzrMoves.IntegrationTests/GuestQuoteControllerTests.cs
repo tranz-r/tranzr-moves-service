@@ -1,14 +1,27 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using NodaTime;
+using NodaTime.Serialization.SystemTextJson;
+using TranzrMoves.Application.Contracts;
 
 namespace TranzrMoves.IntegrationTests;
 
 public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixture<TestServerFixture>, IAsyncLifetime
 {
+    private static readonly JsonSerializerOptions JsonOptions = CreateJsonOptions();
+
+    private static JsonSerializerOptions CreateJsonOptions()
+    {
+        var o = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        o.Converters.Add(new JsonStringEnumConverter());
+        o.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+        return o;
+    }
+
     private readonly Func<Task> _resetDatabase = fixture.ResetDatabaseStateAsync;
     private HttpClient Client => fixture.CreateClient();
 
@@ -21,12 +34,13 @@ public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
             HandleCookies = true
         });
 
-        // ensure cookie
-        var ensure = await client.PostAsync("/api/guest/ensure", new StringContent("{}", Encoding.UTF8, "application/json"));
+        var ensure = await client.PostAsync("/api/v1/quote/ensure", new StringContent("{}", Encoding.UTF8, "application/json"));
         ensure.EnsureSuccessStatusCode();
 
-        // initial GET
-        var get1 = await client.GetAsync("/api/guest/quote");
+        var select = await client.PostAsync("/api/v1/quote/select-quote-type?quoteType=Send", null);
+        select.EnsureSuccessStatusCode();
+
+        var get1 = await client.GetAsync("/api/v1/quote?quoteType=Send");
         get1.EnsureSuccessStatusCode();
         string? etag = null;
         if (get1.Headers.ETag is not null)
@@ -38,12 +52,13 @@ public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
             etag = etagHeaderValues.FirstOrDefault();
         }
 
-        // second GET with If-None-Match
-        var req = new HttpRequestMessage(HttpMethod.Get, "/api/guest/quote");
+        var req = new HttpRequestMessage(HttpMethod.Get, "/api/v1/quote?quoteType=Send");
         if (!string.IsNullOrEmpty(etag))
         {
-            req.Headers.IfNoneMatch.Add(new EntityTagHeaderValue(etag));
+            var token = etag.Trim('"');
+            req.Headers.TryAddWithoutValidation("If-None-Match", $"\"{token}\"");
         }
+
         var get2 = await client.SendAsync(req);
         get2.StatusCode.Should().Be(HttpStatusCode.NotModified);
     }
@@ -57,12 +72,24 @@ public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
             HandleCookies = true
         });
 
-        // ensure cookie
-        var ensure = await client.PostAsync("/api/guest/ensure", new StringContent("{}", Encoding.UTF8, "application/json"));
+        var ensure = await client.PostAsync("/api/v1/quote/ensure", new StringContent("{}", Encoding.UTF8, "application/json"));
         ensure.EnsureSuccessStatusCode();
 
-        var body = JsonSerializer.Serialize(new { Quote = "{}", ETag = "W/\"deadbeef\"" });
-        var save = await client.PostAsync("/api/guest/quote", new StringContent(body, Encoding.UTF8, "application/json"));
+        var select = await client.PostAsync("/api/v1/quote/select-quote-type?quoteType=Send", null);
+        select.EnsureSuccessStatusCode();
+
+        var selectJson = await select.Content.ReadAsStringAsync();
+        var selected = JsonSerializer.Deserialize<QuoteTypeDto>(selectJson, JsonOptions);
+        selected.Should().NotBeNull();
+        selected!.Quote.Should().NotBeNull();
+
+        var saveRequest = new SaveQuoteRequest
+        {
+            Quote = selected.Quote!,
+            ETag = "W/\"deadbeef\""
+        };
+        var body = JsonSerializer.Serialize(saveRequest, JsonOptions);
+        var save = await client.PostAsync("/api/v1/quote", new StringContent(body, Encoding.UTF8, "application/json"));
         save.StatusCode.Should().Be((HttpStatusCode)412);
     }
 
@@ -70,5 +97,3 @@ public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
 
     public async Task DisposeAsync() => await _resetDatabase();
 }
-
-

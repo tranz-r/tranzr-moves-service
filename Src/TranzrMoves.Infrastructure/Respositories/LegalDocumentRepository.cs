@@ -1,7 +1,9 @@
 using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using TranzrMoves.Application.Common.CustomErrors;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
@@ -9,6 +11,7 @@ namespace TranzrMoves.Infrastructure.Respositories;
 
 public class LegalDocumentRepository(
     TranzrMovesDbContext dbContext,
+    ITimeService timeService,
     ILogger<LegalDocumentRepository> logger) : ILegalDocumentRepository
 {
     public async Task<ErrorOr<LegalDocument>> CreateAsync(LegalDocument document, CancellationToken cancellationToken)
@@ -38,7 +41,7 @@ public class LegalDocumentRepository(
         }
     }
 
-    public async Task<LegalDocument?> GetCurrentAsync(LegalDocumentType documentType, DateTimeOffset asOfDate, CancellationToken cancellationToken)
+    public async Task<LegalDocument?> GetCurrentAsync(LegalDocumentType documentType, Instant asOfDate, CancellationToken cancellationToken)
     {
         try
         {
@@ -122,7 +125,7 @@ public class LegalDocumentRepository(
         }
     }
 
-    public async Task<ErrorOr<bool>> ExpirePreviousDocumentsAsync(LegalDocumentType documentType, DateTimeOffset expireAt, CancellationToken cancellationToken)
+    public async Task<ErrorOr<bool>> ExpirePreviousDocumentsAsync(LegalDocumentType documentType, Instant expireAt, CancellationToken cancellationToken)
     {
         try
         {
@@ -135,7 +138,7 @@ public class LegalDocumentRepository(
             foreach (var document in documentsToExpire)
             {
                 document.EffectiveTo = expireAt;
-                document.ModifiedAt = DateTimeOffset.UtcNow;
+                document.ModifiedAt = timeService.Now();
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);

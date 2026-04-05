@@ -2,7 +2,6 @@ using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 
-using TranzrMoves.Application.Common.CustomErrors;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Mapper;
 using TranzrMoves.Domain.Entities;

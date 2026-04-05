@@ -2,6 +2,9 @@ using System.Text;
 using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
+
+using NodaTime.Text;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
@@ -11,6 +14,7 @@ namespace TranzrMoves.Application.Features.Prices.Removals;
 public class RemovalPricesRequestHandler(
     IRemovalPricingRepository removalPricingRepository,
     IAdditionalPriceRepository additionalPriceRepository,
+    ITimeService timeService,
     ILogger<RemovalPricesRequestHandler> logger)
     : IRequestHandler<RemovalPricesRequest, ErrorOr<RemovalPricingDto>>
 {
@@ -73,7 +77,7 @@ public class RemovalPricesRequestHandler(
         {
             Version = version,
             Currency = currency,
-            GeneratedAt = DateTimeOffset.UtcNow,
+            GeneratedAt = timeService.Now(),
             ExtraPrice = extraPrice,
             Rates = new RatesDto
             {
@@ -106,8 +110,8 @@ public class RemovalPricesRequestHandler(
                 .Append(r.HourlyRateAfter.ToString(ci)).Append('|')
                 .Append(r.CurrencyCode).Append('|')
                 .Append(r.IsActive ? '1' : '0').Append('|')
-                .Append(r.EffectiveFrom.UtcDateTime.ToString("O")).Append('|')
-                .Append(r.EffectiveTo?.UtcDateTime.ToString("O") ?? "null")
+                .Append(InstantPattern.ExtendedIso.Format(r.EffectiveFrom)).Append('|')
+                .Append(r.EffectiveTo is { } et ? InstantPattern.ExtendedIso.Format(et) : "null")
                 .Append(';');
         }
 
@@ -117,8 +121,8 @@ public class RemovalPricesRequestHandler(
                 .Append(f.DisplayOrder).Append('|')
                 .Append(f.Text).Append('|')
                 .Append(f.IsActive ? '1' : '0').Append('|')
-                .Append(f.EffectiveFrom.UtcDateTime.ToString("O")).Append('|')
-                .Append(f.EffectiveTo?.UtcDateTime.ToString("O") ?? "null")
+                .Append(InstantPattern.ExtendedIso.Format(f.EffectiveFrom)).Append('|')
+                .Append(f.EffectiveTo is { } etf ? InstantPattern.ExtendedIso.Format(etf) : "null")
                 .Append(';');
         }
         

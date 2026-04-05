@@ -41,7 +41,7 @@ public sealed record RemovalPricingDto
 {
     public string Version { get; init; } = default!;
     public string Currency { get; init; } = "GBP";
-    public DateTimeOffset GeneratedAt { get; init; }
+    public Instant GeneratedAt { get; init; }
     public required ExtraPricesDto ExtraPrice { get; init; }
     public RatesDto Rates { get; init; } = new();
 }

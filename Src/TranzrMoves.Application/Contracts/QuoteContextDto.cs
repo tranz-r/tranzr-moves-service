@@ -13,6 +13,6 @@ public class QuoteContextDto
 public class QuoteContextMetadataDto
 {
     public string? LastActiveQuoteType { get; set; }
-    public string LastActivity { get; set; } = DateTime.UtcNow.ToString("O");
+    public string LastActivity { get; set; } = string.Empty;
     public string Version { get; set; } = "1.0.0";
 }

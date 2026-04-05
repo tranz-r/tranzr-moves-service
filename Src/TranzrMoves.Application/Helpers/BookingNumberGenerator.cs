@@ -1,13 +1,17 @@
 using System.Text;
 
+using NodaTime.Text;
+
 namespace TranzrMoves.Application.Helpers;
 
 public static class BookingNumberGenerator
 {
-    public static string Generate()
+    /// <param name="utcToday">Calendar date in UTC for the booking reference segment.</param>
+    public static string Generate(LocalDate utcToday)
     {
         string prefix = "TRZ";
-        string datePart = DateTime.UtcNow.ToString("yyMMdd");
+        string datePart = LocalDatePattern.CreateWithInvariantCulture("yyMMdd")
+            .Format(utcToday);
 
         // Get 64-bit value from UUID
         var guidBytes = Guid.NewGuid().ToByteArray();

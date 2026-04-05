@@ -2,8 +2,13 @@ using System.Net;
 using System.Text.Json;
 using FluentAssertions;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using NodaTime;
+using NodaTime.Serialization.SystemTextJson;
+using NodaTime.Text;
 
+using TranzrMoves.Application.Features.Admin.Quote.List;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Infrastructure;
 
@@ -11,6 +16,15 @@ namespace TranzrMoves.IntegrationTests;
 
 public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixture<TestServerFixture>, IAsyncLifetime
 {
+    private static readonly JsonSerializerOptions AdminQuoteJsonOptions = CreateAdminQuoteJsonOptions();
+
+    private static JsonSerializerOptions CreateAdminQuoteJsonOptions()
+    {
+        var o = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        o.ConfigureForNodaTime(DateTimeZoneProviders.Tzdb);
+        return o;
+    }
+
     private readonly Func<Task> _resetDatabase = fixture.ResetDatabaseStateAsync;
     private HttpClient Client => fixture.CreateClient();
 
@@ -21,16 +35,13 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote?admin=true&page=1&pageSize=10");
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&page=1&pageSize=10");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
         result!.Data.Should().NotBeNull();
@@ -46,16 +57,13 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote?admin=true&search=TEST-REF-001");
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&search=TEST-REF-001");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
         result!.Data.Should().HaveCount(1);
@@ -69,16 +77,13 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote?admin=true&sortBy=createdAt&sortDir=asc");
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&sortBy=createdAt&sortDir=asc");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
         result!.Data.Should().NotBeEmpty();
@@ -95,16 +100,13 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote?admin=true&status=Pending");
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&status=Pending");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
         result!.Data.Should().AllSatisfy(q => q.Status.Should().Be("Pending"));
@@ -116,25 +118,28 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         // Arrange
         await SeedTestDataAsync();
 
-        var dateFrom = DateTime.UtcNow.AddDays(-7).ToString("yyyy-MM-dd");
-        var dateTo = DateTime.UtcNow.AddDays(1).ToString("yyyy-MM-dd");
+        var utcToday = SystemClock.Instance.GetCurrentInstant().InUtc().Date;
+        var dateFrom = LocalDatePattern.Iso.Format(utcToday.PlusDays(-7));
+        var dateTo = LocalDatePattern.Iso.Format(utcToday.PlusDays(1));
 
         // Act
-        var response = await Client.GetAsync($"/api/v1/quote?admin=true&dateFrom={dateFrom}&dateTo={dateTo}");
+        var response = await Client.GetAsync($"/api/v1/quote/admin?admin=true&dateFrom={dateFrom}&dateTo={dateTo}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
+
+        var fromInclusive = LocalDatePattern.Iso.Parse(dateFrom).Value.AtStartOfDayInZone(DateTimeZone.Utc).ToInstant();
+        var toExclusive = LocalDatePattern.Iso.Parse(dateTo).Value.PlusDays(1).AtStartOfDayInZone(DateTimeZone.Utc).ToInstant();
 
         result.Should().NotBeNull();
         result!.Data.Should().AllSatisfy(q =>
-            q.CreatedAt.Should().BeAfter(DateTimeOffset.Parse(dateFrom))
-             .And.BeBefore(DateTimeOffset.Parse(dateTo)));
+        {
+            q.CreatedAt.Should().BeGreaterThanOrEqualTo(fromInclusive);
+            q.CreatedAt.Should().BeLessThan(toExclusive);
+        });
     }
 
     [Fact]
@@ -144,16 +149,13 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote?admin=true&pageSize=150"); // Exceeds max of 100
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&pageSize=150"); // Exceeds max of 100
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
         result!.Pagination.PageSize.Should().Be(100); // Should be capped at 100
@@ -165,7 +167,7 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         // Arrange
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote?page=1&pageSize=10");
+        var response = await Client.GetAsync("/api/v1/quote/admin?page=1&pageSize=10");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -178,6 +180,37 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
 
         // Clear existing data
         dbContext.Set<Quote>().RemoveRange(dbContext.Set<Quote>());
+        var testSessionIds = new[] { "test-session-1", "test-session-2", "test-session-3" };
+        var existingSessions = await dbContext.Set<QuoteSession>()
+            .Where(s => testSessionIds.Contains(s.SessionId))
+            .ToListAsync();
+        dbContext.Set<QuoteSession>().RemoveRange(existingSessions);
+        await dbContext.SaveChangesAsync();
+
+        var now = SystemClock.Instance.GetCurrentInstant();
+
+        dbContext.Set<QuoteSession>().AddRange(
+            new QuoteSession
+            {
+                SessionId = "test-session-1",
+                ETag = "seed-1",
+                CreatedAt = now,
+                ModifiedAt = now
+            },
+            new QuoteSession
+            {
+                SessionId = "test-session-2",
+                ETag = "seed-2",
+                CreatedAt = now,
+                ModifiedAt = now
+            },
+            new QuoteSession
+            {
+                SessionId = "test-session-3",
+                ETag = "seed-3",
+                CreatedAt = now,
+                ModifiedAt = now
+            });
         await dbContext.SaveChangesAsync();
 
         // Create test quotes
@@ -191,9 +224,9 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
                 QuoteReference = "TEST-REF-001",
                 TotalCost = 150.00m,
                 PaymentStatus = PaymentStatus.Pending,
-                CreatedAt = DateTimeOffset.UtcNow.AddDays(-1),
+                CreatedAt = now.Plus(Duration.FromDays(-1)),
                 CreatedBy = "Test",
-                ModifiedAt = DateTimeOffset.UtcNow.AddDays(-1),
+                ModifiedAt = now.Plus(Duration.FromDays(-1)),
                 ModifiedBy = "Test"
             },
             new()
@@ -204,9 +237,9 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
                 QuoteReference = "TEST-REF-002",
                 TotalCost = 200.00m,
                 PaymentStatus = PaymentStatus.Succeeded,
-                CreatedAt = DateTimeOffset.UtcNow.AddDays(-2),
+                CreatedAt = now.Plus(Duration.FromDays(-2)),
                 CreatedBy = "Test",
-                ModifiedAt = DateTimeOffset.UtcNow.AddDays(-2),
+                ModifiedAt = now.Plus(Duration.FromDays(-2)),
                 ModifiedBy = "Test"
             },
             new()
@@ -217,9 +250,9 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
                 QuoteReference = "TEST-REF-003",
                 TotalCost = 300.00m,
                 PaymentStatus = PaymentStatus.Pending,
-                CreatedAt = DateTimeOffset.UtcNow.AddDays(-3),
+                CreatedAt = now.Plus(Duration.FromDays(-3)),
                 CreatedBy = "Test",
-                ModifiedAt = DateTimeOffset.UtcNow.AddDays(-3),
+                ModifiedAt = now.Plus(Duration.FromDays(-3)),
                 ModifiedBy = "Test"
             }
         };
@@ -232,26 +265,3 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
 
     public async Task DisposeAsync() => await _resetDatabase();
 }
-
-// Response DTOs for testing
-public record AdminQuoteListResponse(
-    List<AdminQuoteDto> Data,
-    PaginationMetadata Pagination);
-
-public record AdminQuoteDto(
-    Guid Id,
-    string QuoteReference,
-    string CustomerName,
-    decimal? TotalCost,
-    string Status,
-    DateTimeOffset CreatedAt,
-    string? DriverName,
-    Guid? DriverId);
-
-public record PaginationMetadata(
-    int Page,
-    int PageSize,
-    int TotalItems,
-    int TotalPages,
-    bool HasNext,
-    bool HasPrevious);

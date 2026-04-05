@@ -4,4 +4,4 @@ using TranzrMoves.Application.Contracts;
 
 namespace TranzrMoves.Application.Features.Prices.Removals;
 
-public record RemovalPricesRequest(DateTimeOffset At) : IRequest<ErrorOr<RemovalPricingDto>>;
+public record RemovalPricesRequest(Instant At) : IRequest<ErrorOr<RemovalPricingDto>>;

@@ -1,6 +1,7 @@
 using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Application.Features.Admin.Quote.Status;
@@ -21,11 +22,12 @@ public record UpdateQuoteStatusResponse(
 public record UpdatedQuoteDto(
     Guid Id,
     string Status,
-    DateTimeOffset ModifiedAt,
+    Instant ModifiedAt,
     string ModifiedBy);
 
 public class UpdateQuoteStatusCommandHandler(
     IQuoteRepository quoteRepository,
+    ITimeService timeService,
     ILogger<UpdateQuoteStatusCommandHandler> logger) : ICommandHandler<UpdateQuoteStatusCommand, ErrorOr<UpdateQuoteStatusResponse>>
 {
     public async ValueTask<ErrorOr<UpdateQuoteStatusResponse>> Handle(UpdateQuoteStatusCommand request, CancellationToken cancellationToken)
@@ -51,7 +53,7 @@ public class UpdateQuoteStatusCommandHandler(
 
             // Update quote status
             quote.PaymentStatus = paymentStatus;
-            quote.ModifiedAt = DateTimeOffset.UtcNow;
+            quote.ModifiedAt = timeService.Now();
             quote.ModifiedBy = "Admin"; // TODO: Get actual admin user
 
             await quoteRepository.UpdateQuoteAsync(quote, cancellationToken);

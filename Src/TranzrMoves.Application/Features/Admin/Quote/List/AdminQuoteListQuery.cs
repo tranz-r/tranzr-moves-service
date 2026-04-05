@@ -10,8 +10,8 @@ public record AdminQuoteListQuery(
     string? SortBy = "createdAt",
     string? SortDir = "desc",
     string? Status = null,
-    DateTime? DateFrom = null,
-    DateTime? DateTo = null) : IQuery<ErrorOr<AdminQuoteListResponse>>;
+    LocalDate? DateFrom = null,
+    LocalDate? DateTo = null) : IQuery<ErrorOr<AdminQuoteListResponse>>;
 
 public record AdminQuoteListResponse(
     List<AdminQuoteDto> Data,
@@ -25,7 +25,7 @@ public record AdminQuoteDto(
     string Status,
     string QuoteType,         // Send, Receive, Removals
     string PaymentType,      // Card, BankTransfer, Cash, etc.
-    DateTimeOffset CreatedAt);
+    Instant CreatedAt);
 
 public record PaginationMetadata(
     int Page,

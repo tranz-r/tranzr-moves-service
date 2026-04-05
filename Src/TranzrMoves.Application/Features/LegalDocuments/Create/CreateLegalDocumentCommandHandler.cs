@@ -1,9 +1,12 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+
 using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
@@ -13,6 +16,7 @@ namespace TranzrMoves.Application.Features.LegalDocuments.Create;
 public class CreateLegalDocumentCommandHandler(
     ILegalDocumentRepository legalDocumentRepository,
     IAzureBlobService azureBlobService,
+    ITimeService timeService,
     ILogger<CreateLegalDocumentCommandHandler> logger) 
     : IRequestHandler<CreateLegalDocumentCommand, ErrorOr<CreateLegalDocumentResponse>>
 {
@@ -38,8 +42,10 @@ public class CreateLegalDocumentCommandHandler(
             var version = GenerateVersionHash(contentBytes);
             
             // Generate blob name with timestamp and version
-            var now = DateTimeOffset.UtcNow;
-            var effectiveFrom = new DateTimeOffset(now.Date.AddDays(1), TimeSpan.Zero); // Tomorrow UTC midnight
+            var utc = DateTimeZone.Utc;
+            var now = timeService.Now();
+            var tomorrow = timeService.TodayInUtc().PlusDays(1);
+            var effectiveFrom = tomorrow.AtStartOfDayInZone(utc).ToInstant();
             var blobName = GenerateBlobName(request.DocumentType, effectiveFrom, version);
             
             // Upload to Azure Blob Storage
@@ -75,8 +81,9 @@ public class CreateLegalDocumentCommandHandler(
                 return createResult.Errors;
             }
 
-            // Expire previous documents at midnight tonight
-            var expireAt = new DateTimeOffset(now.Date.AddDays(1).AddTicks(-1), TimeSpan.Zero); // Tonight UTC 23:59:59
+            // Expire previous documents at last tick before next UTC midnight
+            var tomorrowMidnight = tomorrow.AtStartOfDayInZone(utc).ToInstant();
+            var expireAt = tomorrowMidnight - Duration.FromTimeSpan(TimeSpan.FromTicks(1));
             var expireResult = await legalDocumentRepository.ExpirePreviousDocumentsAsync(
                 request.DocumentType, expireAt, cancellationToken);
             
@@ -118,7 +125,7 @@ public class CreateLegalDocumentCommandHandler(
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
-    private static string GenerateBlobName(LegalDocumentType documentType, DateTimeOffset effectiveDate, string version)
+    private static string GenerateBlobName(LegalDocumentType documentType, Instant effectiveDate, string version)
     {
         var prefix = documentType switch
         {
@@ -127,7 +134,7 @@ public class CreateLegalDocumentCommandHandler(
             _ => throw new ArgumentOutOfRangeException(nameof(documentType))
         };
 
-        var dateString = effectiveDate.ToString("yyyy-MM-dd");
+        var dateString = effectiveDate.InUtc().Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         return $"{prefix}/{dateString}/{version}.md";
     }
 }

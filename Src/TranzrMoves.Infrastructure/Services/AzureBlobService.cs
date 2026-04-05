@@ -1,17 +1,21 @@
 using System.Security.Cryptography;
 using System.Text;
 using Azure.Storage.Blobs;
+
+using NodaTime.Text;
 using Azure.Storage.Blobs.Models;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Infrastructure.Services;
 
 public class AzureBlobService(
     IConfiguration configuration,
+    ITimeService timeService,
     ILogger<AzureBlobService> logger) : IAzureBlobService
 {
     private readonly string _connectionString = configuration["AZURE_STORAGE_CONNECTION_STRING"] ?? 
@@ -41,7 +45,7 @@ public class AzureBlobService(
             {
                 { "ContentHash", GenerateContentHash(contentBytes) },
                 { "ContentLength", contentBytes.Length.ToString() },
-                { "UploadedAt", DateTimeOffset.UtcNow.ToString("O") }
+                { "UploadedAt", InstantPattern.ExtendedIso.Format(timeService.Now()) }
             };
 
             await blobClient.UploadAsync(stream, new BlobUploadOptions

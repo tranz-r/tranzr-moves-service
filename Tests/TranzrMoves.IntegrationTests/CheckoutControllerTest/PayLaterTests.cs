@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Stripe;
 
+using NodaTime;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Infrastructure;
 
@@ -89,12 +90,11 @@ public class PayLaterTests(TestServerFixture fixture) : IClassFixture<TestServer
             .RuleFor(x => x.QuoteReference, f => $"TRZ-251025-746{f.Random.Number(100, 999)}")
             .RuleFor(x => x.TotalCost, f => f.Random.Decimal(300m, 1200m))
             .RuleFor(x => x.PaymentStatus, f => PaymentStatus.PaymentSetup)
-            .RuleFor(x => x.DueDate, f => DateTime.UtcNow)
-            .RuleFor(x => x.CollectionDate, f => DateTime.UtcNow.AddDays(10))
-            .RuleFor(x => x.DeliveryDate, f => DateTime.UtcNow.AddDays(10))
-            .RuleFor(x => x.CreatedAt, () => DateTimeOffset.UtcNow)
-            .RuleFor(x => x.ModifiedAt, () => DateTimeOffset.UtcNow)
-            .RuleFor(x => x.ModifiedAt, () => DateTimeOffset.UtcNow)
+            .RuleFor(x => x.DueDate, (f, q) => SystemClock.Instance.GetCurrentInstant().InUtc().Date)
+            .RuleFor(x => x.CollectionDate, (f, q) => SystemClock.Instance.GetCurrentInstant().InUtc().Date.PlusDays(10))
+            .RuleFor(x => x.DeliveryDate, (f, q) => SystemClock.Instance.GetCurrentInstant().InUtc().Date.PlusDays(10))
+            .RuleFor(x => x.CreatedAt, (f, q) => SystemClock.Instance.GetCurrentInstant())
+            .RuleFor(x => x.ModifiedAt, (f, q) => SystemClock.Instance.GetCurrentInstant())
             .RuleFor(x => x.PaymentMethodId, f => paymentMethodId)
             .Generate();
 
@@ -111,7 +111,7 @@ public class PayLaterTests(TestServerFixture fixture) : IClassFixture<TestServer
 
         var userQuote = new AutoFaker<CustomerQuote>()
             .RuleFor(x => x.UserId, f => user.Id)
-            .RuleFor(x => x.QuoteId, f => quote.Id)
+            .RuleFor(x => x.QuoteId, quote.Id)
             .Generate();
 
         dbContext?.Set<CustomerQuote>().Add(userQuote);
@@ -167,7 +167,7 @@ public class PayLaterTests(TestServerFixture fixture) : IClassFixture<TestServer
             {
                 Number = cardNumber,
                 ExpMonth = 12,
-                ExpYear = DateTime.Now.Year + 1,
+                ExpYear = SystemClock.Instance.GetCurrentInstant().InUtc().Year + 1,
                 Cvc = "123",
             },
         };

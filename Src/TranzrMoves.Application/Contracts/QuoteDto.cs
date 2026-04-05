@@ -26,8 +26,8 @@ public class QuoteDto
 
 public class ScheduleDto
 {
-    public DateTime? DateISO { get; set; }
-    public DateTime? DeliveryDateISO { get; set; }
+    public LocalDate? DateISO { get; set; }
+    public LocalDate? DeliveryDateISO { get; set; }
     public int? Hours { get; set; }
     public bool? FlexibleTime { get; set; }
     public TimeSlot? TimeSlot { get; set; }
@@ -49,7 +49,7 @@ public class PaymentDto
     public decimal? DepositAmount { get; set; }
     public decimal? DepositPercentage { get; set; } = 25m; // e.g., 25 for 25%
     public string? ReceiptUrl { get; set; }
-    public DateTime? DueDate { get; set; } // When full payment is due
+    public LocalDate? DueDate { get; set; } // When full payment is due
 }
 
 public class QuoteAdditionalPaymentDto
