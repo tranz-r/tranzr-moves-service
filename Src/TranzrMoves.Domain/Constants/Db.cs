@@ -5,6 +5,11 @@ public static class Db
     public const string CONNECTION_STRING_NAME = "TranzrMovesDatabaseConnection";
     public const string SCHEMA = "tranzrmoves";
 
+    public static class Sequences
+    {
+        public const string QuoteReference = "quote_reference_seq";
+    }
+
     public static class Tables
     {
         public const string Users = nameof(Users);

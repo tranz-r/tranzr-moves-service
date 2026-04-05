@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using NodaTime;
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Helpers;
+using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
@@ -58,12 +59,18 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
 
         if (quote is not null && quote.PaymentStatus == PaymentStatus.Pending) return quote;
 
-        // Create new quote
+        var utcToday = timeService.TodayInUtc();
+        // EF maps primitive SqlQuery results to a column named "Value" (see EF Core raw SQL docs).
+        var sequence = await db.Database
+            .SqlQueryRaw<long>(
+                $"""SELECT nextval('{Db.SCHEMA}.{Db.Sequences.QuoteReference}') AS "Value" """)
+            .SingleAsync(ct);
+
         quote = new Quote
         {
             SessionId = guestId,
             Type = quoteType,
-            QuoteReference = QuoteReferenceHelper.GenerateQuoteReference(timeService),
+            QuoteReference = QuoteReferenceHelper.FormatQuoteReference(utcToday, sequence),
             VanType = VanType.largeVan, // Default
             DriverCount = 1, // Default
         };

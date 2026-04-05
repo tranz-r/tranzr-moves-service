@@ -1,21 +1,17 @@
 using NodaTime.Text;
-using TranzrMoves.Application.Common.Time;
 
 namespace TranzrMoves.Application.Helpers;
 
 /// <summary>
-/// Builds quote references: <c>TRZ-{yyMMdd}-{3 hex}</c> (UTC calendar date).
-/// The suffix has 4,096 values per day; rely on the unique DB index and retry on duplicate if volume is high.
+/// Formats quote references: <c>TRZ-{yyMMdd}-{n}</c> (UTC calendar date + DB sequence, no zero-padding).
 /// </summary>
 public static class QuoteReferenceHelper
 {
-    public static string GenerateQuoteReference(ITimeService time) =>
-        GenerateQuoteReference(time.TodayInUtc());
-
-    /// <param name="utcToday">UTC calendar date used for the middle segment.</param>
-    public static string GenerateQuoteReference(LocalDate utcToday)
+    /// <param name="utcDate">UTC calendar date for the middle segment.</param>
+    /// <param name="sequenceNumber">Value from PostgreSQL <c>nextval</c> on <c>quote_reference_seq</c>.</param>
+    public static string FormatQuoteReference(LocalDate utcDate, long sequenceNumber)
     {
-        var datePart = LocalDatePattern.CreateWithInvariantCulture("yyMMdd").Format(utcToday);
-        return $"TRZ-{datePart}-{Guid.NewGuid().ToString("N")[..3].ToUpperInvariant()}";
+        var datePart = LocalDatePattern.CreateWithInvariantCulture("yyMMdd").Format(utcDate);
+        return $"TRZ-{datePart}-{sequenceNumber}";
     }
 }
