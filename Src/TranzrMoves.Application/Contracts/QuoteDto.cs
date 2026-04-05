@@ -26,8 +26,8 @@ public class QuoteDto
 
 public class ScheduleDto
 {
-    public LocalDate? DateISO { get; set; }
-    public LocalDate? DeliveryDateISO { get; set; }
+    public Instant? DateISO { get; set; }
+    public Instant? DeliveryDateISO { get; set; }
     public int? Hours { get; set; }
     public bool? FlexibleTime { get; set; }
     public TimeSlot? TimeSlot { get; set; }

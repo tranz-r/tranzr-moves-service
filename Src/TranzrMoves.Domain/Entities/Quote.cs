@@ -32,9 +32,9 @@ public class Quote : IAuditable
     public long DriverCount { get; set; }
     public string QuoteReference { get; set; } = string.Empty;
 
-    // Schedule
-    public LocalDate? CollectionDate { get; set; }
-    public LocalDate? DeliveryDate { get; set; }
+    // Schedule (UTC instants — e.g. from JS Date.toISOString())
+    public Instant? CollectionDate { get; set; }
+    public Instant? DeliveryDate { get; set; }
     public int? Hours { get; set; }
     public bool? FlexibleTime { get; set; }
     public TimeSlot? TimeSlot { get; set; } // morning, afternoon, evening

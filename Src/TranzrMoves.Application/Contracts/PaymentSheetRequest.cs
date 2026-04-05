@@ -52,7 +52,7 @@ public class PaymentSheetRequest // TODO: Remove this perhaps ?
     public JobAddress Origin { get; set; }
     public JobAddress Destination { get; set; }
     public string PricingTier { get; set; }
-    public LocalDate CollectionDate { get; set; }
+    public Instant CollectionDate { get; set; }
     public Customer Customer { get; set; }
     public Cost Cost { get; set; }
 

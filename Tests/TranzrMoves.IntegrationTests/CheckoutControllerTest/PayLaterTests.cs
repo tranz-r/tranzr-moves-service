@@ -91,8 +91,12 @@ public class PayLaterTests(TestServerFixture fixture) : IClassFixture<TestServer
             .RuleFor(x => x.TotalCost, f => f.Random.Decimal(300m, 1200m))
             .RuleFor(x => x.PaymentStatus, f => PaymentStatus.PaymentSetup)
             .RuleFor(x => x.DueDate, (f, q) => SystemClock.Instance.GetCurrentInstant().InUtc().Date)
-            .RuleFor(x => x.CollectionDate, (f, q) => SystemClock.Instance.GetCurrentInstant().InUtc().Date.PlusDays(10))
-            .RuleFor(x => x.DeliveryDate, (f, q) => SystemClock.Instance.GetCurrentInstant().InUtc().Date.PlusDays(10))
+            .RuleFor(x => x.CollectionDate,
+                (f, q) => SystemClock.Instance.GetCurrentInstant().InUtc().Date.PlusDays(10)
+                    .AtStartOfDayInZone(DateTimeZone.Utc).ToInstant())
+            .RuleFor(x => x.DeliveryDate,
+                (f, q) => SystemClock.Instance.GetCurrentInstant().InUtc().Date.PlusDays(10)
+                    .AtStartOfDayInZone(DateTimeZone.Utc).ToInstant())
             .RuleFor(x => x.CreatedAt, (f, q) => SystemClock.Instance.GetCurrentInstant())
             .RuleFor(x => x.ModifiedAt, (f, q) => SystemClock.Instance.GetCurrentInstant())
             .RuleFor(x => x.PaymentMethodId, f => paymentMethodId)

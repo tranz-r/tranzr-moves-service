@@ -339,8 +339,8 @@ public class CheckoutController(
         // Handle different payment types
         if (saveQuoteRequest is { Quote.Payment.PaymentType: PaymentType.Later })
         {
-            var moveDate = saveQuoteRequest!.Quote.Schedule!.DateISO!.Value;
-            var paymentDueDate = moveDate.PlusDays(-3); // calendar analogue to 72h before date-only move
+            var moveCalendarDay = saveQuoteRequest!.Quote.Schedule!.DateISO!.Value.InUtc().Date;
+            var paymentDueDate = moveCalendarDay.PlusDays(-3); // 3 calendar days before move (UTC calendar date)
 
             // Create Setup Intent for "pay later" option
             var setupIntentOptions = new SetupIntentCreateOptions
@@ -454,7 +454,7 @@ public class CheckoutController(
             // For deposit payments, specify payment method types and enable future usage
             paymentIntentOptions.PaymentMethodTypes = ["card", "link"];
             paymentIntentOptions.SetupFutureUsage = "off_session"; // Enable automatic charging later
-            saveQuoteRequest.Quote.Payment.DueDate = saveQuoteRequest.Quote.Schedule!.DateISO;
+            saveQuoteRequest.Quote.Payment.DueDate = saveQuoteRequest.Quote.Schedule!.DateISO!.Value.InUtc().Date;
 
             logger.LogInformation("PaymentIntent created with setup_future_usage for {PaymentType}",
                 saveQuoteRequest.Quote.Payment.PaymentType);
@@ -921,7 +921,7 @@ public class CheckoutController(
                 var cardErrorDescription = $"<b>We couldn't charge your {cardBrand} card ending with {cardLast4Digits}, because {cardErrorReason}.</b> " +
                                            $"<p>Please use the secure link below to complete the payment for your quotation {quote.QuoteReference} with Tranzr Moves.</p> " +
                                            $"To avoid any delay or cancellation of your scheduled service on " +
-                                           $"{FormatLocalDateIso(quote.CollectionDate)}, kindly make your payment as soon as possible or contact us to arrange an alternative payment option.";
+                                           $"{FormatLocalDateIso(quote.CollectionDate?.InUtc().Date)}, kindly make your payment as soon as possible or contact us to arrange an alternative payment option.";
 
                 await CreateCheckoutSession(new CreateCheckoutSessionRequest
                     {

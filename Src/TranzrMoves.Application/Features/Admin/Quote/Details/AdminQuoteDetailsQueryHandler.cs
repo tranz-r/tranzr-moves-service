@@ -128,8 +128,8 @@ public class AdminQuoteDetailsQueryHandler(
             quote.VanType.ToString(),
             (int)quote.DriverCount,
             quote.Hours,
-            MapLocalDateToUtcInstant(quote.CollectionDate),
-            MapLocalDateToUtcInstant(quote.DeliveryDate),
+            quote.CollectionDate,
+            quote.DeliveryDate,
             quote.FlexibleTime ?? false,
             quote.TimeSlot?.ToString(),
             quote.DistanceMiles,
@@ -164,11 +164,6 @@ public class AdminQuoteDetailsQueryHandler(
             serviceDetails,
             adminNotes);
     }
-
-    private static Instant? MapLocalDateToUtcInstant(LocalDate? date) =>
-        date.HasValue
-            ? date.Value.AtStartOfDayInZone(DateTimeZone.Utc).ToInstant()
-            : null;
 
     private static AdminAddressDto MapToAdminAddressDto(Domain.Entities.Address address)
     {

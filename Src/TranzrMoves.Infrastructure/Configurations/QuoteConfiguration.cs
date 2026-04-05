@@ -64,7 +64,7 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
             destination.Property(p => p.Country).HasMaxLength(100);
         });
 
-        // Schedule: CollectionDate, DeliveryDate, DueDate are LocalDate? → PostgreSQL `date` (UseNodaTime)
+        // Schedule: CollectionDate, DeliveryDate are Instant? → timestamptz; DueDate stays LocalDate? → date
         builder.Property(x => x.Hours);
         builder.Property(x => x.FlexibleTime);
         builder.Property(x => x.TimeSlot);
