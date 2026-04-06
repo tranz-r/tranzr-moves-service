@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -60,7 +60,7 @@ try
             configureNodaTime(options.JsonSerializerOptions);
         });
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+    // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
     builder.Services.AddOpenApi();
     builder.Services.AddHttpLogging(o => o.CombineLogs = true);
     builder.Services.AddHealthChecks();
@@ -76,7 +76,7 @@ try
     builder.Services.AddHttpClient<IMapBoxService, MapBoxService>(
         client =>
         {
-            client.BaseAddress = new Uri(builder.Configuration["MAPBOX_BASE_URL"]);
+            client.BaseAddress = new Uri(builder.Configuration["MAPBOX_BASE_URL"]!);
         });
 
     builder.Services.ConfigureTranzrMovesServices(builder.Configuration);
@@ -84,11 +84,23 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
 
 
-    builder.Services.AddSingleton( _ =>
+    builder.Services.AddSingleton(_ =>
     {
         var url = builder.Configuration["SUPABASE_URL"];
         var key = builder.Configuration["SUPABASE_KEY"];
 
+        var loggerFactory = LoggerFactory.Create(logging =>
+        {
+            logging.AddConsole();
+        });
+
+        var logger = loggerFactory.CreateLogger<Program>();
+
+        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key))
+        {
+            logger.LogCritical("Missing configuration for supabase url or key");
+            throw new ArgumentException("Missing configuration for superbase");
+        }
 
         var options = new SupabaseOptions
         {
@@ -103,7 +115,7 @@ try
 
     await app.Services.SeedAsync();
 
-// Configure the HTTP request pipeline.
+    // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
         app.MapOpenApi();

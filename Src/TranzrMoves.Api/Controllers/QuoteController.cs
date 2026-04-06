@@ -1,19 +1,19 @@
-using Mediator;
+﻿using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
-using TranzrMoves.Application.Features.Quote.SelectQuoteType;
-using TranzrMoves.Application.Features.Quote.Save;
-using TranzrMoves.Application.Features.Admin.Quote.List;
 using TranzrMoves.Application.Features.Admin.Quote.Details;
-using TranzrMoves.Application.Features.Admin.Quote.Status;
 using TranzrMoves.Application.Features.Admin.Quote.Driver;
+using TranzrMoves.Application.Features.Admin.Quote.List;
 using TranzrMoves.Application.Features.Admin.Quote.Notes;
+using TranzrMoves.Application.Features.Admin.Quote.Status;
+using TranzrMoves.Application.Features.Quote.Save;
+using TranzrMoves.Application.Features.Quote.SelectQuoteType;
+using TranzrMoves.Application.Mapper;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
-using TranzrMoves.Application.Mapper;
 
 namespace TranzrMoves.Api.Controllers;
 
@@ -35,7 +35,7 @@ public class QuoteController(
     ITimeService timeService,
     ILogger<QuoteController> logger) : ApiControllerBase
 {
-    private const string CookieName = "tranzr_guest";
+    private new const string CookieName = "tranzr_guest";
 
     [HttpPost("ensure")]
     public async Task<IActionResult> Ensure(CancellationToken ct)
@@ -97,7 +97,7 @@ public class QuoteController(
         var mapper = new QuoteMapper();
         var quoteDto = mapper.ToDto(quote);
 
-        var quoteTypeDto =  new QuoteTypeDto
+        var quoteTypeDto = new QuoteTypeDto
         {
             Quote = quoteDto,
             Etag = quoteEtag
@@ -201,7 +201,7 @@ public class QuoteController(
 
         RefreshCookie(guestId);
 
-        var quoteTypeDto =  new QuoteTypeDto
+        var quoteTypeDto = new QuoteTypeDto
         {
             Quote = result.Value,
             Etag = etag
@@ -275,18 +275,18 @@ public class QuoteController(
         }
     }
 
-        [HttpGet("admin")]
-        public async Task<IActionResult> GetAdminQuotes(
-            [FromQuery] bool admin,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 50,
-            [FromQuery] string? search = null,
-            [FromQuery] string? sortBy = "createdAt",
-            [FromQuery] string? sortDir = "desc",
-            [FromQuery] string? status = null,
-            [FromQuery] LocalDate? dateFrom = null,
-            [FromQuery] LocalDate? dateTo = null,
-            CancellationToken ct = default)
+    [HttpGet("admin")]
+    public async Task<IActionResult> GetAdminQuotes(
+        [FromQuery] bool admin,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        [FromQuery] string? search = null,
+        [FromQuery] string? sortBy = "createdAt",
+        [FromQuery] string? sortDir = "desc",
+        [FromQuery] string? status = null,
+        [FromQuery] LocalDate? dateFrom = null,
+        [FromQuery] LocalDate? dateTo = null,
+        CancellationToken ct = default)
     {
         if (!admin)
         {
@@ -295,15 +295,15 @@ public class QuoteController(
 
         try
         {
-                var query = new AdminQuoteListQuery(
-                    page,
-                    pageSize,
-                    search,
-                    sortBy,
-                    sortDir,
-                    status,
-                    dateFrom,
-                    dateTo);
+            var query = new AdminQuoteListQuery(
+                page,
+                pageSize,
+                search,
+                sortBy,
+                sortDir,
+                status,
+                dateFrom,
+                dateTo);
 
             var result = await mediator.Send(query, ct);
 

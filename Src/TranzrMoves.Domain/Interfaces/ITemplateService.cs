@@ -1,4 +1,4 @@
-namespace TranzrMoves.Domain.Interfaces;
+﻿namespace TranzrMoves.Domain.Interfaces;
 
 public interface ITemplateService
 {

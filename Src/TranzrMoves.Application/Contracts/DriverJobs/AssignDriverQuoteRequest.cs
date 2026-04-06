@@ -1,3 +1,3 @@
-namespace TranzrMoves.Application.Contracts.DriverJobs;
+﻿namespace TranzrMoves.Application.Contracts.DriverJobs;
 
 public record AssignDriverQuoteRequest(Guid DriverId, Guid QuoteId);

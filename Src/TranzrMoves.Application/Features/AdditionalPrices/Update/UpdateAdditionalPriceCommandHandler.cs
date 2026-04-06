@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -10,7 +10,7 @@ namespace TranzrMoves.Application.Features.AdditionalPrices.Update;
 
 public class UpdateAdditionalPriceCommandHandler(
     IAdditionalPriceRepository additionalPriceRepository,
-    ILogger<UpdateAdditionalPriceCommandHandler> logger) 
+    ILogger<UpdateAdditionalPriceCommandHandler> logger)
     : IRequestHandler<UpdateAdditionalPriceCommand, ErrorOr<AdditionalPriceDto>>
 {
     public async ValueTask<ErrorOr<AdditionalPriceDto>> Handle(
@@ -20,7 +20,7 @@ public class UpdateAdditionalPriceCommandHandler(
         try
         {
             var existingAdditionalPrice = await additionalPriceRepository.GetAdditionalPriceAsync(command.Id, cancellationToken);
-            
+
             if (existingAdditionalPrice is null)
             {
                 logger.LogWarning("Additional price not found with ID {Id}", command.Id);
@@ -37,7 +37,7 @@ public class UpdateAdditionalPriceCommandHandler(
             existingAdditionalPrice.IsActive = command.IsActive;
 
             var result = await additionalPriceRepository.UpdateAdditionalPriceAsync(existingAdditionalPrice, cancellationToken);
-            
+
             if (result.IsError)
             {
                 logger.LogError("Failed to update additional price {Id}: {Error}", command.Id, result.FirstError.Description);
@@ -46,7 +46,7 @@ public class UpdateAdditionalPriceCommandHandler(
 
             var mapper = new AdditionalPriceMapper();
             var additionalPriceDto = mapper.ToDto(result.Value);
-            
+
             logger.LogInformation("Successfully updated additional price {Id}", command.Id);
             return additionalPriceDto;
         }

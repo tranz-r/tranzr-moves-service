@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -8,7 +8,7 @@ namespace TranzrMoves.Application.Features.RateCards.Delete;
 
 public class DeleteRateCardCommandHandler(
     IRateCardRepository rateCardRepository,
-    ILogger<DeleteRateCardCommandHandler> logger) 
+    ILogger<DeleteRateCardCommandHandler> logger)
     : IRequestHandler<DeleteRateCardCommand, ErrorOr<bool>>
 {
     public async ValueTask<ErrorOr<bool>> Handle(
@@ -18,7 +18,7 @@ public class DeleteRateCardCommandHandler(
         try
         {
             var existingRateCard = await rateCardRepository.GetRateCardAsync(command.Id, cancellationToken);
-            
+
             if (existingRateCard is null)
             {
                 logger.LogWarning("Rate card not found with ID {Id}", command.Id);
@@ -26,7 +26,7 @@ public class DeleteRateCardCommandHandler(
             }
 
             await rateCardRepository.DeleteRateCardAsync(existingRateCard, cancellationToken);
-            
+
             logger.LogInformation("Successfully deleted rate card {Id}", command.Id);
             return true;
         }

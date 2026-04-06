@@ -11,7 +11,7 @@ public class AddressController(IMediator mediator, ILogger<AddressController> lo
     public async Task<ActionResult<SuccessfulAutocomplete>> GetAddressesAsync([FromQuery] string postCode)
     {
         logger.LogInformation("Getting addresses for the postcode {postCode}", postCode);
-        
+
         var autocompleteResult = await api.Autocomplete(postCode);
 
         if (autocompleteResult.IsSuccess)
@@ -23,7 +23,7 @@ public class AddressController(IMediator mediator, ILogger<AddressController> lo
         var errorMessage = autocompleteResult.Failed.Message;
         return BadRequest(new { errorMessage = errorMessage });
     }
-    
+
     [HttpGet("distance")]
     public async Task<double> GetDrivingDistanceAsync([FromQuery] string originAddress, [FromQuery] string destinationAddress, CancellationToken cancellationToken)
     {

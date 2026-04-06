@@ -1,4 +1,4 @@
-namespace TranzrMoves.Domain.Entities;
+﻿namespace TranzrMoves.Domain.Entities;
 
 public class QuoteAdditionalPayment
 {

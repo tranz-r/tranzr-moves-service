@@ -1,4 +1,4 @@
-// -------------------- Models --------------------
+﻿// -------------------- Models --------------------
 
 using System.Text.Json.Serialization;
 
@@ -99,11 +99,11 @@ public class PricingConfig
 
     public List<VolumeBand> VolumeSurcharge { get; init; } = new()
     {
-        new(1.0, 0), 
-        new(3.0, 10), 
+        new(1.0, 0),
+        new(3.0, 10),
         new(5.0, 20),
-        new(8.0, 35), 
-        new(12.0, 60), 
+        new(8.0, 35),
+        new(12.0, 60),
         new(18.0, 90),
     };
 

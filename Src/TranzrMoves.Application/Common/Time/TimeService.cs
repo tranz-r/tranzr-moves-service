@@ -1,4 +1,4 @@
-namespace TranzrMoves.Application.Common.Time;
+﻿namespace TranzrMoves.Application.Common.Time;
 
 public sealed class TimeService(IClock clock) : ITimeService
 {

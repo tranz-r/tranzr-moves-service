@@ -1,4 +1,4 @@
-using Riok.Mapperly.Abstractions;
+﻿using Riok.Mapperly.Abstractions;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Entities;
 
@@ -9,7 +9,7 @@ public partial class ServiceFeatureMapper
 {
     public partial ServiceFeatureDto ToDto(ServiceFeature serviceFeature);
     public partial List<ServiceFeatureDto> ToDtoList(List<ServiceFeature> serviceFeatures);
-    
+
     [MapperIgnoreTarget(nameof(ServiceFeature.Id))]
     public partial ServiceFeature ToEntity(ServiceFeatureDto serviceFeatureDto);
 }

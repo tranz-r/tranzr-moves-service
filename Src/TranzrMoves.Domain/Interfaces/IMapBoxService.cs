@@ -1,4 +1,4 @@
-namespace TranzrMoves.Domain.Interfaces;
+﻿namespace TranzrMoves.Domain.Interfaces;
 
 public interface IMapBoxService
 {
@@ -6,7 +6,7 @@ public interface IMapBoxService
         string originAddressOrPostcode,
         string destAddressOrPostcode,
         bool useTraffic = true);
-    
+
     Task<MapRouteDto> GetRouteDataAsync(
         string originAddress,
         string destinationAddress,

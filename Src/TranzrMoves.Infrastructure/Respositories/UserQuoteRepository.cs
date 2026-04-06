@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using EntityFramework.Exceptions.Common;
 using ErrorOr;
 using Microsoft.EntityFrameworkCore;
@@ -17,15 +17,15 @@ public class UserQuoteRepository(TranzrMovesDbContext dbContext, ILogger<UserQuo
         //Check if this customer quote already exists for this user and quote
         var existing = await dbContext.Set<CustomerQuote>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(cc => cc.UserId == customerQuote.UserId 
+            .FirstOrDefaultAsync(cc => cc.UserId == customerQuote.UserId
                                        && cc.QuoteId == customerQuote.QuoteId, cancellationToken);
-        
+
         if (existing is not null)
         {
             return Error.Conflict("CustomerQuote.AlreadyExists", "A customer quote already exists for this user and quote");
         }
-        
-        
+
+
         dbContext.Set<CustomerQuote>().Add(customerQuote);
 
         try
@@ -49,7 +49,7 @@ public class UserQuoteRepository(TranzrMovesDbContext dbContext, ILogger<UserQuo
 
         return customerQuote;
     }
-    
+
     public async Task<ErrorOr<List<CustomerQuote>>> AddUserQuotesAsync(List<CustomerQuote> customerQuotes,
         CancellationToken cancellationToken)
     {
@@ -85,7 +85,7 @@ public class UserQuoteRepository(TranzrMovesDbContext dbContext, ILogger<UserQuo
     {
         var userQuotes = await dbContext.Set<CustomerQuote>().AsNoTracking()
             .Where(x => x.UserId == userId).ToListAsync(cancellationToken);
-        
+
         return userQuotes.ToImmutableList();
     }
 

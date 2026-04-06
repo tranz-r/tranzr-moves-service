@@ -1,4 +1,4 @@
-using System.Data.Common;
+﻿using System.Data.Common;
 
 using AutoBogus;
 
@@ -25,99 +25,102 @@ namespace TranzrMoves.IntegrationTests;
 
 public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
-        private PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
-            .WithDatabase($"testdb_{Guid.NewGuid()}")
-            .WithUsername("postgres")
-            .WithPassword("postgres")
-            .Build();
+    private PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
+        .WithDatabase($"testdb_{Guid.NewGuid()}")
+        .WithUsername("postgres")
+        .WithPassword("postgres")
+        .Build();
 
-        private IServiceScope _scope;
+    private IServiceScope? _scope;
 
-        private DbConnection _connection = default!;
-        private Respawner _respawner = default!;
-        internal WireMockServer? WireMockServer;
+    private DbConnection _connection = default!;
+    private Respawner _respawner = default!;
+    internal WireMockServer? WireMockServer;
 
-        public HttpClient? HttpClient { get; private set; }
+    public HttpClient? HttpClient { get; private set; }
 
-        public TranzrMovesDbContext? DbContext { get; set; }
+    public TranzrMovesDbContext? DbContext { get; set; }
 
 
-        protected override void ConfigureWebHost(IWebHostBuilder builder)
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        WireMockServer = WireMockServer.StartWithAdminInterface();
+        WireMockServer.LogEntriesChanged += (sender, args) =>
         {
-            WireMockServer = WireMockServer.StartWithAdminInterface();
-            WireMockServer.LogEntriesChanged += (sender, args) =>
+            if (args.NewItems != null)
             {
                 foreach (var entry in args.NewItems)
                 {
                     Console.WriteLine(entry.ToString());
                 }
-            };
+            }
+        };
 
-            builder.ConfigureAppConfiguration(configBuilder =>
-            {
-            });
-
-            builder.ConfigureServices(services =>
-            {
-                services.RemoveAll<DbContextOptions<TranzrMovesDbContext>>();
-                services.RemoveAll<DbConnection>();
-                services.RemoveAll<IEmailService>();
-
-                services.AddScoped<AuditableInterceptor>();
-                services.AddScoped<IEmailService, LocalEmailService>();
-
-                services.AddDbContext<TranzrMovesDbContext>((sp, options) =>
-                    options.UseNpgsql(_postgres.GetConnectionString())
-                        .AddInterceptors(sp.GetRequiredService<AuditableInterceptor>()));
-            });
-        }
-
-        public async Task ResetDatabaseStateAsync()
+        builder.ConfigureAppConfiguration(configBuilder =>
         {
-            await _respawner.ResetAsync(_connection);
-        }
+        });
 
-        public async ValueTask InitializeAsync()
+        builder.ConfigureServices(services =>
         {
-            await _postgres.StartAsync();
-            await SetUpdateBaseAsync();
+            services.RemoveAll<DbContextOptions<TranzrMovesDbContext>>();
+            services.RemoveAll<DbConnection>();
+            services.RemoveAll<IEmailService>();
 
-            _connection = new NpgsqlConnection(_postgres.GetConnectionString());
-            HttpClient = CreateClient();
+            services.AddScoped<AuditableInterceptor>();
+            services.AddScoped<IEmailService, LocalEmailService>();
 
-            await InitializeRespawner();
-        }
+            services.AddDbContext<TranzrMovesDbContext>((sp, options) =>
+                options.UseNpgsql(_postgres.GetConnectionString())
+                    .AddInterceptors(sp.GetRequiredService<AuditableInterceptor>()));
+        });
+    }
 
-        public new async Task DisposeAsync()
+    public async Task ResetDatabaseStateAsync()
+    {
+        await _respawner.ResetAsync(_connection);
+    }
+
+    public async ValueTask InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        await SetUpdateBaseAsync();
+
+        _connection = new NpgsqlConnection(_postgres.GetConnectionString());
+        HttpClient = CreateClient();
+
+        await InitializeRespawner();
+    }
+
+    public new async Task DisposeAsync()
+    {
+        await _postgres.DisposeAsync();
+    }
+
+    private async Task InitializeRespawner()
+    {
+        await _connection.OpenAsync();
+        _respawner = await Respawner.CreateAsync(_connection,
+            new RespawnerOptions { DbAdapter = DbAdapter.Postgres });
+    }
+
+    private async Task SetUpdateBaseAsync()
+    {
+        _scope = Services.CreateScope();
+        DbContext = _scope.ServiceProvider.GetRequiredService<TranzrMovesDbContext>();
+
+        await DbContext.Database.EnsureDeletedAsync(); //Have a clean state
+        await DbContext.Database.MigrateAsync();
+
+        await ConfigureAutoFakerAsync();
+    }
+
+    private Task ConfigureAutoFakerAsync()
+    {
+        AutoFaker.Configure(builder =>
         {
-            await _postgres.DisposeAsync();
-        }
+            builder.WithRecursiveDepth(0);
+        });
 
-        private async Task InitializeRespawner()
-        {
-            await _connection.OpenAsync();
-            _respawner = await Respawner.CreateAsync(_connection,
-                new RespawnerOptions { DbAdapter = DbAdapter.Postgres });
-        }
-
-        private async Task SetUpdateBaseAsync()
-        {
-            _scope = Services.CreateScope();
-            DbContext = _scope.ServiceProvider.GetRequiredService<TranzrMovesDbContext>();
-
-            await DbContext.Database.EnsureDeletedAsync(); //Have a clean state
-            await DbContext.Database.MigrateAsync();
-
-            await ConfigureAutoFakerAsync();
-        }
-
-        private Task ConfigureAutoFakerAsync()
-        {
-            AutoFaker.Configure(builder =>
-            {
-                builder.WithRecursiveDepth(0);
-            });
-
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
+    }
 }

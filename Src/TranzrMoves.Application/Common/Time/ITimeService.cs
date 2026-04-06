@@ -1,4 +1,4 @@
-namespace TranzrMoves.Application.Common.Time;
+﻿namespace TranzrMoves.Application.Common.Time;
 
 /// <summary>Central access to the current time (inject <see cref="IClock"/> in tests).</summary>
 public interface ITimeService

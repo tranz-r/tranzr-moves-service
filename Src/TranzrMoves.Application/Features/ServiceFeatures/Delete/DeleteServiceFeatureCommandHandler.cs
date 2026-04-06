@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -8,7 +8,7 @@ namespace TranzrMoves.Application.Features.ServiceFeatures.Delete;
 
 public class DeleteServiceFeatureCommandHandler(
     IServiceFeatureRepository serviceFeatureRepository,
-    ILogger<DeleteServiceFeatureCommandHandler> logger) 
+    ILogger<DeleteServiceFeatureCommandHandler> logger)
     : IRequestHandler<DeleteServiceFeatureCommand, ErrorOr<bool>>
 {
     public async ValueTask<ErrorOr<bool>> Handle(
@@ -18,7 +18,7 @@ public class DeleteServiceFeatureCommandHandler(
         try
         {
             var existingServiceFeature = await serviceFeatureRepository.GetServiceFeatureAsync(command.Id, cancellationToken);
-            
+
             if (existingServiceFeature is null)
             {
                 logger.LogWarning("Service feature not found with ID {Id}", command.Id);
@@ -26,7 +26,7 @@ public class DeleteServiceFeatureCommandHandler(
             }
 
             await serviceFeatureRepository.DeleteServiceFeatureAsync(existingServiceFeature, cancellationToken);
-            
+
             logger.LogInformation("Successfully deleted service feature {Id}", command.Id);
             return true;
         }

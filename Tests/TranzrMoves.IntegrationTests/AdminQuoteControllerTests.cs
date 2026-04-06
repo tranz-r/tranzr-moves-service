@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 using FluentAssertions;
 
@@ -35,12 +35,12 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&page=1&pageSize=10");
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&page=1&pageSize=10", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
@@ -57,12 +57,12 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&search=TEST-REF-001");
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&search=TEST-REF-001", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
@@ -77,12 +77,12 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&sortBy=createdAt&sortDir=asc");
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&sortBy=createdAt&sortDir=asc", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
@@ -100,12 +100,12 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&status=Pending");
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&status=Pending", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
@@ -123,12 +123,12 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         var dateTo = LocalDatePattern.Iso.Format(utcToday.PlusDays(1));
 
         // Act
-        var response = await Client.GetAsync($"/api/v1/quote/admin?admin=true&dateFrom={dateFrom}&dateTo={dateTo}");
+        var response = await Client.GetAsync($"/api/v1/quote/admin?admin=true&dateFrom={dateFrom}&dateTo={dateTo}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         var fromInclusive = LocalDatePattern.Iso.Parse(dateFrom).Value.AtStartOfDayInZone(DateTimeZone.Utc).ToInstant();
@@ -149,12 +149,12 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await SeedTestDataAsync();
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&pageSize=150"); // Exceeds max of 100
+        var response = await Client.GetAsync("/api/v1/quote/admin?admin=true&pageSize=150", TestContext.Current.CancellationToken); // Exceeds max of 100
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var result = JsonSerializer.Deserialize<AdminQuoteListResponse>(content, AdminQuoteJsonOptions);
 
         result.Should().NotBeNull();
@@ -167,7 +167,7 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         // Arrange
 
         // Act
-        var response = await Client.GetAsync("/api/v1/quote/admin?page=1&pageSize=10");
+        var response = await Client.GetAsync("/api/v1/quote/admin?page=1&pageSize=10", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

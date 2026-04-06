@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using FluentAssertions;
 using Mediator;
 using Microsoft.AspNetCore.Http;
@@ -48,7 +48,7 @@ public class AdminControllerTests
         };
 
         var cacheKey = "admin_dashboard_metrics";
-        _memoryCache.TryGetValue(cacheKey, out Arg.Any<object>())
+        _memoryCache.TryGetValue(cacheKey, out Arg.Any<object>()!)
             .Returns(x =>
             {
                 x[1] = cachedMetrics;
@@ -84,7 +84,7 @@ public class AdminControllerTests
         };
 
         var cacheKey = "admin_dashboard_metrics";
-        _memoryCache.TryGetValue(cacheKey, out Arg.Any<object>()).Returns(false);
+        _memoryCache.TryGetValue(cacheKey, out Arg.Any<object>()!).Returns(false);
 
         _mediator.Send(Arg.Any<GetDashboardMetricsQuery>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromResult<ErrorOr<DashboardMetricsDto>>(serviceMetrics));
@@ -121,7 +121,7 @@ public class AdminControllerTests
 
         var cacheKey =
             $"admin_dashboard_metrics_{LocalDatePattern.Iso.Format(fromLd)}_{LocalDatePattern.Iso.Format(toLd)}";
-        _memoryCache.TryGetValue(cacheKey, out Arg.Any<object>()).Returns(false);
+        _memoryCache.TryGetValue(cacheKey, out Arg.Any<object>()!).Returns(false);
 
         _mediator.Send(Arg.Any<GetDashboardMetricsQuery>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromResult<ErrorOr<DashboardMetricsDto>>(serviceMetrics));
@@ -163,7 +163,7 @@ public class AdminControllerTests
     {
         // Arrange
         var cacheKey = "admin_dashboard_metrics";
-        _memoryCache.TryGetValue(cacheKey, out Arg.Any<object>()).Returns(false);
+        _memoryCache.TryGetValue(cacheKey, out Arg.Any<object>()!).Returns(false);
 
         _mediator.Send(Arg.Any<GetDashboardMetricsQuery>(), Arg.Any<CancellationToken>())
             .Returns(ValueTask.FromException<ErrorOr<DashboardMetricsDto>>(new Exception("Database connection failed")));

@@ -1,4 +1,4 @@
-using System.Data;
+﻿using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -105,11 +105,11 @@ public static class RemovalPricingSeeder
         }
 
         await EnsureRateAsync(1, ServiceLevel.Standard, 3, 250, 65);
-        await EnsureRateAsync(1, ServiceLevel.Premium,  4, 350, 75);
+        await EnsureRateAsync(1, ServiceLevel.Premium, 4, 350, 75);
         await EnsureRateAsync(2, ServiceLevel.Standard, 3, 300, 75);
-        await EnsureRateAsync(2, ServiceLevel.Premium,  4, 450, 85);
+        await EnsureRateAsync(2, ServiceLevel.Premium, 4, 450, 85);
         await EnsureRateAsync(3, ServiceLevel.Standard, 3, 350, 85);
-        await EnsureRateAsync(3, ServiceLevel.Premium,  4, 500, 95);
+        await EnsureRateAsync(3, ServiceLevel.Premium, 4, 500, 95);
 
         async Task EnsureFeatureAsync(ServiceLevel level, int order, string text)
         {

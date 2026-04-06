@@ -1,4 +1,4 @@
-using TranzrMoves.Domain.Interfaces;
+﻿using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Domain.Entities;
 
@@ -14,10 +14,10 @@ public class LegalDocument : IAuditable
     public bool IsActive { get; set; } = true;
     public int ContentLength { get; set; } // Content size in bytes
     public string ContentHash { get; set; } = string.Empty; // MD5 hash for integrity
-    
+
     // Optimistic concurrency
     public uint RowVersion { get; set; }
-    
+
     // Audit properties
     public Instant CreatedAt { get; set; }
     public string CreatedBy { get; set; } = "System";

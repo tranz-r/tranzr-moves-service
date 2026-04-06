@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Contracts;
@@ -19,11 +19,11 @@ public class GetLegalDocumentHistoryQueryHandler(
         try
         {
             var documents = await legalDocumentRepository.GetHistoryAsync(query.DocumentType, cancellationToken);
-            
+
             var mapper = new LegalDocumentMapper();
             var documentDtos = mapper.ToDtoList(documents);
 
-            logger.LogInformation("Successfully retrieved {Count} historical documents for {DocumentType}", 
+            logger.LogInformation("Successfully retrieved {Count} historical documents for {DocumentType}",
                 documents.Count, query.DocumentType);
 
             return new GetLegalDocumentHistoryResponse(documentDtos);
@@ -31,7 +31,7 @@ public class GetLegalDocumentHistoryQueryHandler(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error retrieving legal document history for {DocumentType}", query.DocumentType);
-            return Error.Failure("LegalDocument.HistoryError", 
+            return Error.Failure("LegalDocument.HistoryError",
                 "An error occurred while retrieving the legal document history");
         }
     }

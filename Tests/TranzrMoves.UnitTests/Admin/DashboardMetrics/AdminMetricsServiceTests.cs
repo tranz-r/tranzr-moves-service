@@ -1,9 +1,8 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using NodaTime;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using NSubstitute;
-
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Infrastructure;
@@ -213,8 +212,20 @@ public class AdminMetricsServiceTests : IDisposable
         // Add driver quotes
         var driverQuotes = new List<DriverQuote>
         {
-            new() { Id = Guid.NewGuid(), UserId = users[1].Id, QuoteId = quotes[0].Id },
-            new() { Id = Guid.NewGuid(), UserId = users[1].Id, QuoteId = quotes[1].Id }
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = users[1].Id,
+                QuoteId = quotes[0].Id,
+                User = new User(),
+                Quote = new Quote()
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                UserId = users[1].Id,
+                QuoteId = quotes[1].Id
+            }
         };
 
         _context.Set<DriverQuote>().AddRange(driverQuotes);

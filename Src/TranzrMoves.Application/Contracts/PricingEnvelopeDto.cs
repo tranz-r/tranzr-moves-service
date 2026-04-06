@@ -1,4 +1,4 @@
-namespace TranzrMoves.Application.Contracts;
+﻿namespace TranzrMoves.Application.Contracts;
 
 public sealed class RateLeafDto
 {
@@ -11,7 +11,7 @@ public sealed class RateLeafDto
 public sealed class MoversDto
 {
     public RateLeafDto? Standard { get; init; }
-    public RateLeafDto? Premium  { get; init; }
+    public RateLeafDto? Premium { get; init; }
 }
 
 public sealed class ServiceTextDto
@@ -27,7 +27,7 @@ public sealed class RatesDto
     public MoversDto? Three { get; init; }
 
     public List<ServiceTextDto> StandardServiceTexts { get; init; } = new();
-    public List<ServiceTextDto> PremiumServiceTexts  { get; init; } = new();
+    public List<ServiceTextDto> PremiumServiceTexts { get; init; } = new();
 }
 
 

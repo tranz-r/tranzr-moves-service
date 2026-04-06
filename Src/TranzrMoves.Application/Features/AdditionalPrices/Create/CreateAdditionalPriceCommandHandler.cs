@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Contracts;
@@ -10,7 +10,7 @@ namespace TranzrMoves.Application.Features.AdditionalPrices.Create;
 
 public class CreateAdditionalPriceCommandHandler(
     IAdditionalPriceRepository additionalPriceRepository,
-    ILogger<CreateAdditionalPriceCommandHandler> logger) 
+    ILogger<CreateAdditionalPriceCommandHandler> logger)
     : IRequestHandler<CreateAdditionalPriceCommand, ErrorOr<AdditionalPriceDto>>
 {
     public async ValueTask<ErrorOr<AdditionalPriceDto>> Handle(
@@ -31,7 +31,7 @@ public class CreateAdditionalPriceCommandHandler(
             };
 
             var result = await additionalPriceRepository.AddAdditionalPriceAsync(additionalPrice, cancellationToken);
-            
+
             if (result.IsError)
             {
                 logger.LogError("Failed to create additional price: {Error}", result.FirstError.Description);
@@ -40,8 +40,8 @@ public class CreateAdditionalPriceCommandHandler(
 
             var mapper = new AdditionalPriceMapper();
             var additionalPriceDto = mapper.ToDto(result.Value);
-            
-            logger.LogInformation("Successfully created additional price {Id} of type {Type}", 
+
+            logger.LogInformation("Successfully created additional price {Id} of type {Type}",
                 additionalPriceDto.Id, additionalPriceDto.Type);
 
             return additionalPriceDto;

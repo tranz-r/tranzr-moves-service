@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -10,7 +10,7 @@ namespace TranzrMoves.Application.Features.AdditionalPrices.Get;
 
 public class GetAdditionalPriceQueryHandler(
     IAdditionalPriceRepository additionalPriceRepository,
-    ILogger<GetAdditionalPriceQueryHandler> logger) 
+    ILogger<GetAdditionalPriceQueryHandler> logger)
     : IRequestHandler<GetAdditionalPriceQuery, ErrorOr<AdditionalPriceDto>>
 {
     public async ValueTask<ErrorOr<AdditionalPriceDto>> Handle(
@@ -20,7 +20,7 @@ public class GetAdditionalPriceQueryHandler(
         try
         {
             var additionalPrice = await additionalPriceRepository.GetAdditionalPriceAsync(query.Id, cancellationToken);
-            
+
             if (additionalPrice is null)
             {
                 logger.LogWarning("Additional price not found with ID {Id}", query.Id);
@@ -29,7 +29,7 @@ public class GetAdditionalPriceQueryHandler(
 
             var mapper = new AdditionalPriceMapper();
             var additionalPriceDto = mapper.ToDto(additionalPrice);
-            
+
             logger.LogInformation("Successfully retrieved additional price {Id}", query.Id);
             return additionalPriceDto;
         }

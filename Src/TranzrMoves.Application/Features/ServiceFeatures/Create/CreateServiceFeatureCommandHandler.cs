@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Contracts;
@@ -10,7 +10,7 @@ namespace TranzrMoves.Application.Features.ServiceFeatures.Create;
 
 public class CreateServiceFeatureCommandHandler(
     IServiceFeatureRepository serviceFeatureRepository,
-    ILogger<CreateServiceFeatureCommandHandler> logger) 
+    ILogger<CreateServiceFeatureCommandHandler> logger)
     : IRequestHandler<CreateServiceFeatureCommand, ErrorOr<ServiceFeatureDto>>
 {
     public async ValueTask<ErrorOr<ServiceFeatureDto>> Handle(
@@ -30,7 +30,7 @@ public class CreateServiceFeatureCommandHandler(
             };
 
             var result = await serviceFeatureRepository.AddServiceFeatureAsync(serviceFeature, cancellationToken);
-            
+
             if (result.IsError)
             {
                 logger.LogError("Failed to create service feature: {Error}", result.FirstError.Description);
@@ -39,8 +39,8 @@ public class CreateServiceFeatureCommandHandler(
 
             var mapper = new ServiceFeatureMapper();
             var serviceFeatureDto = mapper.ToDto(result.Value);
-            
-            logger.LogInformation("Successfully created service feature {Id} for {ServiceLevel} service level", 
+
+            logger.LogInformation("Successfully created service feature {Id} for {ServiceLevel} service level",
                 serviceFeatureDto.Id, serviceFeatureDto.ServiceLevel);
 
             return serviceFeatureDto;

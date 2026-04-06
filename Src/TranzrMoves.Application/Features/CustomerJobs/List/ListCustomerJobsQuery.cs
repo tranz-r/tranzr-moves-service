@@ -1,4 +1,4 @@
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using Mediator;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Entities;

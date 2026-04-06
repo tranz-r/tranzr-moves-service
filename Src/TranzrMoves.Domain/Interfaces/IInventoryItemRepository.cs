@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Domain.Interfaces;

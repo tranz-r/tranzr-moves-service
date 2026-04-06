@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -149,7 +149,7 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
         return db.Set<Quote>()
             .Include(x => x.InventoryItems)
             .Include(x => x.QuoteAdditionalPayments)
-            .FirstOrDefaultAsync(q => q.QuoteReference == quoteReference && q.PaymentIntentId == paymentIntentId , cancellationToken);
+            .FirstOrDefaultAsync(q => q.QuoteReference == quoteReference && q.PaymentIntentId == paymentIntentId, cancellationToken);
     }
 
     public Task<Quote?> GetQuoteByReferenceAsync(string quoteReference, CancellationToken cancellationToken = default)
@@ -218,15 +218,15 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
         var totalCount = await baseQuery.CountAsync(ct);
 
         // Apply sorting - ONLY on Quote fields for maximum performance
-        baseQuery = sortBy.ToLower() switch
+        baseQuery = sortBy?.ToLower() switch
         {
-            "createdat" => sortDir.ToLower() == "asc"
+            "createdat" => sortDir?.ToLower() == "asc"
                 ? baseQuery.OrderBy(q => q.CreatedAt)
                 : baseQuery.OrderByDescending(q => q.CreatedAt),
-            "amount" => sortDir.ToLower() == "asc"
+            "amount" => sortDir?.ToLower() == "asc"
                 ? baseQuery.OrderBy(q => q.TotalCost)
                 : baseQuery.OrderByDescending(q => q.TotalCost),
-            "status" => sortDir.ToLower() == "asc"
+            "status" => sortDir?.ToLower() == "asc"
                 ? baseQuery.OrderBy(q => q.PaymentStatus)
                 : baseQuery.OrderByDescending(q => q.PaymentStatus),
             // Driver name sorting removed for performance - will be handled in detail view
@@ -282,10 +282,10 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
     public async Task<Quote?> GetAdminQuoteDetailsAsync(Guid quoteId, CancellationToken ct = default)
     {
         return await db.Set<Quote>()
-            .Include(q => q.CustomerQuotes)
-                .ThenInclude(cq => cq.User)
-                    .ThenInclude(u => u.BillingAddress)
-            .Include(q => q.DriverQuotes)
+            .Include(q => q.CustomerQuotes)!
+            .ThenInclude(cq => cq.User)
+            .ThenInclude(u => u.BillingAddress)
+            .Include(q => q.DriverQuotes)!
                 .ThenInclude(dq => dq.User)
             .Include(q => q.Origin)
             .Include(q => q.Destination)

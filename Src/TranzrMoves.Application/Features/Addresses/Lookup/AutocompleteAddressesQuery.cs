@@ -1,1 +1,1 @@
-// Intentionally removed; depends on presentation types. Use Web layer to shape response.
+﻿// Intentionally removed; depends on presentation types. Use Web layer to shape response.

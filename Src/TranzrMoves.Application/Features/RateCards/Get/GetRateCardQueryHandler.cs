@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -10,7 +10,7 @@ namespace TranzrMoves.Application.Features.RateCards.Get;
 
 public class GetRateCardQueryHandler(
     IRateCardRepository rateCardRepository,
-    ILogger<GetRateCardQueryHandler> logger) 
+    ILogger<GetRateCardQueryHandler> logger)
     : IRequestHandler<GetRateCardQuery, ErrorOr<RateCardDto>>
 {
     public async ValueTask<ErrorOr<RateCardDto>> Handle(
@@ -20,7 +20,7 @@ public class GetRateCardQueryHandler(
         try
         {
             var rateCard = await rateCardRepository.GetRateCardAsync(query.Id, cancellationToken);
-            
+
             if (rateCard is null)
             {
                 logger.LogWarning("Rate card not found with ID {Id}", query.Id);
@@ -29,7 +29,7 @@ public class GetRateCardQueryHandler(
 
             var mapper = new RateCardMapper();
             var rateCardDto = mapper.ToDto(rateCard);
-            
+
             logger.LogInformation("Successfully retrieved rate card {Id}", query.Id);
             return rateCardDto;
         }

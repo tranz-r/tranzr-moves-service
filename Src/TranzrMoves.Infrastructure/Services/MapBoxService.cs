@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Web;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -14,6 +14,12 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
         bool useTraffic = true)
     {
         var mapboxToken = configuration.GetSection("MAPBOX_TOKEN").Value;
+        if (string.IsNullOrWhiteSpace(mapboxToken))
+        {
+            logger.LogError("Mapbox driving distance requested but MAPBOX_TOKEN is not configured");
+            throw new InvalidOperationException("Mapbox token is not configured.");
+        }
+
         var (lon1, lat1) = await GeocodeAsync(originAddressOrPostcode, mapboxToken);
         var (lon2, lat2) = await GeocodeAsync(destAddressOrPostcode, mapboxToken);
 
@@ -29,7 +35,11 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
 
         var routes = doc.RootElement.GetProperty("routes");
         if (routes.GetArrayLength() == 0)
+        {
+            logger.LogWarning("Mapbox returned no routes between origin (len {OriginLen}) and destination (len {DestLen})",
+                originAddressOrPostcode.Length, destAddressOrPostcode.Length);
             throw new InvalidOperationException("No route found.");
+        }
 
         var route = routes[0];
         var distanceMeters = route.GetProperty("distance").GetDouble();
@@ -38,16 +48,25 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
         var km = distanceMeters / 1000.0;
         var miles = distanceMeters / 1609.344;
 
+        logger.LogDebug(
+            "Mapbox driving distance: {Km:F2} km, {Miles:F2} mi, {Seconds:F0}s (traffic={UseTraffic})",
+            km, miles + 1, durationSeconds, useTraffic);
+
         return (km, miles + 1, durationSeconds);
     }
-    
+
     public async Task<MapRouteDto> GetRouteDataAsync(
         string originAddress,
         string destinationAddress,
         CancellationToken cancellationToken = default)
     {
         var mapboxToken = configuration.GetSection("MAPBOX_TOKEN").Value;
-        
+        if (string.IsNullOrWhiteSpace(mapboxToken))
+        {
+            logger.LogError("Mapbox route data requested but MAPBOX_TOKEN is not configured");
+            throw new InvalidOperationException("Mapbox token is not configured.");
+        }
+
         // Geocode both addresses
         var (originLon, originLat, originFormattedAddress) = await GeocodeWithAddressAsync(originAddress, mapboxToken);
         var (destLon, destLat, destFormattedAddress) = await GeocodeWithAddressAsync(destinationAddress, mapboxToken);
@@ -65,17 +84,24 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
 
         var routes = doc.RootElement.GetProperty("routes");
         if (routes.GetArrayLength() == 0)
+        {
+            logger.LogWarning("Mapbox returned no route geometry for origin (len {OriginLen}) to destination (len {DestLen})",
+                originAddress.Length, destinationAddress.Length);
             throw new InvalidOperationException("No route found.");
+        }
 
         var route = routes[0];
         var distanceMeters = route.GetProperty("distance").GetDouble();
         var durationSeconds = route.GetProperty("duration").GetDouble();
         var geometry = route.GetProperty("geometry");
 
+        logger.LogDebug("Mapbox route: {Miles:F2} mi, {Minutes:F1} min, {PointCount} coordinates",
+            distanceMeters / 1609.344, durationSeconds / 60.0, geometry.GetProperty("coordinates").GetArrayLength());
+
         // Parse GeoJSON LineString coordinates
         var coordinates = geometry.GetProperty("coordinates");
         var routeCoordinates = new List<CoordinateDto>();
-        
+
         foreach (var coord in coordinates.EnumerateArray())
         {
             routeCoordinates.Add(new CoordinateDto
@@ -104,9 +130,15 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
             }
         };
     }
-    
-    private async Task<(double lon, double lat)> GeocodeAsync(string query, string token)
+
+    private async Task<(double lon, double lat)> GeocodeAsync(string query, string? token)
     {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            logger.LogError("Mapbox geocode called with empty token (query length {Length})", query.Length);
+            throw new InvalidOperationException("Mapbox token is not configured.");
+        }
+
         var q = HttpUtility.UrlEncode(query);
         var url = $"geocoding/v5/mapbox.places/{q}.json" +
                   $"?country=GB&types=address,postcode&limit=1&autocomplete=false&access_token={token}";
@@ -118,16 +150,26 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
 
         var features = doc.RootElement.GetProperty("features");
         if (features.GetArrayLength() == 0)
+        {
+            logger.LogWarning("Mapbox geocode returned no features for query (length {Length})", query.Length);
             throw new InvalidOperationException($"Could not geocode: '{query}'.");
+        }
 
         var coords = features[0].GetProperty("geometry").GetProperty("coordinates");
         var lon = coords[0].GetDouble();
         var lat = coords[1].GetDouble();
+        logger.LogDebug("Mapbox geocode resolved query length {Length} to coordinates", query.Length);
         return (lon, lat);
     }
-    
-    private async Task<(double lon, double lat, string formattedAddress)> GeocodeWithAddressAsync(string query, string token)
+
+    private async Task<(double lon, double lat, string formattedAddress)> GeocodeWithAddressAsync(string query, string? token)
     {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            logger.LogError("Mapbox geocode (with address) called with empty token (query length {Length})", query.Length);
+            throw new InvalidOperationException("Mapbox token is not configured.");
+        }
+
         var q = HttpUtility.UrlEncode(query);
         var url = $"geocoding/v5/mapbox.places/{q}.json" +
                   $"?country=GB&types=address,postcode&limit=1&autocomplete=false&access_token={token}";
@@ -139,14 +181,18 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
 
         var features = doc.RootElement.GetProperty("features");
         if (features.GetArrayLength() == 0)
+        {
+            logger.LogWarning("Mapbox geocode returned no features for query (length {Length})", query.Length);
             throw new InvalidOperationException($"Could not geocode: '{query}'.");
+        }
 
         var feature = features[0];
         var coords = feature.GetProperty("geometry").GetProperty("coordinates");
         var lon = coords[0].GetDouble();
         var lat = coords[1].GetDouble();
         var formattedAddress = feature.GetProperty("place_name").GetString() ?? query;
-        
+
+        logger.LogDebug("Mapbox geocode resolved query length {Length} to formatted address", query.Length);
         return (lon, lat, formattedAddress);
     }
 }

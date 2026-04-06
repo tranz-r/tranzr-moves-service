@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 
@@ -31,9 +31,9 @@ public class GetLegalDocumentQueryHandler(
 
             if (document == null)
             {
-                logger.LogWarning("No {DocumentType} found for date {AsOfDate}", 
+                logger.LogWarning("No {DocumentType} found for date {AsOfDate}",
                     request.DocumentType, asOfDate);
-                return Error.Custom((int)CustomErrorType.NotFound, "LegalDocument.NotFound", 
+                return Error.Custom((int)CustomErrorType.NotFound, "LegalDocument.NotFound",
                     $"No {request.DocumentType} document found for the specified date");
             }
 
@@ -43,12 +43,12 @@ public class GetLegalDocumentQueryHandler(
 
             if (downloadResult.IsError)
             {
-                logger.LogError("Failed to download blob {BlobName}: {Error}", 
+                logger.LogError("Failed to download blob {BlobName}: {Error}",
                     document.BlobName, downloadResult.FirstError.Description);
                 return downloadResult.Errors;
             }
 
-            logger.LogInformation("Successfully retrieved {DocumentType} version {Version} for date {AsOfDate}", 
+            logger.LogInformation("Successfully retrieved {DocumentType} version {Version} for date {AsOfDate}",
                 request.DocumentType, document.Version, asOfDate);
 
             return new GetLegalDocumentResponse(
@@ -63,9 +63,9 @@ public class GetLegalDocumentQueryHandler(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error retrieving legal document {DocumentType} for date {AsOfDate}", 
+            logger.LogError(ex, "Error retrieving legal document {DocumentType} for date {AsOfDate}",
                 query.Request.DocumentType, query.Request.AsOfDate);
-            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.RetrievalError", 
+            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.RetrievalError",
                 "An error occurred while retrieving the legal document");
         }
     }

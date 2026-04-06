@@ -1,4 +1,4 @@
-using Mediator;
+﻿using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Domain.Interfaces;
 

@@ -1,4 +1,4 @@
-using TranzrMoves.Domain.Entities;
+﻿using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Application.Contracts;
 
@@ -15,7 +15,7 @@ public record JobDto
     public Instant CollectionDate { get; set; }
     public long DriverCount { get; set; }
     public long DistanceMiles { get; set; }
-    public CostDto Cost { get; set; }
-    public UserDto User { get; set; }
+    public required CostDto Cost { get; set; }
+    public required UserDto User { get; set; }
     public List<InventoryItemDto> InventoryItems { get; set; } = [];
 }

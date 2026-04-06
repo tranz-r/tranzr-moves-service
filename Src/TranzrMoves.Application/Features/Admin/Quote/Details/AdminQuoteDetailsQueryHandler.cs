@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 
@@ -58,7 +58,7 @@ public class AdminQuoteDetailsQueryHandler(
         }
 
         var depositAmount = quote.DepositAmount ?? 0;
-        var receiptUrl = quote?.ReceiptUrl ?? null;
+        var receiptUrl = quote.ReceiptUrl;
 
         // Map customer information
         var customerQuote = quote.CustomerQuotes?.FirstOrDefault();

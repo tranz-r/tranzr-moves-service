@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using EntityFramework.Exceptions.PostgreSQL;
 using Microsoft.EntityFrameworkCore;
 using TranzrMoves.Domain.Entities;
@@ -7,12 +7,12 @@ namespace TranzrMoves.Infrastructure;
 
 public class TranzrMovesDbContext(DbContextOptions<TranzrMovesDbContext> dbContextOptions) : DbContext(dbContextOptions)
 {
-    public TranzrMovesDbContext() : this(new  DbContextOptionsBuilder<TranzrMovesDbContext>().Options)
-    {}
+    public TranzrMovesDbContext() : this(new DbContextOptionsBuilder<TranzrMovesDbContext>().Options)
+    { }
 
     // DbSets
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
-    
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         base.OnConfiguring(optionsBuilder);

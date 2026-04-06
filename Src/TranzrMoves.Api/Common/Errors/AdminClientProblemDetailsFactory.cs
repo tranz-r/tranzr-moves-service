@@ -93,7 +93,7 @@ public class TranzrProblemDetailsFactory(
             problemDetails.Extensions["traceId"] = traceId;
         }
 
-        if(httpContext?.Items[HttpContextItemKeys.Errors] is List<Error> errors)
+        if (httpContext?.Items[HttpContextItemKeys.Errors] is List<Error> errors)
         {
             problemDetails.Extensions.Add("errorCodes", errors.Select(e => e.Code));
         }

@@ -1,4 +1,4 @@
-using Riok.Mapperly.Abstractions;
+﻿using Riok.Mapperly.Abstractions;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Entities;
 

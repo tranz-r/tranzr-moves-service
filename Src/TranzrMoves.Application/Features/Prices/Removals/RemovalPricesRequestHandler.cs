@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
@@ -23,7 +23,7 @@ public class RemovalPricesRequestHandler(
         CancellationToken cancellationToken)
     {
         var rates = await removalPricingRepository.GetRateCardsAsync(request.At, cancellationToken);
-        
+
         string currency = rates.FirstOrDefault()?.CurrencyCode ?? "GBP";
 
         RateLeafDto? Map(int movers, ServiceLevel level) =>
@@ -35,11 +35,15 @@ public class RemovalPricesRequestHandler(
                     HourlyAfter = r.HourlyRateAfter
                 })
                 .FirstOrDefault();
-        
+
         var features = await removalPricingRepository.GetServiceFeatureAsync(request.At, cancellationToken);
         var additionalPrices = await additionalPriceRepository.GetAdditionalPricesAsync(true, cancellationToken);
 
         var version = ComputePayloadVersion(rates, features, additionalPrices);
+
+        logger.LogDebug(
+            "Built removal pricing for {At}: version {Version}, {RateCount} rate rows, {FeatureCount} features, {AdditionalPriceCount} additional prices",
+            request.At, version, rates.Count, features.Count, additionalPrices.Count);
 
         var standardTexts = features.Where(f => f.ServiceLevel == ServiceLevel.Standard)
             .Select((f, i) => new ServiceTextDto { Id = i + 1, Text = f.Text })
@@ -48,9 +52,9 @@ public class RemovalPricesRequestHandler(
         var premiumTexts = features.Where(f => f.ServiceLevel == ServiceLevel.Premium)
             .Select((f, i) => new ServiceTextDto { Id = i + 1, Text = f.Text })
             .ToList();
-        
-        
-        
+
+
+
         var extraPrice = new ExtraPricesDto
         {
             Dismantle = additionalPrices
@@ -82,17 +86,17 @@ public class RemovalPricesRequestHandler(
             Rates = new RatesDto
             {
                 One = new MoversDto
-                    { Standard = Map(1, ServiceLevel.Standard), Premium = Map(1, ServiceLevel.Premium) },
+                { Standard = Map(1, ServiceLevel.Standard), Premium = Map(1, ServiceLevel.Premium) },
                 Two = new MoversDto
-                    { Standard = Map(2, ServiceLevel.Standard), Premium = Map(2, ServiceLevel.Premium) },
+                { Standard = Map(2, ServiceLevel.Standard), Premium = Map(2, ServiceLevel.Premium) },
                 Three = new MoversDto
-                    { Standard = Map(3, ServiceLevel.Standard), Premium = Map(3, ServiceLevel.Premium) },
+                { Standard = Map(3, ServiceLevel.Standard), Premium = Map(3, ServiceLevel.Premium) },
                 StandardServiceTexts = standardTexts,
                 PremiumServiceTexts = premiumTexts
             }
         };
     }
-    
+
     private static string ComputePayloadVersion(
         IEnumerable<RateCard> rates, IEnumerable<ServiceFeature> features, IEnumerable<AdditionalPrice> additionalPrices)
     {
@@ -125,7 +129,7 @@ public class RemovalPricesRequestHandler(
                 .Append(f.EffectiveTo is { } etf ? InstantPattern.ExtendedIso.Format(etf) : "null")
                 .Append(';');
         }
-        
+
         foreach (var p in additionalPrices.OrderBy(p => p.Type).ThenBy(p => p.Id))
         {
             sb.Append((int)p.Type).Append('|')

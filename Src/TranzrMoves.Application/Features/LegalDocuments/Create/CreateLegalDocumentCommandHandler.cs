@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -17,37 +17,37 @@ public class CreateLegalDocumentCommandHandler(
     ILegalDocumentRepository legalDocumentRepository,
     IAzureBlobService azureBlobService,
     ITimeService timeService,
-    ILogger<CreateLegalDocumentCommandHandler> logger) 
+    ILogger<CreateLegalDocumentCommandHandler> logger)
     : IRequestHandler<CreateLegalDocumentCommand, ErrorOr<CreateLegalDocumentResponse>>
 {
     private const string ContainerName = "legal";
-    
+
     public async ValueTask<ErrorOr<CreateLegalDocumentResponse>> Handle(
-        CreateLegalDocumentCommand command, 
+        CreateLegalDocumentCommand command,
         CancellationToken cancellationToken)
     {
         try
         {
             var request = command.Request;
-            
+
             // Validate content
             if (string.IsNullOrWhiteSpace(request.MarkdownContent))
             {
-                return Error.Custom((int)CustomErrorType.BadRequest, "LegalDocument.InvalidContent", 
+                return Error.Custom((int)CustomErrorType.BadRequest, "LegalDocument.InvalidContent",
                     "Markdown content cannot be empty");
             }
 
             // Generate version hash
             var contentBytes = Encoding.UTF8.GetBytes(request.MarkdownContent);
             var version = GenerateVersionHash(contentBytes);
-            
+
             // Generate blob name with timestamp and version
             var utc = DateTimeZone.Utc;
             var now = timeService.Now();
             var tomorrow = timeService.TodayInUtc().PlusDays(1);
             var effectiveFrom = tomorrow.AtStartOfDayInZone(utc).ToInstant();
             var blobName = GenerateBlobName(request.DocumentType, effectiveFrom, version);
-            
+
             // Upload to Azure Blob Storage
             var uploadResult = await azureBlobService.UploadBlobAsync(ContainerName, blobName, request.MarkdownContent, cancellationToken);
             if (uploadResult.IsError)
@@ -86,14 +86,14 @@ public class CreateLegalDocumentCommandHandler(
             var expireAt = tomorrowMidnight - Duration.FromTimeSpan(TimeSpan.FromTicks(1));
             var expireResult = await legalDocumentRepository.ExpirePreviousDocumentsAsync(
                 request.DocumentType, expireAt, cancellationToken);
-            
+
             if (expireResult.IsError)
             {
                 logger.LogWarning("Failed to expire previous documents: {Error}", expireResult.FirstError.Description);
                 // Continue anyway - the new document was created successfully
             }
 
-            logger.LogInformation("Successfully created legal document {DocumentType} with version {Version}, effective from {EffectiveFrom}", 
+            logger.LogInformation("Successfully created legal document {DocumentType} with version {Version}, effective from {EffectiveFrom}",
                 request.DocumentType, version, effectiveFrom);
 
             return new CreateLegalDocumentResponse(
@@ -106,7 +106,7 @@ public class CreateLegalDocumentCommandHandler(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating legal document {DocumentType}", command.Request.DocumentType);
-            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.CreationError", 
+            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.CreationError",
                 "An error occurred while creating the legal document");
         }
     }

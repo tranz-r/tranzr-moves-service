@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Entities;
@@ -28,12 +28,12 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         builder.Property(x => x.PaymentStatus)
             .HasConversion(
                 v => v.ToString(),
-                v => (PaymentStatus)Enum.Parse(typeof(PaymentStatus), v));
+                v => (PaymentStatus)Enum.Parse(typeof(PaymentStatus), v!));
 
         builder.Property(x => x.TimeSlot)
             .HasConversion(
                 v => v.ToString(),
-                v => (TimeSlot)Enum.Parse(typeof(TimeSlot), v));
+                v => (TimeSlot)Enum.Parse(typeof(TimeSlot), v!));
 
         builder.Property(x => x.VanType)
             .HasConversion(

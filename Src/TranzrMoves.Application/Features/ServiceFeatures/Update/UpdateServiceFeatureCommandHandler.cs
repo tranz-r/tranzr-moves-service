@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -10,7 +10,7 @@ namespace TranzrMoves.Application.Features.ServiceFeatures.Update;
 
 public class UpdateServiceFeatureCommandHandler(
     IServiceFeatureRepository serviceFeatureRepository,
-    ILogger<UpdateServiceFeatureCommandHandler> logger) 
+    ILogger<UpdateServiceFeatureCommandHandler> logger)
     : IRequestHandler<UpdateServiceFeatureCommand, ErrorOr<ServiceFeatureDto>>
 {
     public async ValueTask<ErrorOr<ServiceFeatureDto>> Handle(
@@ -20,7 +20,7 @@ public class UpdateServiceFeatureCommandHandler(
         try
         {
             var existingServiceFeature = await serviceFeatureRepository.GetServiceFeatureAsync(command.Id, cancellationToken);
-            
+
             if (existingServiceFeature is null)
             {
                 logger.LogWarning("Service feature not found with ID {Id}", command.Id);
@@ -36,7 +36,7 @@ public class UpdateServiceFeatureCommandHandler(
             existingServiceFeature.IsActive = command.IsActive;
 
             var result = await serviceFeatureRepository.UpdateServiceFeatureAsync(existingServiceFeature, cancellationToken);
-            
+
             if (result.IsError)
             {
                 logger.LogError("Failed to update service feature {Id}: {Error}", command.Id, result.FirstError.Description);
@@ -45,7 +45,7 @@ public class UpdateServiceFeatureCommandHandler(
 
             var mapper = new ServiceFeatureMapper();
             var serviceFeatureDto = mapper.ToDto(result.Value);
-            
+
             logger.LogInformation("Successfully updated service feature {Id}", command.Id);
             return serviceFeatureDto;
         }

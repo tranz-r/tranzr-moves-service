@@ -1,12 +1,11 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using Azure.Storage.Blobs;
-
-using NodaTime.Text;
 using Azure.Storage.Blobs.Models;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using NodaTime.Text;
 using TranzrMoves.Application.Common.CustomErrors;
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Interfaces;
@@ -18,9 +17,9 @@ public class AzureBlobService(
     ITimeService timeService,
     ILogger<AzureBlobService> logger) : IAzureBlobService
 {
-    private readonly string _connectionString = configuration["AZURE_STORAGE_CONNECTION_STRING"] ?? 
+    private readonly string _connectionString = configuration["AZURE_STORAGE_CONNECTION_STRING"] ??
         throw new InvalidOperationException("AZURE_STORAGE_CONNECTION_STRING is not configured");
-    
+
     // private readonly string _sasToken = configuration["AZURE_STORAGE_SAS_TOKEN"] ?? 
     //     throw new InvalidOperationException("AZURE_STORAGE_SAS_TOKEN is not configured");
 
@@ -55,16 +54,16 @@ public class AzureBlobService(
                 Conditions = null
             }, cancellationToken);
 
-            logger.LogInformation("Successfully uploaded blob {BlobName} to container {ContainerName}", 
+            logger.LogInformation("Successfully uploaded blob {BlobName} to container {ContainerName}",
                 blobName, containerName);
 
             return blobClient.Uri.ToString();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to upload blob {BlobName} to container {ContainerName}", 
+            logger.LogError(ex, "Failed to upload blob {BlobName} to container {ContainerName}",
                 blobName, containerName);
-            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.UploadFailed", 
+            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.UploadFailed",
                 $"Failed to upload blob: {ex.Message}");
         }
     }
@@ -80,16 +79,16 @@ public class AzureBlobService(
             var response = await blobClient.DownloadContentAsync(cancellationToken);
             var content = response.Value.Content.ToString();
 
-            logger.LogInformation("Successfully downloaded blob {BlobName} from container {ContainerName}", 
+            logger.LogInformation("Successfully downloaded blob {BlobName} from container {ContainerName}",
                 blobName, containerName);
 
             return content;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to download blob {BlobName} from container {ContainerName}", 
+            logger.LogError(ex, "Failed to download blob {BlobName} from container {ContainerName}",
                 blobName, containerName);
-            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.DownloadFailed", 
+            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.DownloadFailed",
                 $"Failed to download blob: {ex.Message}");
         }
     }
@@ -104,16 +103,16 @@ public class AzureBlobService(
 
             var response = await blobClient.DeleteIfExistsAsync(cancellationToken: cancellationToken);
 
-            logger.LogInformation("Successfully deleted blob {BlobName} from container {ContainerName}", 
+            logger.LogInformation("Successfully deleted blob {BlobName} from container {ContainerName}",
                 blobName, containerName);
 
             return response.Value;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to delete blob {BlobName} from container {ContainerName}", 
+            logger.LogError(ex, "Failed to delete blob {BlobName} from container {ContainerName}",
                 blobName, containerName);
-            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.DeleteFailed", 
+            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.DeleteFailed",
                 $"Failed to delete blob: {ex.Message}");
         }
     }
@@ -132,9 +131,9 @@ public class AzureBlobService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to check if blob {BlobName} exists in container {ContainerName}", 
+            logger.LogError(ex, "Failed to check if blob {BlobName} exists in container {ContainerName}",
                 blobName, containerName);
-            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.ExistsCheckFailed", 
+            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.ExistsCheckFailed",
                 $"Failed to check blob existence: {ex.Message}");
         }
     }
@@ -156,9 +155,9 @@ public class AzureBlobService(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to get metadata for blob {BlobName} in container {ContainerName}", 
+            logger.LogError(ex, "Failed to get metadata for blob {BlobName} in container {ContainerName}",
                 blobName, containerName);
-            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.MetadataFailed", 
+            return Error.Custom((int)CustomErrorType.ServiceUnavailable, "AzureBlob.MetadataFailed",
                 $"Failed to get blob metadata: {ex.Message}");
         }
     }

@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -34,13 +34,13 @@ public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
             HandleCookies = true
         });
 
-        var ensure = await client.PostAsync("/api/v1/quote/ensure", new StringContent("{}", Encoding.UTF8, "application/json"));
+        var ensure = await client.PostAsync("/api/v1/quote/ensure", new StringContent("{}", Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
         ensure.EnsureSuccessStatusCode();
 
-        var select = await client.PostAsync("/api/v1/quote/select-quote-type?quoteType=Send", null);
+        var select = await client.PostAsync("/api/v1/quote/select-quote-type?quoteType=Send", null, TestContext.Current.CancellationToken);
         select.EnsureSuccessStatusCode();
 
-        var get1 = await client.GetAsync("/api/v1/quote?quoteType=Send");
+        var get1 = await client.GetAsync("/api/v1/quote?quoteType=Send", TestContext.Current.CancellationToken);
         get1.EnsureSuccessStatusCode();
         string? etag = null;
         if (get1.Headers.ETag is not null)
@@ -59,7 +59,7 @@ public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
             req.Headers.TryAddWithoutValidation("If-None-Match", $"\"{token}\"");
         }
 
-        var get2 = await client.SendAsync(req);
+        var get2 = await client.SendAsync(req, TestContext.Current.CancellationToken);
         get2.StatusCode.Should().Be(HttpStatusCode.NotModified);
     }
 
@@ -72,13 +72,13 @@ public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
             HandleCookies = true
         });
 
-        var ensure = await client.PostAsync("/api/v1/quote/ensure", new StringContent("{}", Encoding.UTF8, "application/json"));
+        var ensure = await client.PostAsync("/api/v1/quote/ensure", new StringContent("{}", Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
         ensure.EnsureSuccessStatusCode();
 
-        var select = await client.PostAsync("/api/v1/quote/select-quote-type?quoteType=Send", null);
+        var select = await client.PostAsync("/api/v1/quote/select-quote-type?quoteType=Send", null, TestContext.Current.CancellationToken);
         select.EnsureSuccessStatusCode();
 
-        var selectJson = await select.Content.ReadAsStringAsync();
+        var selectJson = await select.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         var selected = JsonSerializer.Deserialize<QuoteTypeDto>(selectJson, JsonOptions);
         selected.Should().NotBeNull();
         selected!.Quote.Should().NotBeNull();
@@ -89,7 +89,7 @@ public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
             ETag = "W/\"deadbeef\""
         };
         var body = JsonSerializer.Serialize(saveRequest, JsonOptions);
-        var save = await client.PostAsync("/api/v1/quote", new StringContent(body, Encoding.UTF8, "application/json"));
+        var save = await client.PostAsync("/api/v1/quote", new StringContent(body, Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
         save.StatusCode.Should().Be((HttpStatusCode)412);
     }
 

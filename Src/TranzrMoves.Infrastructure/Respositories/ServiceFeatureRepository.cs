@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Domain.Entities;
@@ -14,10 +14,10 @@ public class ServiceFeatureRepository(TranzrMovesDbContext dbContext, ILogger<Se
         {
             dbContext.Add(serviceFeature);
             await dbContext.SaveChangesAsync(cancellationToken);
-            
-            logger.LogInformation("Successfully added service feature {Id} for {ServiceLevel} service level", 
+
+            logger.LogInformation("Successfully added service feature {Id} for {ServiceLevel} service level",
                 serviceFeature.Id, serviceFeature.ServiceLevel);
-            
+
             return serviceFeature;
         }
         catch (Exception ex)
@@ -36,12 +36,12 @@ public class ServiceFeatureRepository(TranzrMovesDbContext dbContext, ILogger<Se
     public async Task<List<ServiceFeature>> GetServiceFeaturesAsync(bool? isActive, CancellationToken cancellationToken)
     {
         var query = dbContext.Set<ServiceFeature>().AsQueryable();
-        
+
         if (isActive.HasValue)
         {
             query = query.Where(s => s.IsActive == isActive.Value);
         }
-        
+
         return await query
             .OrderBy(s => s.ServiceLevel)
             .ThenBy(s => s.DisplayOrder)
@@ -54,9 +54,9 @@ public class ServiceFeatureRepository(TranzrMovesDbContext dbContext, ILogger<Se
         {
             dbContext.Update(serviceFeature);
             await dbContext.SaveChangesAsync(cancellationToken);
-            
+
             logger.LogInformation("Successfully updated service feature {Id}", serviceFeature.Id);
-            
+
             return serviceFeature;
         }
         catch (DbUpdateConcurrencyException ex)
@@ -77,7 +77,7 @@ public class ServiceFeatureRepository(TranzrMovesDbContext dbContext, ILogger<Se
         {
             dbContext.Remove(serviceFeature);
             await dbContext.SaveChangesAsync(cancellationToken);
-            
+
             logger.LogInformation("Successfully deleted service feature {Id}", serviceFeature.Id);
         }
         catch (Exception ex)

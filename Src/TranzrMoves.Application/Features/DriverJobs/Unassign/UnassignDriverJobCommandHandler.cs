@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -18,10 +18,13 @@ public class UnassignDriverJobCommandHandler(
         var existing = await driverQuoteRepository.GetDriverQuoteAsync(driverId, quoteId, cancellationToken);
         if (existing is null)
         {
+            logger.LogWarning("Unassign driver job: no assignment for driver {DriverId} on quote {QuoteId}", driverId,
+                quoteId);
             return Error.Custom((int)CustomErrorType.NotFound, "DriverJob.NotFound", "Assignment not found");
         }
 
         await driverQuoteRepository.DeleteDriverQuoteAsync(existing, cancellationToken);
+        logger.LogInformation("Driver {DriverId} unassigned from quote {QuoteId}", driverId, quoteId);
         return true;
     }
 }

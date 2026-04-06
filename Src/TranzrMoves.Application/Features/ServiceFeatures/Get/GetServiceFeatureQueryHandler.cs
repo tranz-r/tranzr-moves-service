@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -10,7 +10,7 @@ namespace TranzrMoves.Application.Features.ServiceFeatures.Get;
 
 public class GetServiceFeatureQueryHandler(
     IServiceFeatureRepository serviceFeatureRepository,
-    ILogger<GetServiceFeatureQueryHandler> logger) 
+    ILogger<GetServiceFeatureQueryHandler> logger)
     : IRequestHandler<GetServiceFeatureQuery, ErrorOr<ServiceFeatureDto>>
 {
     public async ValueTask<ErrorOr<ServiceFeatureDto>> Handle(
@@ -20,7 +20,7 @@ public class GetServiceFeatureQueryHandler(
         try
         {
             var serviceFeature = await serviceFeatureRepository.GetServiceFeatureAsync(query.Id, cancellationToken);
-            
+
             if (serviceFeature is null)
             {
                 logger.LogWarning("Service feature not found with ID {Id}", query.Id);
@@ -29,7 +29,7 @@ public class GetServiceFeatureQueryHandler(
 
             var mapper = new ServiceFeatureMapper();
             var serviceFeatureDto = mapper.ToDto(serviceFeature);
-            
+
             logger.LogInformation("Successfully retrieved service feature {Id}", query.Id);
             return serviceFeatureDto;
         }

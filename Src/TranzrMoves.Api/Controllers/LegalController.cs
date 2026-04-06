@@ -1,4 +1,4 @@
-using Mediator;
+﻿using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using NodaTime;
 using NodaTime.Text;
@@ -19,7 +19,7 @@ public class LegalController(IMediator mediator, ITimeService timeService) : Api
 
     [HttpPost("terms-and-conditions")]
     public async Task<IActionResult> CreateTermsAndConditions(
-        [FromBody] CreateLegalDocumentRequest request, 
+        [FromBody] CreateLegalDocumentRequest request,
         CancellationToken cancellationToken)
     {
         var command = new CreateLegalDocumentCommand(request with { DocumentType = LegalDocumentType.TermsAndConditions });
@@ -31,24 +31,25 @@ public class LegalController(IMediator mediator, ITimeService timeService) : Api
 
     [HttpGet("terms-and-conditions")]
     public async Task<IActionResult> GetTermsAndConditions(
-        [FromQuery] Instant? asOfDate, 
+        [FromQuery] Instant? asOfDate,
         CancellationToken cancellationToken)
     {
         var request = new GetLegalDocumentRequest(LegalDocumentType.TermsAndConditions, asOfDate);
         var query = new GetLegalDocumentQuery(request);
         var result = await mediator.Send(query, cancellationToken);
         return result.Match(
-            response => {
+            response =>
+            {
                 // Check for conditional requests
                 var ifNoneMatch = Request.Headers.IfNoneMatch.FirstOrDefault();
                 var ifModifiedSince = Request.Headers.IfModifiedSince.FirstOrDefault();
-                
+
                 // If client has the same version, return 304 Not Modified
                 if (!string.IsNullOrEmpty(ifNoneMatch) && ifNoneMatch == $"\"{response.Version}\"")
                 {
                     return StatusCode(304); // Not Modified
                 }
-                
+
                 // If client's cached version is newer or same, return 304 Not Modified
                 if (!string.IsNullOrEmpty(ifModifiedSince) &&
                     TryParseHttpInstant(ifModifiedSince, out var clientModified) &&
@@ -56,7 +57,7 @@ public class LegalController(IMediator mediator, ITimeService timeService) : Api
                 {
                     return StatusCode(304); // Not Modified
                 }
-                
+
                 // Set intelligent cache control headers for legal documents
                 // Cache until the next document becomes effective (when EffectiveTo is set),
                 // or 24 hours minimum for current documents (EffectiveTo is null)
@@ -81,7 +82,7 @@ public class LegalController(IMediator mediator, ITimeService timeService) : Api
 
     [HttpPost("privacy-policy")]
     public async Task<IActionResult> CreatePrivacyPolicy(
-        [FromBody] CreateLegalDocumentRequest request, 
+        [FromBody] CreateLegalDocumentRequest request,
         CancellationToken cancellationToken)
     {
         var command = new CreateLegalDocumentCommand(request with { DocumentType = LegalDocumentType.PrivacyPolicy });
@@ -93,24 +94,25 @@ public class LegalController(IMediator mediator, ITimeService timeService) : Api
 
     [HttpGet("privacy-policy")]
     public async Task<IActionResult> GetPrivacyPolicy(
-        [FromQuery] Instant? asOfDate, 
+        [FromQuery] Instant? asOfDate,
         CancellationToken cancellationToken)
     {
         var request = new GetLegalDocumentRequest(LegalDocumentType.PrivacyPolicy, asOfDate);
         var query = new GetLegalDocumentQuery(request);
         var result = await mediator.Send(query, cancellationToken);
         return result.Match(
-            response => {
+            response =>
+            {
                 // Check for conditional requests
                 var ifNoneMatch = Request.Headers.IfNoneMatch.FirstOrDefault();
                 var ifModifiedSince = Request.Headers.IfModifiedSince.FirstOrDefault();
-                
+
                 // If client has the same version, return 304 Not Modified
                 if (!string.IsNullOrEmpty(ifNoneMatch) && ifNoneMatch == $"\"{response.Version}\"")
                 {
                     return StatusCode(304); // Not Modified
                 }
-                
+
                 // If client's cached version is newer or same, return 304 Not Modified
                 if (!string.IsNullOrEmpty(ifModifiedSince) &&
                     TryParseHttpInstant(ifModifiedSince, out var clientModified) &&
@@ -118,7 +120,7 @@ public class LegalController(IMediator mediator, ITimeService timeService) : Api
                 {
                     return StatusCode(304); // Not Modified
                 }
-                
+
                 // Set intelligent cache control headers for legal documents
                 // Cache until the next document becomes effective (when EffectiveTo is set),
                 // or 24 hours minimum for current documents (EffectiveTo is null)

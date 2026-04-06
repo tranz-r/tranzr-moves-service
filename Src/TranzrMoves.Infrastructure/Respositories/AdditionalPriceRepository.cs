@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Domain.Entities;
@@ -14,10 +14,10 @@ public class AdditionalPriceRepository(TranzrMovesDbContext dbContext, ILogger<A
         {
             dbContext.Add(additionalPrice);
             await dbContext.SaveChangesAsync(cancellationToken);
-            
-            logger.LogInformation("Successfully added additional price {Id} of type {Type}", 
+
+            logger.LogInformation("Successfully added additional price {Id} of type {Type}",
                 additionalPrice.Id, additionalPrice.Type);
-            
+
             return additionalPrice;
         }
         catch (Exception ex)
@@ -36,12 +36,12 @@ public class AdditionalPriceRepository(TranzrMovesDbContext dbContext, ILogger<A
     public async Task<List<AdditionalPrice>> GetAdditionalPricesAsync(bool? isActive, CancellationToken cancellationToken)
     {
         var query = dbContext.Set<AdditionalPrice>().AsQueryable();
-        
+
         if (isActive.HasValue)
         {
             query = query.Where(x => x.IsActive == isActive.Value);
         }
-        
+
         return await query
             .OrderBy(x => x.Type)
             .ThenBy(x => x.EffectiveFrom)
@@ -54,9 +54,9 @@ public class AdditionalPriceRepository(TranzrMovesDbContext dbContext, ILogger<A
         {
             dbContext.Update(additionalPrice);
             await dbContext.SaveChangesAsync(cancellationToken);
-            
+
             logger.LogInformation("Successfully updated additional price {Id}", additionalPrice.Id);
-            
+
             return additionalPrice;
         }
         catch (DbUpdateConcurrencyException ex)
@@ -77,7 +77,7 @@ public class AdditionalPriceRepository(TranzrMovesDbContext dbContext, ILogger<A
         {
             dbContext.Remove(additionalPrice);
             await dbContext.SaveChangesAsync(cancellationToken);
-            
+
             logger.LogInformation("Successfully deleted additional price {Id}", additionalPrice.Id);
         }
         catch (Exception ex)

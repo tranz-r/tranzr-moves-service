@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Domain.Entities;
@@ -14,10 +14,10 @@ public class RateCardRepository(TranzrMovesDbContext dbContext, ILogger<RateCard
         {
             dbContext.Add(rateCard);
             await dbContext.SaveChangesAsync(cancellationToken);
-            
-            logger.LogInformation("Successfully added rate card {Id} for {Movers} movers with {ServiceLevel} service level", 
+
+            logger.LogInformation("Successfully added rate card {Id} for {Movers} movers with {ServiceLevel} service level",
                 rateCard.Id, rateCard.Movers, rateCard.ServiceLevel);
-            
+
             return rateCard;
         }
         catch (Exception ex)
@@ -36,12 +36,12 @@ public class RateCardRepository(TranzrMovesDbContext dbContext, ILogger<RateCard
     public async Task<List<RateCard>> GetRateCardsAsync(bool? isActive, CancellationToken cancellationToken)
     {
         var query = dbContext.Set<RateCard>().AsQueryable();
-        
+
         if (isActive.HasValue)
         {
             query = query.Where(r => r.IsActive == isActive.Value);
         }
-        
+
         return await query
             .OrderBy(r => r.Movers)
             .ThenBy(r => r.ServiceLevel)
@@ -54,9 +54,9 @@ public class RateCardRepository(TranzrMovesDbContext dbContext, ILogger<RateCard
         {
             dbContext.Update(rateCard);
             await dbContext.SaveChangesAsync(cancellationToken);
-            
+
             logger.LogInformation("Successfully updated rate card {Id}", rateCard.Id);
-            
+
             return rateCard;
         }
         catch (DbUpdateConcurrencyException ex)
@@ -77,7 +77,7 @@ public class RateCardRepository(TranzrMovesDbContext dbContext, ILogger<RateCard
         {
             dbContext.Remove(rateCard);
             await dbContext.SaveChangesAsync(cancellationToken);
-            
+
             logger.LogInformation("Successfully deleted rate card {Id}", rateCard.Id);
         }
         catch (Exception ex)

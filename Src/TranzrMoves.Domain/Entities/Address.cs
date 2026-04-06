@@ -1,4 +1,4 @@
-namespace TranzrMoves.Domain.Entities;
+﻿namespace TranzrMoves.Domain.Entities;
 
 public class Address
 {
@@ -11,10 +11,10 @@ public class Address
     public string? County { get; set; }
     public required string PostCode { get; set; }
     public string? Country { get; set; }
-    
+
     public bool? HasElevator { get; set; }
     public int? Floor { get; set; }
-    
+
     // Extended Mapbox fields for complete address data
     public string? AddressNumber { get; set; }
     public string? Street { get; set; }

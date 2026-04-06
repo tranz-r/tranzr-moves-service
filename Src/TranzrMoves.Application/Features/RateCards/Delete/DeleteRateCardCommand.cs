@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 
 namespace TranzrMoves.Application.Features.RateCards.Delete;

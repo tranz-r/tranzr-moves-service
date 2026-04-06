@@ -1,4 +1,4 @@
-using EntityFramework.Exceptions.Common;
+﻿using EntityFramework.Exceptions.Common;
 using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -39,8 +39,8 @@ public class UserRepository(TranzrMovesDbContext dbContext, ILogger<UserReposito
 
     public async Task<User?> GetUserAsync(Guid userId, CancellationToken cancellationToken)
         => await dbContext.Set<User>().AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);    
-    
+            .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
     public async Task<User?> GetUserByEmailAsync(string? emailAddress, CancellationToken cancellationToken)
         => await dbContext.Set<User>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.Email == emailAddress, cancellationToken);

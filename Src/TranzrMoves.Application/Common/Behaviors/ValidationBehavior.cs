@@ -11,21 +11,21 @@ public class ValidationBehavior<TRequest, TResponse>(IValidator<TRequest>? valid
 {
     public async ValueTask<TResponse> Handle(TRequest message, MessageHandlerDelegate<TRequest, TResponse> next, CancellationToken cancellationToken)
     {
-        if(validators is null)
+        if (validators is null)
         {
             return await next(message, cancellationToken);
         }
 
         var validationResult = await validators.ValidateAsync(message, cancellationToken);
-        
-        if(validationResult.IsValid)
+
+        if (validationResult.IsValid)
         {
             return await next(message, cancellationToken);
         }
 
         var errors = validationResult.Errors
             .ConvertAll(validationFailure => Error.Validation(validationFailure.PropertyName, validationFailure.ErrorMessage));
-        
+
         return (dynamic)errors;
     }
 }

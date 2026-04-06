@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -183,7 +183,7 @@ public class AdminMetricsService : IAdminMetricsService
         var driverQuery = _context.Set<User>()
             .AsNoTracking()
             .Where(u => u.Role == Role.driver)
-            .Include(u => u.DriverQuotes)
+            .Include(u => u.DriverQuotes)!
             .ThenInclude(dq => dq.Quote)
             .AsQueryable();
 
@@ -202,11 +202,19 @@ public class AdminMetricsService : IAdminMetricsService
         var drivers = await driverQuery.ToListAsync(ct);
 
         var totalDrivers = drivers.Count;
-        var activeDrivers = drivers.Count(d => d.DriverQuotes.Any());
-        var totalAssignments = drivers.Sum(d => d.DriverQuotes.Count);
-        var busyDrivers = drivers.Count(d => d.DriverQuotes.Any(dq =>
-            dq.Quote.PaymentStatus == PaymentStatus.Pending ||
-            dq.Quote.PaymentStatus == PaymentStatus.PartiallyPaid));
+        var activeDrivers = drivers.Count(d => d.DriverQuotes != null && d.DriverQuotes.Any());
+        var totalAssignments = drivers.Sum(d =>
+        {
+            if (d.DriverQuotes != null)
+            {
+                return d.DriverQuotes.Count;
+            }
+
+            return 0;
+        });
+        var busyDrivers = drivers.Count(d => d.DriverQuotes != null && d.DriverQuotes.Any(dq =>
+            dq.Quote?.PaymentStatus == PaymentStatus.Pending ||
+            dq.Quote?.PaymentStatus == PaymentStatus.PartiallyPaid));
 
         return new DriverMetricsDto
         {

@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Contracts;
@@ -9,7 +9,7 @@ namespace TranzrMoves.Application.Features.AdditionalPrices.List;
 
 public class ListAdditionalPricesQueryHandler(
     IAdditionalPriceRepository additionalPriceRepository,
-    ILogger<ListAdditionalPricesQueryHandler> logger) 
+    ILogger<ListAdditionalPricesQueryHandler> logger)
     : IRequestHandler<ListAdditionalPricesQuery, ErrorOr<List<AdditionalPriceDto>>>
 {
     public async ValueTask<ErrorOr<List<AdditionalPriceDto>>> Handle(
@@ -19,10 +19,10 @@ public class ListAdditionalPricesQueryHandler(
         try
         {
             var additionalPrices = await additionalPriceRepository.GetAdditionalPricesAsync(query.IsActive, cancellationToken);
-            
+
             var mapper = new AdditionalPriceMapper();
             var additionalPriceDtos = additionalPrices.Select(mapper.ToDto).ToList();
-            
+
             logger.LogInformation("Successfully retrieved {Count} additional prices", additionalPriceDtos.Count);
             return additionalPriceDtos;
         }

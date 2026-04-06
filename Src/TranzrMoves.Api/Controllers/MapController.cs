@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Api.Controllers;
@@ -8,16 +8,16 @@ public class MapController(IMapBoxService mapBoxService, ILogger<MapController> 
 {
     [HttpGet("route")]
     public async Task<ActionResult<MapRouteDto>> GetRouteAsync(
-        [FromQuery] string originAddress, 
-        [FromQuery] string destinationAddress, 
+        [FromQuery] string originAddress,
+        [FromQuery] string destinationAddress,
         CancellationToken cancellationToken)
     {
         try
         {
             logger.LogInformation("Getting route from {OriginAddress} to {DestinationAddress}", originAddress, destinationAddress);
-            
+
             var routeData = await mapBoxService.GetRouteDataAsync(originAddress, destinationAddress, cancellationToken);
-            
+
             return Ok(routeData);
         }
         catch (Exception ex)

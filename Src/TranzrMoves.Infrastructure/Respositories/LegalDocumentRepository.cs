@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NodaTime;
@@ -21,22 +21,22 @@ public class LegalDocumentRepository(
             dbContext.LegalDocuments.Add(document);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            logger.LogInformation("Successfully created legal document {DocumentType} with ID {Id}", 
+            logger.LogInformation("Successfully created legal document {DocumentType} with ID {Id}",
                 document.DocumentType, document.Id);
 
             return document;
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            logger.LogError(ex, "Concurrency conflict while creating legal document {DocumentType}", 
+            logger.LogError(ex, "Concurrency conflict while creating legal document {DocumentType}",
                 document.DocumentType);
-            return Error.Custom((int)CustomErrorType.Conflict, "LegalDocument.ConcurrencyConflict", 
+            return Error.Custom((int)CustomErrorType.Conflict, "LegalDocument.ConcurrencyConflict",
                 "A concurrency conflict occurred while creating the document");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error creating legal document {DocumentType}", document.DocumentType);
-            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.CreationError", 
+            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.CreationError",
                 "An error occurred while creating the legal document");
         }
     }
@@ -57,7 +57,7 @@ public class LegalDocumentRepository(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error retrieving current legal document {DocumentType} for date {AsOfDate}", 
+            logger.LogError(ex, "Error retrieving current legal document {DocumentType} for date {AsOfDate}",
                 documentType, asOfDate);
             throw;
         }
@@ -104,23 +104,23 @@ public class LegalDocumentRepository(
             dbContext.LegalDocuments.Update(document);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            logger.LogInformation("Successfully updated legal document {DocumentType} with ID {Id}", 
+            logger.LogInformation("Successfully updated legal document {DocumentType} with ID {Id}",
                 document.DocumentType, document.Id);
 
             return document;
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            logger.LogError(ex, "Concurrency conflict while updating legal document {DocumentType} with ID {Id}", 
+            logger.LogError(ex, "Concurrency conflict while updating legal document {DocumentType} with ID {Id}",
                 document.DocumentType, document.Id);
-            return Error.Custom((int)CustomErrorType.Conflict, "LegalDocument.ConcurrencyConflict", 
+            return Error.Custom((int)CustomErrorType.Conflict, "LegalDocument.ConcurrencyConflict",
                 "A concurrency conflict occurred while updating the document");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating legal document {DocumentType} with ID {Id}", 
+            logger.LogError(ex, "Error updating legal document {DocumentType} with ID {Id}",
                 document.DocumentType, document.Id);
-            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.UpdateError", 
+            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.UpdateError",
                 "An error occurred while updating the legal document");
         }
     }
@@ -143,16 +143,16 @@ public class LegalDocumentRepository(
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            logger.LogInformation("Successfully expired {Count} previous documents for {DocumentType} at {ExpireAt}", 
+            logger.LogInformation("Successfully expired {Count} previous documents for {DocumentType} at {ExpireAt}",
                 documentsToExpire.Count, documentType, expireAt);
 
             return true;
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error expiring previous documents for {DocumentType} at {ExpireAt}", 
+            logger.LogError(ex, "Error expiring previous documents for {DocumentType} at {ExpireAt}",
                 documentType, expireAt);
-            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.ExpirationError", 
+            return Error.Custom((int)CustomErrorType.InternalServerError, "LegalDocument.ExpirationError",
                 "An error occurred while expiring previous documents");
         }
     }

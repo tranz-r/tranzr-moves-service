@@ -1,4 +1,4 @@
-namespace TranzrMoves.Application.Contracts;
+﻿namespace TranzrMoves.Application.Contracts;
 
 public class InventoryItemDto
 {

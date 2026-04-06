@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -194,7 +194,9 @@ public class SaveQuoteCommandHandler(
                         var customerQuote = new CustomerQuote
                         {
                             UserId = userToSave.Id,
-                            QuoteId = updatedQuote.Id
+                            QuoteId = updatedQuote.Id,
+                            User = userToSave,
+                            Quote = updatedQuote
                         };
 
                         var relationshipResult = await userQuoteRepository.AddUserQuoteAsync(customerQuote, cancellationToken);

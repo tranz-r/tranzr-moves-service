@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Common.CustomErrors;
@@ -8,7 +8,7 @@ namespace TranzrMoves.Application.Features.AdditionalPrices.Delete;
 
 public class DeleteAdditionalPriceCommandHandler(
     IAdditionalPriceRepository additionalPriceRepository,
-    ILogger<DeleteAdditionalPriceCommandHandler> logger) 
+    ILogger<DeleteAdditionalPriceCommandHandler> logger)
     : IRequestHandler<DeleteAdditionalPriceCommand, ErrorOr<bool>>
 {
     public async ValueTask<ErrorOr<bool>> Handle(
@@ -18,7 +18,7 @@ public class DeleteAdditionalPriceCommandHandler(
         try
         {
             var existingAdditionalPrice = await additionalPriceRepository.GetAdditionalPriceAsync(command.Id, cancellationToken);
-            
+
             if (existingAdditionalPrice is null)
             {
                 logger.LogWarning("Additional price not found with ID {Id}", command.Id);
@@ -26,7 +26,7 @@ public class DeleteAdditionalPriceCommandHandler(
             }
 
             await additionalPriceRepository.DeleteAdditionalPriceAsync(existingAdditionalPrice, cancellationToken);
-            
+
             logger.LogInformation("Successfully deleted additional price {Id}", command.Id);
             return true;
         }

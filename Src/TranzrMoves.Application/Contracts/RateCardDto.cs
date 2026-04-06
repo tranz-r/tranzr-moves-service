@@ -1,4 +1,4 @@
-using TranzrMoves.Domain.Entities;
+﻿using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Application.Contracts;
 
@@ -12,12 +12,12 @@ public class RateCardDto
     public decimal BaseBlockPrice { get; set; }
     public decimal HourlyRateAfter { get; set; }
 
-    public string CurrencyCode { get; set; }
+    public string? CurrencyCode { get; set; }
 
     public Instant EffectiveFrom { get; set; }
     public Instant? EffectiveTo { get; set; }
     public bool IsActive { get; set; } = true;
-    
+
     // Optimistic concurrency
     public uint Version { get; set; }
 }

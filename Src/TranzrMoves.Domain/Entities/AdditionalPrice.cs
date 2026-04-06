@@ -1,4 +1,4 @@
-using TranzrMoves.Domain.Interfaces;
+﻿using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Domain.Entities;
 

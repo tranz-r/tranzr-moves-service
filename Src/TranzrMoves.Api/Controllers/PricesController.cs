@@ -1,4 +1,4 @@
-using Mediator;
+﻿using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Net.Http.Headers;
 using TranzrMoves.Application.Common.Time;
@@ -52,58 +52,58 @@ public class PricesController(IMediator mediator, ITimeService timeService) : Ap
         decimal longCarryFee = (req.LongCarry ? 1 : 0) * bulkyCount * cfg.LongCarryPerBulky;
 
         decimal extrasFee = req.ParkingFee + req.UlezFee;
-        
+
         // 1 Mover price calculation for standard and premium
-        var oneMoverStandard = CalculateTierBreakdown(TierType.standard, basePrice, volFee, 1 * cfg.ExtraMoverFlatFee, 
-            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount, 
+        var oneMoverStandard = CalculateTierBreakdown(TierType.standard, basePrice, volFee, 1 * cfg.ExtraMoverFlatFee,
+            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount,
             req.VatRegistered, cfg);
-        
-        var oneMoverPremium = CalculateTierBreakdown(TierType.premium, basePrice, volFee, 1 * cfg.ExtraMoverFlatFee, 
-            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount, 
+
+        var oneMoverPremium = CalculateTierBreakdown(TierType.premium, basePrice, volFee, 1 * cfg.ExtraMoverFlatFee,
+            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount,
             req.VatRegistered, cfg);
-        
+
         // 2 Movers price calculation for standard and premium
-        var twoMoversStandard = CalculateTierBreakdown(TierType.standard, basePrice, volFee, 1 * cfg.ExtraTwoMoversFlatFee, 
-            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount, 
+        var twoMoversStandard = CalculateTierBreakdown(TierType.standard, basePrice, volFee, 1 * cfg.ExtraTwoMoversFlatFee,
+            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount,
             req.VatRegistered, cfg);
-        
-        var twoMoversPremium = CalculateTierBreakdown(TierType.premium, basePrice, volFee, 1 * cfg.ExtraTwoMoversFlatFee, 
-            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount, 
+
+        var twoMoversPremium = CalculateTierBreakdown(TierType.premium, basePrice, volFee, 1 * cfg.ExtraTwoMoversFlatFee,
+            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount,
             req.VatRegistered, cfg);
-        
+
         // 3 Movers price calculation for standard and premium
-        var threeMoversStandard = CalculateTierBreakdown(TierType.standard, basePrice, volFee, 1 * cfg.ExtraThreeMoversFlatFee, 
-            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount, 
+        var threeMoversStandard = CalculateTierBreakdown(TierType.standard, basePrice, volFee, 1 * cfg.ExtraThreeMoversFlatFee,
+            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount,
             req.VatRegistered, cfg);
-        
-        var threeMoversPremium = CalculateTierBreakdown(TierType.premium, basePrice, volFee, 1 * cfg.ExtraThreeMoversFlatFee, 
-            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount, 
+
+        var threeMoversPremium = CalculateTierBreakdown(TierType.premium, basePrice, volFee, 1 * cfg.ExtraThreeMoversFlatFee,
+            stairsFee, longCarryFee, extrasFee, recommendedMovers, crewReasons, totalVol, bulkyCount, veryBulkyCount,
             req.VatRegistered, cfg);
-        
+
         var basePriceCalculationResult = await mediator.Send(new RemovalPricesRequest(timeService.Now()), cancellationToken);
 
 
         var basePriceCalculation = basePriceCalculationResult.Value;
-        
+
         basePriceCalculation!.Rates.One!.Standard!.PickUpDropOff = oneMoverStandard;
         basePriceCalculation!.Rates.One!.Premium!.PickUpDropOff = oneMoverPremium;
-        
+
         basePriceCalculation!.Rates.Two!.Standard!.PickUpDropOff = twoMoversStandard;
         basePriceCalculation!.Rates.Two!.Premium!.PickUpDropOff = twoMoversPremium;
-        
+
         basePriceCalculation!.Rates.Three!.Standard!.PickUpDropOff = threeMoversStandard;
         basePriceCalculation!.Rates.Three!.Premium!.PickUpDropOff = threeMoversPremium;
 
         return Ok(basePriceCalculation);
     }
-    
+
     [HttpGet("removal-prices")]
     public async Task<ActionResult<RemovalPricingDto>> GetRemovalPricesAsync(CancellationToken ct)
     {
         var response = await mediator.Send(new RemovalPricesRequest(timeService.Now()), ct);
-        
+
         var removalPricing = response.Value;
-        
+
         var etag = removalPricing.Version;
         if (Request.Headers.TryGetValue(HeaderNames.IfMatch, out var inm) && inm.ToString() == etag)
             return StatusCode(StatusCodes.Status304NotModified);
@@ -200,7 +200,7 @@ public class PricesController(IMediator mediator, ITimeService timeService) : Ap
 
         // Simple rule: Recommend 2 movers if any of these conditions are met
         // This covers the majority of moves safely and efficiently
-        
+
         if (veryBulkyCount > 0)
         {
             movers = 2;
@@ -229,7 +229,7 @@ public class PricesController(IMediator mediator, ITimeService timeService) : Ap
 
         // Note: Customers can optionally add a 3rd mover if they want extra help
         // The system will charge appropriately for the additional mover
-        
+
         return (movers, reasons);
     }
 
@@ -237,10 +237,10 @@ public class PricesController(IMediator mediator, ITimeService timeService) : Ap
     {
         // Premium tier includes 2 movers, only charge for additional movers beyond 2
         int premiumExtraMovers = Math.Max(0, chosenMovers - 2);
-        
+
         if (premiumExtraMovers == 0) return 0m;
         if (premiumExtraMovers == 1) return premiumExtraMovers * cfg.ExtraMoverFlatFee;
-        
+
         // For 2+ extra movers (i.e., 4+ total movers), use the two-mover rate
         return premiumExtraMovers * cfg.ExtraTwoMoversFlatFee;
     }
@@ -249,16 +249,16 @@ public class PricesController(IMediator mediator, ITimeService timeService) : Ap
     {
         // Calculate what Standard tier total would be (base service components)
         decimal standardBaseService = basePrice + volFee + standardCrewFee;
-        
+
         // Premium uplift strategy: 
         // 1. Double the base service cost
         // 2. Add value of included assembly/dismantle services
         // 3. Add premium service enhancement
-        
+
         decimal doubleBaseService = standardBaseService * 1.00m; // 100% uplift for doubling
         // decimal includedServicesValue = (assemblyFee + dismantleFee) * 0.8m; // 80% value of included services
         decimal premiumEnhancement = (basePrice + volFee) * 0.25m; // 25% enhancement for premium quality
-        
+
         return doubleBaseService + premiumEnhancement;
     }
 

@@ -1,7 +1,7 @@
+﻿using System.Collections.ObjectModel;
 using ErrorOr;
 using Mediator;
 using Microsoft.Extensions.Logging;
-using System.Collections.ObjectModel;
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
@@ -76,6 +76,8 @@ public class AssignDriverCommandHandler(
                 Id = Guid.NewGuid(),
                 QuoteId = quote.Id,
                 UserId = driver.Id,
+                User = driver,
+                Quote = quote,
                 CreatedAt = assignedAt,
                 CreatedBy = "Admin" // TODO: Get actual admin user
             };

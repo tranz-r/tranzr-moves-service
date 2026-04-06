@@ -587,45 +587,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsMany("TranzrMoves.Domain.Entities.InventoryItem", "InventoryItems", b1 =>
-                        {
-                            b1.Property<Guid>("QuoteId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("uuid");
-
-                            b1.Property<int?>("Depth")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("Description")
-                                .HasColumnType("text");
-
-                            b1.Property<int?>("Height")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<int?>("Quantity")
-                                .HasColumnType("integer");
-
-                            b1.Property<int?>("Width")
-                                .HasColumnType("integer");
-
-                            b1.HasKey("QuoteId", "Id");
-
-                            b1.HasIndex("QuoteId")
-                                .HasDatabaseName("IX_InventoryItems_QuoteId");
-
-                            b1.ToTable("InventoryItems", "tranzrmoves");
-
-                            b1.WithOwner()
-                                .HasForeignKey("QuoteId");
-                        });
-
                     b.OwnsOne("TranzrMoves.Domain.Entities.Address", "Destination", b1 =>
                         {
                             b1.Property<Guid>("QuoteId")
@@ -710,6 +671,45 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.HasKey("QuoteId");
 
                             b1.ToTable("Quotes", "tranzrmoves");
+
+                            b1.WithOwner()
+                                .HasForeignKey("QuoteId");
+                        });
+
+                    b.OwnsMany("TranzrMoves.Domain.Entities.InventoryItem", "InventoryItems", b1 =>
+                        {
+                            b1.Property<Guid>("QuoteId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid");
+
+                            b1.Property<int?>("Depth")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("Description")
+                                .HasColumnType("text");
+
+                            b1.Property<int?>("Height")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<int?>("Quantity")
+                                .HasColumnType("integer");
+
+                            b1.Property<int?>("Width")
+                                .HasColumnType("integer");
+
+                            b1.HasKey("QuoteId", "Id");
+
+                            b1.HasIndex("QuoteId")
+                                .HasDatabaseName("IX_InventoryItems_QuoteId");
+
+                            b1.ToTable("InventoryItems", "tranzrmoves");
 
                             b1.WithOwner()
                                 .HasForeignKey("QuoteId");

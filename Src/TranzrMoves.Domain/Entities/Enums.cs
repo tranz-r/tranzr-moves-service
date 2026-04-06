@@ -1,4 +1,4 @@
-namespace TranzrMoves.Domain.Entities;
+﻿namespace TranzrMoves.Domain.Entities;
 
 public enum Role
 {
@@ -55,7 +55,7 @@ public enum TimeSlot
 public enum ServiceLevel
 {
     Standard = 0,
-    Premium  = 1
+    Premium = 1
 }
 
 public enum AdditionalPriceType

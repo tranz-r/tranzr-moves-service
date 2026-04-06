@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using FluentValidation;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,18 +16,18 @@ public static class DependencyInjection
         services.AddSingleton<IClock>(_ => SystemClock.Instance);
         services.AddSingleton<ITimeService, TimeService>();
 
-        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly()); 
-        services.AddMediator( options =>
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddMediator(options =>
             {
                 options.Assemblies = [typeof(SelectQuoteTypeCommand).Assembly];
                 options.ServiceLifetime = ServiceLifetime.Scoped;
             }
         );
-        
+
         services
             .AddSingleton(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>))
             .AddSingleton(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-    
+
         return services;
     }
 }

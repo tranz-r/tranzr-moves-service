@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using NodaTime;
@@ -31,17 +31,17 @@ public class AuditableInterceptor(ITimeService timeService) : SaveChangesInterce
             switch (entry.State)
             {
                 case EntityState.Added:
-                    SetCurrentPropertyDateTimeValue(entry, 
+                    SetCurrentPropertyDateTimeValue(entry,
                         nameof(IAuditable.CreatedAt), utcNow);
-                    SetCurrentPropertyDateTimeValue(entry, 
+                    SetCurrentPropertyDateTimeValue(entry,
                         nameof(IAuditable.ModifiedAt), utcNow);
-                    SetCurrentPropertyValue(entry, 
+                    SetCurrentPropertyValue(entry,
                         nameof(IAuditable.CreatedBy), "System");
                     break;
                 case EntityState.Modified:
-                    SetCurrentPropertyDateTimeValue(entry, 
+                    SetCurrentPropertyDateTimeValue(entry,
                         nameof(IAuditable.ModifiedAt), utcNow);
-                    SetCurrentPropertyValue(entry, 
+                    SetCurrentPropertyValue(entry,
                         nameof(IAuditable.ModifiedBy), "System");
                     break;
             }

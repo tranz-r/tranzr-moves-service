@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using ErrorOr;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
@@ -55,7 +55,7 @@ public class CheckoutController(
         d is { } v ? LocalDatePattern.Iso.Format(v) : string.Empty;
 
     [HttpPost("session")]
-    public async Task<ActionResult<CreateCheckoutSessionResponse>> CreateCheckoutSession(
+    public async Task<ActionResult<CreateCheckoutSessionResponse>?> CreateCheckoutSession(
         [FromBody] CreateCheckoutSessionRequest? request, CancellationToken cancellationToken)
     {
         try
@@ -96,12 +96,12 @@ public class CheckoutController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to create checkout session for quote {QuoteReference}", request.QuoteReference);
+            logger.LogError(ex, "Failed to create checkout session for quote {QuoteReference}", request?.QuoteReference);
             return StatusCode(500, "Failed to create checkout session");
         }
     }
 
-    private async Task<ActionResult<CreateCheckoutSessionResponse>> CreateCheckoutSession(
+    private async Task<ActionResult<CreateCheckoutSessionResponse>?> CreateCheckoutSession(
         CreateCheckoutSessionRequest request, User user,
         Quote quote, string emailTemplateName, KeyValuePair<string, string> metadata,
         CancellationToken cancellationToken, string? cardErrorReason = null, List<string>? bbcRecipients = null)
@@ -140,78 +140,83 @@ public class CheckoutController(
                 : request.Description, quote.QuoteReference);
 
         // Create Checkout Session
-        var sessionOptions = new SessionCreateOptions
+        if (user.Email != null)
         {
-            Mode = "payment",
-            Customer = stripeCustomer.Id,
-            ClientReferenceId = quote.QuoteReference,
-            LineItems =
-            [
-                new SessionLineItemOptions
+            var sessionOptions = new SessionCreateOptions
+            {
+                Mode = "payment",
+                Customer = stripeCustomer.Id,
+                ClientReferenceId = quote.QuoteReference,
+                LineItems =
+                [
+                    new SessionLineItemOptions
+                    {
+                        Price = priceId,
+                        Quantity = 1
+                    }
+                ],
+                AutomaticTax = new SessionAutomaticTaxOptions
                 {
-                    Price = priceId,
-                    Quantity = 1
-                }
-            ],
-            AutomaticTax = new SessionAutomaticTaxOptions
-            {
-                Enabled = true // Enable automatic tax calculation
-            },
-            Metadata = new Dictionary<string, string>
-            {
-                { nameof(PaymentMetadata.QuoteReference), quote.QuoteReference },
-                { nameof(PaymentMetadata.CustomerEmail), user.Email },
-                { nameof(PaymentMetadata.PaymentAmount), request.Amount.ToString("F2") },
-                { nameof(PaymentMetadata.ExtraChargesDescription), request.Description },
-                { metadata.Key, metadata.Value }
-            },
-            SuccessUrl = configuration["CHECKOUT_SESSION_SUCCESS_URL"],
-            CancelUrl = configuration["CHECKOUT_SESSION_CANCEL_URL"]
-        };
-
-        var sessionService = new SessionService(stripeClient);
-        var session = await sessionService.CreateAsync(sessionOptions, cancellationToken: cancellationToken);
-
-        quote.StripeSessionId = session.Id;
-        await quoteRepository.UpdateQuoteAsync(quote, cancellationToken);
-
-        // Email checkout URL to customer
-        bool emailSent = false;
-        try
-        {
-            var templateData = new
-            {
-                customerName = user.FullName,
-                paymentAmount = request.Amount.ToString("N2"),
-                quoteReference = quote.QuoteReference,
-                checkoutUrl = session.Url,
-                description = string.IsNullOrWhiteSpace(request.Description)
-                    ? $"Payment for quote #{quote.QuoteReference}"
-                    : request.Description,
-                currentYear = timeService.NowInUtc().Year,
-                cardErrorReason
+                    Enabled = true // Enable automatic tax calculation
+                },
+                Metadata = new Dictionary<string, string>
+                {
+                    { nameof(PaymentMetadata.QuoteReference), quote.QuoteReference },
+                    { nameof(PaymentMetadata.CustomerEmail), user.Email },
+                    { nameof(PaymentMetadata.PaymentAmount), request.Amount.ToString("F2") },
+                    { nameof(PaymentMetadata.ExtraChargesDescription), request.Description },
+                    { metadata.Key, metadata.Value }
+                },
+                SuccessUrl = configuration["CHECKOUT_SESSION_SUCCESS_URL"],
+                CancelUrl = configuration["CHECKOUT_SESSION_CANCEL_URL"]
             };
 
-            var subject = $"Checkout Link - #{quote.QuoteReference}";
-            var htmlEmail = templateService.GenerateEmail($"{emailTemplateName}.html", templateData);
-            var textEmail = templateService.GenerateEmail($"{emailTemplateName}.txt", templateData);
-            await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, user.Email, htmlEmail,
-                textEmail, bbcRecipients);
-            emailSent = true;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to send checkout session email to {Email}", user.Email);
+            var sessionService = new SessionService(stripeClient);
+            var session = await sessionService.CreateAsync(sessionOptions, cancellationToken: cancellationToken);
+
+            quote.StripeSessionId = session.Id;
+            await quoteRepository.UpdateQuoteAsync(quote, cancellationToken);
+
+            // Email checkout URL to customer
+            bool emailSent = false;
+            try
+            {
+                var templateData = new
+                {
+                    customerName = user.FullName,
+                    paymentAmount = request.Amount.ToString("N2"),
+                    quoteReference = quote.QuoteReference,
+                    checkoutUrl = session.Url,
+                    description = string.IsNullOrWhiteSpace(request.Description)
+                        ? $"Payment for quote #{quote.QuoteReference}"
+                        : request.Description,
+                    currentYear = timeService.NowInUtc().Year,
+                    cardErrorReason
+                };
+
+                var subject = $"Checkout Link - #{quote.QuoteReference}";
+                var htmlEmail = templateService.GenerateEmail($"{emailTemplateName}.html", templateData);
+                var textEmail = templateService.GenerateEmail($"{emailTemplateName}.txt", templateData);
+                await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, user.Email, htmlEmail,
+                    textEmail, bbcRecipients);
+                emailSent = true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to send checkout session email to {Email}", user.Email);
+            }
+
+            return Ok(new CreateCheckoutSessionResponse
+            {
+                SessionId = session.Id,
+                Url = session.Url,
+                QuoteReference = quote.QuoteReference,
+                Amount = request.Amount,
+                EmailSent = emailSent
+            });
         }
 
-        return Ok(new CreateCheckoutSessionResponse
-        {
-            SessionId = session.Id,
-            Url = session.Url,
-            QuoteReference = quote.QuoteReference,
-            Amount = request.Amount,
-            EmailSent = emailSent
-        });
+        return null;
     }
 
     [HttpGet("session")]
@@ -838,15 +843,15 @@ public class CheckoutController(
                 switch (ex.StripeError.Code)
                 {
                     case "card_declined" when ex.StripeError.DeclineCode == "insufficient_funds":
-                        cardErrorReason  = "the card was declined due to insufficient funds";
+                        cardErrorReason = "the card was declined due to insufficient funds";
                         logger.LogWarning(ex, "the was declined.");
                         break;
                     case "card_declined":
-                        cardErrorReason  = "the was declined.";
+                        cardErrorReason = "the was declined.";
                         logger.LogWarning(ex, "the was declined.");
                         break;
                     case "expired_card":
-                        cardErrorReason  = "the card has expired.";
+                        cardErrorReason = "the card has expired.";
                         logger.LogWarning(ex, "the has expired.");
                         break;
                     case "incorrect_cvc":
@@ -924,11 +929,11 @@ public class CheckoutController(
                                            $"{FormatLocalDateIso(quote.CollectionDate?.InUtc().Date)}, kindly make your payment as soon as possible or contact us to arrange an alternative payment option.";
 
                 await CreateCheckoutSession(new CreateCheckoutSessionRequest
-                    {
-                        Amount = quote.TotalCost!.Value,
-                        QuoteReference = quote.QuoteReference,
-                        Description = $"Full payment for quote #{quote.QuoteReference}"
-                    }, user, quote, "checkout-session-payment-error",
+                {
+                    Amount = quote.TotalCost!.Value,
+                    QuoteReference = quote.QuoteReference,
+                    Description = $"Full payment for quote #{quote.QuoteReference}"
+                }, user, quote, "checkout-session-payment-error",
                     new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Full)),
                     cancellationToken, cardErrorDescription, [ToBccEmails.PayLaterWarning]);
             }
@@ -1189,19 +1194,22 @@ public class CheckoutController(
             // If on SDK version < 46, use class Events instead of EventTypes
             if (stripeEvent.Type == EventTypes.PaymentIntentSucceeded)
             {
-                var paymentIntent = stripeEvent.Data.Object as PaymentIntent;
-                logger.LogInformation("A successful payment for {paymentAmount} GBP was made.", paymentIntent.Amount);
+                if (stripeEvent.Data.Object is PaymentIntent paymentIntent)
+                {
+                    logger.LogInformation("A successful payment for {paymentAmount} GBP was made.",
+                        paymentIntent.Amount);
 
-                // Send order confirmation email
-                await HandlePaymentIntentSucceeded(paymentIntent);
+                    // Send order confirmation email
+                    await HandlePaymentIntentSucceeded(paymentIntent);
+                }
             }
             else if (stripeEvent.Type == EventTypes.SetupIntentSucceeded)
             {
                 var setupIntent = stripeEvent.Data.Object as SetupIntent;
                 logger.LogInformation("A successful setup intent was completed for customer {CustomerId}.",
-                    setupIntent.CustomerId);
+                    setupIntent?.CustomerId);
 
-                await HandleSetupIntentSucceeded(setupIntent);
+                await HandleSetupIntentSucceeded(setupIntent!);
             }
             else if (stripeEvent.Type == EventTypes.PaymentMethodAttached)
             {
@@ -1213,9 +1221,9 @@ public class CheckoutController(
             {
                 var checkoutSession = stripeEvent.Data.Object as Session;
                 logger.LogInformation("A successful PaymentLink payment was completed for PaymentLink {PaymentLinkId}.",
-                    checkoutSession.Id);
+                    checkoutSession?.Id);
 
-                await HandleCheckoutSessionCompleted(checkoutSession);
+                await HandleCheckoutSessionCompleted(checkoutSession!);
             }
             else
             {
@@ -1229,7 +1237,7 @@ public class CheckoutController(
             logger.LogError("Error: {0}", e.Message);
             return BadRequest();
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return StatusCode(500);
         }

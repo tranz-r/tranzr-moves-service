@@ -1,4 +1,4 @@
-namespace TranzrMoves.Api.Dtos;
+﻿namespace TranzrMoves.Api.Dtos;
 
 public class UserRoleResponse
 {

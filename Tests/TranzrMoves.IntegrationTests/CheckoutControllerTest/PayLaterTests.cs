@@ -1,17 +1,11 @@
-using System.Net;
-
+﻿using System.Net;
 using AutoBogus;
-
 using FluentAssertions;
-
 using Microsoft.Extensions.DependencyInjection;
-
-using Stripe;
-
 using NodaTime;
+using Stripe;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Infrastructure;
-
 using Quote = TranzrMoves.Domain.Entities.Quote;
 
 namespace TranzrMoves.IntegrationTests.CheckoutControllerTest;
@@ -31,7 +25,7 @@ public class PayLaterTests(TestServerFixture fixture) : IClassFixture<TestServer
 
         await CreatePayLaterQuote(dbContext, "pm_card_authenticationRequired");
 
-        var getResponse = await Client.PostAsync($"/api/v1/checkout/pay-later-collection", null);
+        var getResponse = await Client.PostAsync($"/api/v1/checkout/pay-later-collection", null, TestContext.Current.CancellationToken);
         getResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
@@ -43,7 +37,7 @@ public class PayLaterTests(TestServerFixture fixture) : IClassFixture<TestServer
 
         await CreatePayLaterQuote(dbContext, "pm_card_visa_chargeDeclinedInsufficientFunds");
 
-        var getResponse = await Client.PostAsync($"/api/v1/checkout/pay-later-collection", null);
+        var getResponse = await Client.PostAsync($"/api/v1/checkout/pay-later-collection", null, TestContext.Current.CancellationToken);
         getResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
@@ -55,7 +49,7 @@ public class PayLaterTests(TestServerFixture fixture) : IClassFixture<TestServer
 
         await CreatePayLaterQuote(dbContext, "pm_card_chargeDeclinedProcessingError");
 
-        var getResponse = await Client.PostAsync($"/api/v1/checkout/pay-later-collection", null);
+        var getResponse = await Client.PostAsync($"/api/v1/checkout/pay-later-collection", null, TestContext.Current.CancellationToken);
         getResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
@@ -67,14 +61,14 @@ public class PayLaterTests(TestServerFixture fixture) : IClassFixture<TestServer
 
         await CreatePayLaterQuote(dbContext, "pm_card_chargeDeclinedExpiredCard");
 
-        var getResponse = await Client.PostAsync($"/api/v1/checkout/pay-later-collection", null);
+        var getResponse = await Client.PostAsync($"/api/v1/checkout/pay-later-collection", null, TestContext.Current.CancellationToken);
         getResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
 
     private async Task CreatePayLaterQuote(TranzrMovesDbContext? dbContext, string paymentMethodId)
     {
-        dbContext.ChangeTracker.Clear();
+        dbContext?.ChangeTracker.Clear();
 
         var fakeSession = new AutoFaker<QuoteSession>()
             .Generate();

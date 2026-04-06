@@ -1,4 +1,4 @@
-using HandlebarsDotNet;
+﻿using HandlebarsDotNet;
 using Microsoft.Extensions.Logging;
 using NodaTime;
 using NodaTime.Text;

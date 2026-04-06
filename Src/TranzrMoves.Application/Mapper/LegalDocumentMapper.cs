@@ -1,4 +1,4 @@
-using Riok.Mapperly.Abstractions;
+﻿using Riok.Mapperly.Abstractions;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Entities;
 
@@ -9,7 +9,7 @@ public partial class LegalDocumentMapper
 {
     public partial LegalDocumentDto ToDto(LegalDocument document);
     public partial List<LegalDocumentDto> ToDtoList(List<LegalDocument> documents);
-    
+
     [MapperIgnoreTarget(nameof(LegalDocument.Id))]
     [MapperIgnoreTarget(nameof(LegalDocument.RowVersion))]
     [MapperIgnoreTarget(nameof(LegalDocument.CreatedAt))]

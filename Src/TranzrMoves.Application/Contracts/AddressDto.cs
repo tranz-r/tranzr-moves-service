@@ -1,4 +1,4 @@
-namespace TranzrMoves.Application.Contracts;
+﻿namespace TranzrMoves.Application.Contracts;
 
 public class AddressDto
 {
@@ -13,7 +13,7 @@ public class AddressDto
     public string? Country { get; set; }
     public bool HasElevator { get; set; }
     public int Floor { get; set; }
-    
+
     // Extended Mapbox fields for complete address data
     public string? AddressNumber { get; set; }
     public string? Street { get; set; }

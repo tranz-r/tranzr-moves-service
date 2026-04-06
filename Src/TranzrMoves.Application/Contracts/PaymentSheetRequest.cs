@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 using TranzrMoves.Domain.Entities;
 
@@ -13,8 +13,8 @@ namespace TranzrMoves.Application.Contracts;
 
 public class JobAddressBase
 {
-    public string Line1 { get; set; }
-    public string Postcode { get; set; }
+    public string? Line1 { get; set; }
+    public string? Postcode { get; set; }
 }
 
 public class Cost
@@ -30,10 +30,10 @@ public class Cost
 
 public class Customer
 {
-    public string FullName { get; set; }
-    public string Email { get; set; }
-    public string Phone { get; set; }
-    public JobAddressBase BillingAddress { get; set; }
+    public string? FullName { get; set; }
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public JobAddressBase? BillingAddress { get; set; }
 }
 
 public class JobAddress : JobAddressBase
@@ -49,12 +49,12 @@ public class PaymentSheetRequest // TODO: Remove this perhaps ?
     public VanType Van { get; set; }
     public int DriverCount { get; set; }
     public double DistanceMiles { get; set; }
-    public JobAddress Origin { get; set; }
-    public JobAddress Destination { get; set; }
-    public string PricingTier { get; set; }
+    public JobAddress? Origin { get; set; }
+    public JobAddress? Destination { get; set; }
+    public string? PricingTier { get; set; }
     public Instant CollectionDate { get; set; }
-    public Customer Customer { get; set; }
-    public Cost Cost { get; set; }
+    public Customer? Customer { get; set; }
+    public Cost? Cost { get; set; }
 
     // New properties for payment options
     public PaymentType PaymentType { get; set; } = PaymentType.Full; // Default to full payment
