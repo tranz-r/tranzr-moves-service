@@ -7,6 +7,7 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /workspace
+COPY ["Directory.Packages.props", "."]
 COPY ["Src/TranzrMoves.Api/TranzrMoves.Api.csproj", "Src/TranzrMoves.Api/"]
 COPY ["Src/TranzrMoves.Application/TranzrMoves.Application.csproj", "Src/TranzrMoves.Application/"]
 COPY ["Src/TranzrMoves.Infrastructure/TranzrMoves.Infrastructure.csproj", "Src/TranzrMoves.Infrastructure/"]

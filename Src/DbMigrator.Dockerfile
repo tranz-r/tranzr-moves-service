@@ -4,6 +4,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-env
 # Set the working directory
 WORKDIR /src
 
+COPY Directory.Packages.props .
+
 # Copy required project files
 COPY Src/TranzrMoves.Domain Src/TranzrMoves.Domain
 COPY Src/TranzrMoves.Application Src/TranzrMoves.Application
