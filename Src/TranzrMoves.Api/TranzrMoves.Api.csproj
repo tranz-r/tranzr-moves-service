@@ -9,16 +9,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="getAddress.Sdk" Version="3.5.1" />
-        <PackageReference Include="MailKit" Version="4.13.0" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.5" />
-        <PackageReference Include="NodaTime" Version="3.3.1" />
-        <PackageReference Include="NodaTime.Serialization.SystemTextJson" Version="1.3.1" />
-        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="10.0.1" />
-        <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
-        <PackageReference Include="Stripe.net" Version="48.5.0" />
-        <PackageReference Include="Supabase" Version="1.1.1" />
+        <PackageReference Include="getAddress.Sdk" />
+        <PackageReference Include="MailKit" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+        <PackageReference Include="NodaTime" />
+        <PackageReference Include="NodaTime.Serialization.SystemTextJson" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" />
+        <PackageReference Include="Serilog.AspNetCore" />
+        <PackageReference Include="Stripe.net" />
+        <PackageReference Include="Supabase" />
     </ItemGroup>
 
     <ItemGroup>

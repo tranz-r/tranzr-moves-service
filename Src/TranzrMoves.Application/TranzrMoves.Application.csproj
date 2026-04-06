@@ -15,17 +15,17 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ErrorOr" Version="2.0.1"/>
-        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0"/>
-        <PackageReference Include="Mediator.SourceGenerator" Version="3.0.*">
+        <PackageReference Include="ErrorOr" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+        <PackageReference Include="Mediator.SourceGenerator">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Mediator.Abstractions" Version="3.0.*" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.5"/>
-        <PackageReference Include="NodaTime" Version="3.3.1" />
-        <PackageReference Include="Riok.Mapperly" Version="4.2.1" ExcludeAssets="runtime" PrivateAssets="all"/>
+        <PackageReference Include="Mediator.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="NodaTime" />
+        <PackageReference Include="Riok.Mapperly" ExcludeAssets="runtime" PrivateAssets="all" />
     </ItemGroup>
 
 </Project>
