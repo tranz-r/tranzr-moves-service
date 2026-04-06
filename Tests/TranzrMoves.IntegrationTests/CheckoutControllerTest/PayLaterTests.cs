@@ -200,7 +200,7 @@ public class PayLaterTests(TestServerFixture fixture) : IClassFixture<TestServer
     }
 
 
-    public Task InitializeAsync() => Task.CompletedTask;
+    public ValueTask InitializeAsync() => new(Task.CompletedTask);
 
-    public async Task DisposeAsync() => await _resetDatabase();
+    public async ValueTask DisposeAsync() => await _resetDatabase();
 }

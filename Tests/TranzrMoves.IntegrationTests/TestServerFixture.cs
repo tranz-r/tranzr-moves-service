@@ -25,8 +25,7 @@ namespace TranzrMoves.IntegrationTests;
 
 public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
-        private PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-            .WithImage("postgres:17-alpine")
+        private PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
             .WithDatabase($"testdb_{Guid.NewGuid()}")
             .WithUsername("postgres")
             .WithPassword("postgres")
@@ -78,7 +77,7 @@ public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
             await _respawner.ResetAsync(_connection);
         }
 
-        public async Task InitializeAsync()
+        public async ValueTask InitializeAsync()
         {
             await _postgres.StartAsync();
             await SetUpdateBaseAsync();

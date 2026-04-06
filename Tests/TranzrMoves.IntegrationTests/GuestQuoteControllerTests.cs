@@ -93,7 +93,7 @@ public class GuestQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         save.StatusCode.Should().Be((HttpStatusCode)412);
     }
 
-    public Task InitializeAsync() => Task.CompletedTask;
+    public ValueTask InitializeAsync() => new(Task.CompletedTask);
 
-    public async Task DisposeAsync() => await _resetDatabase();
+    public async ValueTask DisposeAsync() => await _resetDatabase();
 }

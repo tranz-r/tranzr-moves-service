@@ -4,10 +4,10 @@
 
 Global tech stack defaults for Agent OS projects, overridable in project-specific `.agent-os/product/tech-stack.md`.
 
-- App Framework: ASP.NET Core 9 (Controller + MVC)
-- Language: C# (latest supported by .NET 9)
+- App Framework: ASP.NET Core 10 (Controller + MVC)
+- Language: C# (latest supported by .NET 10)
 - Primary Database: PostgreSQL 17+
-- ORM: Entity Framework Core 9
+- ORM: Entity Framework Core 10
 - JavaScript Framework: React (latest stable)
 - Build Tool (frontend): Vite (or Next.js if SSR/ISR is needed)
 - Import Strategy: ES Modules

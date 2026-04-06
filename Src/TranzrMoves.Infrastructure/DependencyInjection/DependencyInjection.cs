@@ -1,6 +1,4 @@
-﻿using Amazon.Runtime;
-using Amazon.SimpleEmailV2;
-using Azure.Communication.Email;
+﻿using Azure.Communication.Email;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TranzrMoves.Application.Features.Admin.Dashboard;
@@ -15,15 +13,6 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var awsOption = configuration.GetAWSOptions();
-        awsOption.Credentials = new BasicAWSCredentials(configuration["AWS_ACCESS_KEY_ID"], configuration["AWS_SECRET_ACCESS_KEY"]);
-        services.AddDefaultAWSOptions(awsOption);
-
-
-        // services.AddDefaultAWSOptions(configuration.GetAWSOptions());
-        services.AddAWSService<IAmazonSimpleEmailServiceV2>();
-        // services.AddSingleton<IEmailService, AwsEmailService>();
-
         services.AddSingleton(_ =>
         {
             var connectionString = configuration["COMMUNICATION_SERVICES_CONNECTION_STRING"];

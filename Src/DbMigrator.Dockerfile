@@ -1,5 +1,5 @@
 # Use the official .NET SDK image to build the project
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-env
 
 # Set the working directory
 WORKDIR /src
@@ -19,7 +19,7 @@ RUN dotnet tool install --global dotnet-ef && \
 # Copy the migration script
 COPY Src/db-migration.sh /migrations/db-migration.sh
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /migrations
 
 COPY --from=build-env /migrations/migrator migrator

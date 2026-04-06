@@ -261,7 +261,7 @@ public class AdminQuoteControllerTests(TestServerFixture fixture) : IClassFixtur
         await dbContext.SaveChangesAsync();
     }
 
-    public Task InitializeAsync() => Task.CompletedTask;
+    public ValueTask InitializeAsync() => new(Task.CompletedTask);
 
-    public async Task DisposeAsync() => await _resetDatabase();
+    public async ValueTask DisposeAsync() => await _resetDatabase();
 }
