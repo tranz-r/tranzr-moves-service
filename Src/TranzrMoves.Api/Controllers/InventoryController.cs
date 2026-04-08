@@ -1,0 +1,44 @@
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using Mediator;
+using Microsoft.AspNetCore.Mvc;
+using TranzrMoves.Application.Contracts;
+using TranzrMoves.Application.Features.Inventory;
+using TranzrMoves.Application.Features.Inventory.Categories;
+using TranzrMoves.Application.Features.Inventory.Goods;
+
+namespace TranzrMoves.Api.Controllers;
+
+[Microsoft.AspNetCore.Components.Route("api/v1/[controller]")]
+public class InventoryController(IMediator mediator) : ApiControllerBase
+{
+    [HttpPost]
+    public async Task<IActionResult> ImportInventoryGoods([FromBody] InventoryImportDto dto, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new ImportInventoriesCommand(dto), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+
+    [HttpGet("goods")]
+    public async Task<IActionResult> GetGoods(CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GoodsQuery(), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+
+    [HttpGet("categories/{categoryId:int}/goods")]
+    public async Task<IActionResult> GetGoodsByCategoryId(int categoryId, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GoodsByCategoryIdQuery(categoryId), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+
+    [HttpGet("categories")]
+    public async Task<IActionResult> GetCategories(CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new CategoriesQuery(), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+}

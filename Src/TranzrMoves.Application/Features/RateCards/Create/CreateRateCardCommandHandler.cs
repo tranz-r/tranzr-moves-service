@@ -9,7 +9,7 @@ using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Application.Features.RateCards.Create;
 
-public class CreateRateCardCommandHandler(
+internal sealed class CreateRateCardCommandHandler(
     IRateCardRepository rateCardRepository,
     ILogger<CreateRateCardCommandHandler> logger)
     : IRequestHandler<CreateRateCardCommand, ErrorOr<RateCardDto>>

@@ -1,5 +1,4 @@
-﻿using Mediator;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using TranzrMoves.Api.Dtos;
 using TranzrMoves.Api.Entities;
 

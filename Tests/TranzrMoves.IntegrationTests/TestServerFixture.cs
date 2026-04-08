@@ -13,8 +13,6 @@ using Npgsql;
 using Respawn;
 
 using Testcontainers.PostgreSql;
-
-using TranzrMoves.Api;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure;
 using TranzrMoves.Infrastructure.Interceptors;

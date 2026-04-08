@@ -40,6 +40,8 @@ public static class DependencyInjection
         // Admin Services
         services.AddTransient<IAdminMetricsService, AdminMetricsService>();
 
+        services.AddTransient<IInventoryItemRepository, InventoryItemRepository>();
+
         return services;
     }
 }

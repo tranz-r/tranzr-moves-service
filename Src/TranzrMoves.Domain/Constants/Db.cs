@@ -23,5 +23,7 @@ public static class Db
         public const string AdditionalPrices = nameof(AdditionalPrices);
         public const string LegalDocuments = nameof(LegalDocuments);
         public const string QuoteAdditionalPayments = nameof(QuoteAdditionalPayments);
+        public const string InventoryCategories = nameof(InventoryCategories);
+        public const string InventoryGoods = nameof(InventoryGoods);
     }
 }
