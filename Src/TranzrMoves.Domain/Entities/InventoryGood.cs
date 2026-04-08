@@ -56,7 +56,9 @@ public sealed class InventoryGood
     public void SetCategory(int categoryId)
     {
         if (categoryId <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(categoryId), "CategoryId must be greater than zero.");
+        }
 
         CategoryId = categoryId;
     }

@@ -27,7 +27,7 @@ public sealed class InventoryCategoryImportDto
     public string? Icon { get; set; }
 }
 
-public sealed class InventoryGoodImportDto
+public class InventoryGoodImportDto
 {
     [JsonPropertyName("id")]
     public int Id { get; set; }

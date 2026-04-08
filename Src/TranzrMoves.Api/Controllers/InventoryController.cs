@@ -8,10 +8,11 @@ using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.Inventory;
 using TranzrMoves.Application.Features.Inventory.Categories;
 using TranzrMoves.Application.Features.Inventory.Goods;
+using TranzrMoves.Application.Features.Inventory.Search;
 
 namespace TranzrMoves.Api.Controllers;
 
-[Microsoft.AspNetCore.Components.Route("api/v1/[controller]")]
+[Route("api/v1/[controller]")]
 public class InventoryController(IMediator mediator) : ApiControllerBase
 {
     [HttpPost]
@@ -39,6 +40,16 @@ public class InventoryController(IMediator mediator) : ApiControllerBase
     public async Task<IActionResult> GetCategories(CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new CategoriesQuery(), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search(
+        [FromQuery] string? query,
+        [FromQuery] int limit = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await mediator.Send(new InventorySearchQuery(query ?? string.Empty, limit), cancellationToken);
         return result.Match(Ok, Problem);
     }
 }

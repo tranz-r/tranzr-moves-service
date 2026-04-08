@@ -13,9 +13,6 @@ public sealed class InventoryGoodConfiguration : IEntityTypeConfiguration<Invent
 {
     public void Configure(EntityTypeBuilder<InventoryGood> builder)
     {
-        builder.ToTable(Db.Tables.InventoryGoods, Db.SCHEMA);
-        builder.HasKey(x => x.Id);
-
         builder.ToTable(Db.Tables.InventoryGoods, Db.SCHEMA, t =>
         {
             t.HasCheckConstraint("CK_inventory_goods_length_cm_positive", "length_cm > 0");
@@ -31,35 +28,28 @@ public sealed class InventoryGoodConfiguration : IEntityTypeConfiguration<Invent
             .ValueGeneratedNever();
 
         builder.Property(x => x.Name)
-            .HasColumnName("name")
             .IsRequired()
             .HasMaxLength(300);
 
         builder.Property(x => x.CategoryId)
-            .HasColumnName("category_id")
             .IsRequired();
 
         builder.Property(x => x.PopularityIndex)
-            .HasColumnName("popularity_index")
             .HasDefaultValue(0);
 
         builder.Property(x => x.LengthCm)
-            .HasColumnName("length_cm")
             .HasColumnType("numeric(10,2)")
             .IsRequired();
 
         builder.Property(x => x.WidthCm)
-            .HasColumnName("width_cm")
             .HasColumnType("numeric(10,2)")
             .IsRequired();
 
         builder.Property(x => x.HeightCm)
-            .HasColumnName("height_cm")
             .HasColumnType("numeric(10,2)")
             .IsRequired();
 
         builder.Property(x => x.VolumeM3)
-            .HasColumnName("volume_m3")
             .HasColumnType("numeric(12,6)")
             .IsRequired();
 

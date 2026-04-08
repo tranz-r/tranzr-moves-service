@@ -151,4 +151,30 @@ public class InventoryItemRepository(TranzrMovesDbContext dbContext, ILogger<Inv
 
         return categories;
     }
+
+    public async Task<List<InventoryGood>> SearchAsync(string query, int limit, CancellationToken cancellationToken)
+    {
+        if (query is null)
+            throw new ArgumentNullException(nameof(query));
+
+        var term = (query ?? string.Empty).Trim().ToLowerInvariant();
+
+        if (term.Length < 2)
+            return [];
+
+        limit = limit <= 0 ? 10 : Math.Min(limit, 20);
+        var likePattern = term + "%";
+
+        var items = await dbContext.Set<InventoryGood>()
+            .AsNoTracking()
+            .Include(x => x.Category)
+            .Where(x => EF.Functions.Like(x.Name.ToLower(), likePattern))
+            .OrderBy(x => x.Name.ToLower() == term ? 0 : 1)
+            .ThenByDescending(x => x.PopularityIndex)
+            .ThenBy(x => x.Name)
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+
+        return items;
+    }
 }
