@@ -32,4 +32,11 @@ public partial class InventoryMapper
     public partial InventoryGoodDto ToInventoryGoodDto(InventoryGood src);
 
     public partial List<InventoryGoodDto> ToInventoryGoodDtoList(List<InventoryGood> src);
+
+    [MapProperty(nameof(InventorySearchRow.LengthCm), nameof(InventoryGoodDto.Length))]
+    [MapProperty(nameof(InventorySearchRow.WidthCm), nameof(InventoryGoodDto.Width))]
+    [MapProperty(nameof(InventorySearchRow.HeightCm), nameof(InventoryGoodDto.Height))]
+    public partial InventoryGoodDto ToInventoryGoodDto(InventorySearchRow src);
+
+    public partial List<InventoryGoodDto> ToInventoryGoodDtoList(List<InventorySearchRow> src);
 }

@@ -1,5 +1,4 @@
-﻿using ErrorOr;
-using Mediator;
+﻿using Mediator;
 using Microsoft.Extensions.Logging;
 
 using NodaTime.Text;

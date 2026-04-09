@@ -1,5 +1,4 @@
-﻿using ErrorOr;
-using Mediator;
+﻿using Mediator;
 using TranzrMoves.Application.Contracts.DriverJobs;
 
 namespace TranzrMoves.Application.Features.DriverJobs.Unassign;

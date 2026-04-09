@@ -9,5 +9,5 @@ public interface IInventoryItemRepository
     Task<ErrorOr<List<InventoryGood>>> GetAllGoodsAsync(CancellationToken cancellationToken);
     Task<ErrorOr<List<InventoryGood>>> GetGoodsByCategoryIdAsync(int categoryId, CancellationToken cancellationToken);
     Task<ErrorOr<List<InventoryCategory>>> GetAllCategoriesAsync(CancellationToken cancellationToken);
-    Task<List<InventoryGood>> SearchAsync(string query, int limit, CancellationToken cancellationToken);
+    Task<List<InventorySearchRow>> SearchAsync(string query, int limit, CancellationToken cancellationToken);
 }

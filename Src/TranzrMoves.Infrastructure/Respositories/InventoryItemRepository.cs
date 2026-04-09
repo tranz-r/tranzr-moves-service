@@ -1,6 +1,7 @@
 ﻿using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
@@ -152,29 +153,105 @@ public class InventoryItemRepository(TranzrMovesDbContext dbContext, ILogger<Inv
         return categories;
     }
 
-    public async Task<List<InventoryGood>> SearchAsync(string query, int limit, CancellationToken cancellationToken)
+    private static string Normalize(string input)
+        => input.Trim().ToLowerInvariant();
+
+    public async Task<List<InventorySearchRow>> SearchAsync(string query, int limit, CancellationToken cancellationToken)
     {
         if (query is null)
             throw new ArgumentNullException(nameof(query));
 
-        var term = (query ?? string.Empty).Trim().ToLowerInvariant();
+        var term = Normalize(query);
 
         if (term.Length < 2)
             return [];
 
         limit = limit <= 0 ? 10 : Math.Min(limit, 20);
-        var likePattern = term + "%";
 
-        var items = await dbContext.Set<InventoryGood>()
+        var startsWithPattern = term + "%";
+        var wordStartsWithPattern = "% " + term + "%";
+
+        var useFuzzy = term.Length >= 3;
+
+        var sql = useFuzzy
+            ? BuildFuzzySql()
+            : BuildPrefixOnlySql();
+
+        var rows = await dbContext.Set<InventorySearchRow>()
+            .FromSqlRaw(sql, term, startsWithPattern, wordStartsWithPattern, limit)
             .AsNoTracking()
-            .Include(x => x.Category)
-            .Where(x => EF.Functions.Like(x.Name.ToLower(), likePattern))
-            .OrderBy(x => x.Name.ToLower() == term ? 0 : 1)
-            .ThenByDescending(x => x.PopularityIndex)
-            .ThenBy(x => x.Name)
-            .Take(limit)
             .ToListAsync(cancellationToken);
 
-        return items;
+        return rows;
+    }
+
+    private static string BuildPrefixOnlySql()
+    {
+        return $@"
+SELECT
+    g.""Id"",
+    g.""Name"",
+    g.""CategoryId"",
+    c.""Name"" AS ""CategoryName"",
+    g.""PopularityIndex"",
+    g.""LengthCm"",
+    g.""WidthCm"",
+    g.""HeightCm"",
+    g.""VolumeM3""
+FROM ""{Db.SCHEMA}"".""{Db.Tables.InventoryGoods}"" g
+INNER JOIN ""{Db.SCHEMA}"".""{Db.Tables.InventoryCategories}"" c
+    ON c.""Id"" = g.""CategoryId""
+WHERE
+    lower(g.""Name"") = {{0}}
+    OR lower(g.""Name"") LIKE {{1}}
+    OR lower(g.""Name"") LIKE {{2}}
+ORDER BY
+    CASE
+        WHEN lower(g.""Name"") = {{0}} THEN 0
+        WHEN lower(g.""Name"") LIKE {{1}} THEN 1
+        WHEN lower(g.""Name"") LIKE {{2}} THEN 2
+        ELSE 3
+    END,
+    g.""PopularityIndex"" DESC,
+    g.""Name"" ASC
+LIMIT {{3}}";
+    }
+
+    private static string BuildFuzzySql()
+    {
+        return $@"
+SELECT
+    g.""Id"",
+    g.""Name"",
+    g.""CategoryId"",
+    c.""Name"" AS ""CategoryName"",
+    g.""PopularityIndex"",
+    g.""LengthCm"",
+    g.""WidthCm"",
+    g.""HeightCm"",
+    g.""VolumeM3""
+FROM ""{Db.SCHEMA}"".""{Db.Tables.InventoryGoods}"" g
+INNER JOIN ""{Db.SCHEMA}"".""{Db.Tables.InventoryCategories}"" c
+    ON c.""Id"" = g.""CategoryId""
+WHERE
+    lower(g.""Name"") = {{0}}
+    OR lower(g.""Name"") LIKE {{1}}
+    OR lower(g.""Name"") LIKE {{2}}
+    OR {{0}} <<% lower(g.""Name"")
+    OR {{0}} <% lower(g.""Name"")
+ORDER BY
+    CASE
+        WHEN lower(g.""Name"") = {{0}} THEN 0
+        WHEN lower(g.""Name"") LIKE {{1}} THEN 1
+        WHEN lower(g.""Name"") LIKE {{2}} THEN 2
+        WHEN {{0}} <<% lower(g.""Name"") THEN 3
+        WHEN {{0}} <% lower(g.""Name"") THEN 4
+        ELSE 5
+    END,
+    strict_word_similarity({{0}}, lower(g.""Name"")) DESC,
+    word_similarity({{0}}, lower(g.""Name"")) DESC,
+    g.""PopularityIndex"" DESC,
+    g.""Name"" ASC
+LIMIT {{3}}";
     }
 }

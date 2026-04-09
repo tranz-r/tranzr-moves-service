@@ -1,5 +1,4 @@
-﻿using ErrorOr;
-using Mediator;
+﻿using Mediator;
 
 namespace TranzrMoves.Application.Features.Admin.Dashboard;
 
