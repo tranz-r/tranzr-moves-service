@@ -58,6 +58,14 @@ public sealed class InventoryGoodConfiguration : IEntityTypeConfiguration<Invent
             .HasForeignKey(x => x.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Property(x => x.SearchAliases)
+            .HasColumnType("text[]")
+            .IsRequired();
+
+        builder.Property(x => x.SearchText)
+            .HasMaxLength(2000)
+            .IsRequired();
+
         builder.HasIndex(x => x.CategoryId);
 
         builder.HasIndex(x => x.Name);

@@ -49,4 +49,7 @@ public class InventoryGoodImportDto
 
     [JsonPropertyName("height")]
     public decimal Height { get; set; }
+
+    [JsonPropertyName("search_aliases")]
+    public List<string>? SearchAliases { get; set; }
 }

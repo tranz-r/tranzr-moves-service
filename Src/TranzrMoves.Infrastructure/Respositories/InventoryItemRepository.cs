@@ -204,12 +204,12 @@ INNER JOIN ""{Db.SCHEMA}"".""{Db.Tables.InventoryCategories}"" c
 WHERE
     lower(g.""Name"") = {{0}}
     OR lower(g.""Name"") LIKE {{1}}
-    OR lower(g.""Name"") LIKE {{2}}
+    OR g.""SearchText"" LIKE {{2}}
 ORDER BY
     CASE
         WHEN lower(g.""Name"") = {{0}} THEN 0
         WHEN lower(g.""Name"") LIKE {{1}} THEN 1
-        WHEN lower(g.""Name"") LIKE {{2}} THEN 2
+        WHEN g.""SearchText"" LIKE {{2}} THEN 2
         ELSE 3
     END,
     g.""PopularityIndex"" DESC,
@@ -236,20 +236,20 @@ INNER JOIN ""{Db.SCHEMA}"".""{Db.Tables.InventoryCategories}"" c
 WHERE
     lower(g.""Name"") = {{0}}
     OR lower(g.""Name"") LIKE {{1}}
-    OR lower(g.""Name"") LIKE {{2}}
-    OR {{0}} <<% lower(g.""Name"")
-    OR {{0}} <% lower(g.""Name"")
+    OR g.""SearchText"" LIKE {{2}}
+    OR {{0}} <<% g.""SearchText""
+    OR {{0}} <% g.""SearchText""
 ORDER BY
     CASE
         WHEN lower(g.""Name"") = {{0}} THEN 0
         WHEN lower(g.""Name"") LIKE {{1}} THEN 1
-        WHEN lower(g.""Name"") LIKE {{2}} THEN 2
-        WHEN {{0}} <<% lower(g.""Name"") THEN 3
-        WHEN {{0}} <% lower(g.""Name"") THEN 4
+        WHEN g.""SearchText"" LIKE {{2}} THEN 2
+        WHEN {{0}} <<% g.""SearchText"" THEN 3
+        WHEN {{0}} <% g.""SearchText"" THEN 4
         ELSE 5
     END,
-    strict_word_similarity({{0}}, lower(g.""Name"")) DESC,
-    word_similarity({{0}}, lower(g.""Name"")) DESC,
+    strict_word_similarity({{0}}, g.""SearchText"") DESC,
+    word_similarity({{0}}, g.""SearchText"") DESC,
     g.""PopularityIndex"" DESC,
     g.""Name"" ASC
 LIMIT {{3}}";

@@ -22,6 +22,10 @@ public sealed class InventoryGood
 
     public decimal VolumeM3 { get; private set; }
 
+    public string[] SearchAliases { get; private set; } = [];
+
+    public string SearchText { get; private set; } = null!;
+
     public InventoryCategory Category { get; private set; } = null!;
 
     private InventoryGood()
@@ -36,13 +40,15 @@ public sealed class InventoryGood
         int popularityIndex,
         decimal lengthCm,
         decimal widthCm,
-        decimal heightCm)
+        decimal heightCm,
+        IEnumerable<string>? searchAliases = null)
     {
         Id = id;
         Rename(name);
         SetCategory(categoryId);
         SetPopularityIndex(popularityIndex);
         SetDimensions(lengthCm, widthCm, heightCm);
+        SetSearchAliases(searchAliases ?? []);
     }
 
     public void Rename(string name)
@@ -51,6 +57,7 @@ public sealed class InventoryGood
             throw new ArgumentException("Name is required.", nameof(name));
 
         Name = name.Trim();
+        RebuildSearchText();
     }
 
     public void SetCategory(int categoryId)
@@ -87,6 +94,44 @@ public sealed class InventoryGood
         HeightCm = decimal.Round(heightCm, 2, MidpointRounding.AwayFromZero);
 
         VolumeM3 = CalculateVolumeM3(LengthCm, WidthCm, HeightCm);
+    }
+
+    public void SetSearchAliases(IEnumerable<string> aliases)
+    {
+        if (aliases is null)
+            throw new ArgumentNullException(nameof(aliases));
+
+        SearchAliases = aliases
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x.Trim().ToLowerInvariant())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        RebuildSearchText();
+    }
+
+    private void RebuildSearchText()
+    {
+        var tokens = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var token in Tokenize(Name))
+            tokens.Add(token);
+
+        foreach (var alias in SearchAliases)
+        {
+            foreach (var token in Tokenize(alias))
+                tokens.Add(token);
+        }
+
+        SearchText = string.Join(' ', tokens);
+    }
+
+    private static IEnumerable<string> Tokenize(string input)
+    {
+        return input
+            .Trim()
+            .ToLowerInvariant()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
     private static decimal CalculateVolumeM3(decimal lengthCm, decimal widthCm, decimal heightCm)
