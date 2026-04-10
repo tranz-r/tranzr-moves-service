@@ -193,9 +193,7 @@ public class SaveQuoteCommandHandler(
                         var customerQuote = new CustomerQuote
                         {
                             UserId = userToSave.Id,
-                            QuoteId = updatedQuote.Id,
-                            User = userToSave,
-                            Quote = updatedQuote
+                            QuoteId = updatedQuote.Id
                         };
 
                         var relationshipResult = await userQuoteRepository.AddUserQuoteAsync(customerQuote, cancellationToken);

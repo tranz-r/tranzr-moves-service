@@ -10,16 +10,6 @@ namespace TranzrMoves.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameTable(
-                name: "QuoteAdditionalPayments",
-                schema: "tranzrmoves",
-                newName: "QuoteAdditionalPayments");
-
-            migrationBuilder.RenameTable(
-                name: "InventoryItems",
-                schema: "tranzrmoves",
-                newName: "InventoryItems");
-
             migrationBuilder.CreateTable(
                 name: "InventoryCategories",
                 schema: "tranzrmoves",
@@ -107,16 +97,6 @@ namespace TranzrMoves.Infrastructure.Migrations
             migrationBuilder.DropTable(
                 name: "InventoryCategories",
                 schema: "tranzrmoves");
-
-            migrationBuilder.RenameTable(
-                name: "QuoteAdditionalPayments",
-                newName: "QuoteAdditionalPayments",
-                newSchema: "tranzrmoves");
-
-            migrationBuilder.RenameTable(
-                name: "InventoryItems",
-                newName: "InventoryItems",
-                newSchema: "tranzrmoves");
         }
     }
 }

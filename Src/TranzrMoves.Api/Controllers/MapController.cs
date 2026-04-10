@@ -20,6 +20,15 @@ public class MapController(IMapBoxService mapBoxService, ILogger<MapController> 
 
             return Ok(routeData);
         }
+        catch (InvalidOperationException ex) when (ex.Message == "No route found.")
+        {
+            logger.LogWarning("No drivable route found from {OriginAddress} to {DestinationAddress}", originAddress,
+                destinationAddress);
+            return NotFound(new
+            {
+                error = "No drivable route found for the supplied addresses. Please verify the destination details."
+            });
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to get route from {OriginAddress} to {DestinationAddress}", originAddress, destinationAddress);

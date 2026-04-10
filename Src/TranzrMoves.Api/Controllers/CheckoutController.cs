@@ -1337,7 +1337,7 @@ public class CheckoutController(
                     await UpdateQuoteAsync(new SaveQuoteRequest
                     {
                         Quote = quoteDto,
-                        Customer = userMapper.ToDto(user!)
+                        Customer = user is null ? null : userMapper.ToDto(user)
                     });
 
                     var totalCost = (quoteDto.Pricing?.TotalCost!).Value;
@@ -1386,7 +1386,7 @@ public class CheckoutController(
                     var quoteDeposit = await UpdateQuoteAsync(new SaveQuoteRequest
                     {
                         Quote = quoteDto,
-                        Customer = userMapper.ToDto(user!)
+                        Customer = user is null ? null : userMapper.ToDto(user)
                     });
 
                     var depositAmount = paymentIntent.Amount / 100.0m;
@@ -1427,7 +1427,7 @@ public class CheckoutController(
                     await UpdateQuoteAsync(new SaveQuoteRequest
                     {
                         Quote = quoteDto,
-                        Customer = userMapper.ToDto(user!)
+                        Customer = user is null ? null : userMapper.ToDto(user)
                     });
 
                     var fullAmount = paymentIntent.Amount / 100.0m;
@@ -1524,7 +1524,7 @@ public class CheckoutController(
                     await UpdateQuoteAsync(new SaveQuoteRequest
                     {
                         Quote = quoteDto,
-                        Customer = userMapper.ToDto(user!)
+                        Customer = user is null ? null : userMapper.ToDto(user)
                     });
 
                     var templateData = new

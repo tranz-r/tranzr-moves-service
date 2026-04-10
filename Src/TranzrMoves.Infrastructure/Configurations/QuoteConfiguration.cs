@@ -75,7 +75,7 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         // Inventory Items
         builder.OwnsMany(c => c.InventoryItems, inventoryItem =>
         {
-            inventoryItem.ToTable(Db.Tables.InventoryItems);
+            inventoryItem.ToTable(Db.Tables.InventoryItems, Db.SCHEMA);
             inventoryItem.WithOwner().HasForeignKey(e => e.QuoteId);
 
             // Performance index for inventory queries
@@ -86,7 +86,7 @@ public class QuoteConfiguration : IEntityTypeConfiguration<Quote>
         // Quote Additional Payments
         builder.OwnsMany(c => c.QuoteAdditionalPayments, quoteAdditionalPayment =>
         {
-            quoteAdditionalPayment.ToTable(Db.Tables.QuoteAdditionalPayments);
+            quoteAdditionalPayment.ToTable(Db.Tables.QuoteAdditionalPayments, Db.SCHEMA);
             quoteAdditionalPayment.HasKey(x => x.Id);
             quoteAdditionalPayment.WithOwner().HasForeignKey(e => e.QuoteId);
 
