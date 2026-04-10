@@ -302,7 +302,7 @@ public class CheckoutController(
         var ephemeralKeyOptions = new EphemeralKeyCreateOptions
         {
             Customer = customer.Id,
-            StripeVersion = "2025-06-30.basil",
+            StripeVersion = "2026-03-25.dahlia",
         };
 
         var ephemeralKey = await stripeClient.V1.EphemeralKeys.CreateAsync(ephemeralKeyOptions, cancellationToken: ct);
