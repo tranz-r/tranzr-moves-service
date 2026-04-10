@@ -35,7 +35,7 @@
     <PackageVersion Include="Respawn" Version="7.0.0" />
     <PackageVersion Include="Riok.Mapperly" Version="4.2.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
-    <PackageVersion Include="Stripe.net" Version="48.5.0" />
+    <PackageVersion Include="Stripe.net" Version="51.0.0" />
     <PackageVersion Include="Supabase" Version="1.1.1" />
     <PackageVersion Include="Testcontainers" Version="4.11.0" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.11.0" />
