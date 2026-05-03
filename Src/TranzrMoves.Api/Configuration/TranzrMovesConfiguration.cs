@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 using TranzrMoves.Domain.Constants;
 using TranzrMoves.Infrastructure;
 using TranzrMoves.Infrastructure.Interceptors;
@@ -25,6 +26,11 @@ namespace TranzrMoves.Api.Configuration
                         x.UseNodaTime();
                     })
                     .AddInterceptors(sp.GetRequiredService<AuditableInterceptor>()));
+
+            // using Microsoft.AspNetCore.DataProtection;
+            services.AddDataProtection()
+                .SetApplicationName("TranzrMoves")
+                .PersistKeysToDbContext<TranzrMovesDbContext>();
         }
     }
 }

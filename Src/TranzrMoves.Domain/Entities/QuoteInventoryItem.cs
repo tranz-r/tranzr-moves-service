@@ -1,0 +1,14 @@
+﻿namespace TranzrMoves.Domain.Entities;
+
+public sealed class QuoteInventoryItem
+{
+    public Guid Id { get; set; }
+    public Guid QuoteId { get; set; }
+    public required string Name { get; set; }
+    public string? Description { get; set; }
+    public int? Width { get; set; }
+    public int? Height { get; set; }
+    public int? Depth { get; set; }
+    public int? Quantity { get; set; }
+    public QuoteV2? Quote { get; set; }
+}

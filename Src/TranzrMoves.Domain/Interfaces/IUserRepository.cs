@@ -7,11 +7,16 @@ public interface IUserRepository
 {
     Task<ErrorOr<User>> AddUserAsync(User user,
         CancellationToken cancellationToken);
+    Task<ErrorOr<UserV2>> AddUserAsync(UserV2 user,
+        CancellationToken cancellationToken);
 
     Task<User?> GetUserAsync(Guid userId, CancellationToken cancellationToken);
     Task<User?> GetUserByEmailAsync(string? emailAddress, CancellationToken cancellationToken);
 
     Task<ErrorOr<User>> UpdateUserAsync(User user,
+        CancellationToken cancellationToken);
+
+    Task<ErrorOr<UserV2>> UpdateUserAsync(UserV2 user,
         CancellationToken cancellationToken);
 
     Task DeleteUserAsync(User user, CancellationToken cancellationToken);

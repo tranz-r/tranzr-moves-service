@@ -1,28 +1,37 @@
 ﻿using System.Globalization;
+using Asp.Versioning;
 using ErrorOr;
 using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using NodaTime;
 using NodaTime.Text;
-
 using Stripe;
 using Stripe.Checkout;
 using Stripe.Tax;
-
+using Swashbuckle.AspNetCore.Annotations;
 using TranzrMoves.Api.Dtos;
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
+using TranzrMoves.Application.Features.Checkout.CollectPayLater;
+using TranzrMoves.Application.Features.Checkout.CreateQuoteV2CheckoutSession;
+using TranzrMoves.Application.Features.Checkout.DepositBalance;
+using TranzrMoves.Application.Features.Checkout.PaymentSheet;
+using TranzrMoves.Application.Features.Checkout.ReadIntent;
+using TranzrMoves.Application.Features.Checkout.ReadSession;
+using TranzrMoves.Application.Features.Checkout.Webhook;
 using TranzrMoves.Application.Features.Quote.Save;
 using TranzrMoves.Application.Mapper;
 using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
-
 using Quote = TranzrMoves.Domain.Entities.Quote;
 
 namespace TranzrMoves.Api.Controllers;
 
-[Route("api/v1/[controller]")]
+[ApiVersion(1)]
+[ApiVersion(2)]
+[ApiController]
+[Route("api/v{v:apiVersion}/[controller]")]
 public class CheckoutController(
     StripeClient stripeClient,
     IConfiguration configuration,
@@ -54,6 +63,8 @@ public class CheckoutController(
     private static string FormatLocalDateIso(LocalDate? d) =>
         d is { } v ? LocalDatePattern.Iso.Format(v) : string.Empty;
 
+    #region Version1
+    [MapToApiVersion(1)]
     [HttpPost("session")]
     public async Task<ActionResult<CreateCheckoutSessionResponse>?> CreateCheckoutSession(
         [FromBody] CreateCheckoutSessionRequest? request, CancellationToken cancellationToken)
@@ -101,124 +112,7 @@ public class CheckoutController(
         }
     }
 
-    private async Task<ActionResult<CreateCheckoutSessionResponse>?> CreateCheckoutSession(
-        CreateCheckoutSessionRequest request, User user,
-        Quote quote, string emailTemplateName, KeyValuePair<string, string> metadata,
-        CancellationToken cancellationToken, string? cardErrorReason = null, List<string>? bbcRecipients = null)
-    {
-        // Create or find stripe customer
-        var sr = await stripeClient.V1.Customers.SearchAsync(
-            new CustomerSearchOptions { Query = $"email:'{user.Email}'" }, cancellationToken: cancellationToken);
-
-        var stripeCustomer = sr.Data.FirstOrDefault();
-
-        if (stripeCustomer is null)
-        {
-            stripeCustomer = await stripeClient.V1.Customers.CreateAsync(new CustomerCreateOptions
-            {
-                Email = user.Email,
-                Name = user.FullName,
-                Address = user.BillingAddress != null
-                    ? new AddressOptions
-                    {
-                        Line1 = user.BillingAddress.Line1,
-                        Line2 = user.BillingAddress.Line2,
-                        City = user.BillingAddress.City,
-                        PostalCode = user.BillingAddress.PostCode,
-                        Country = user.BillingAddress.Country ?? "United Kingdom",
-                        // Enhanced with extended Mapbox fields
-                        State = user.BillingAddress.Region
-                    }
-                    : null
-            }, cancellationToken: cancellationToken);
-        }
-
-        // Create Price for this amount/description
-        var priceId = await CreateOrGetPriceAsync(request.Amount,
-            string.IsNullOrWhiteSpace(request.Description)
-                ? $"Payment for quote #{quote.QuoteReference}"
-                : request.Description, quote.QuoteReference);
-
-        // Create Checkout Session
-        if (user.Email != null)
-        {
-            var sessionOptions = new SessionCreateOptions
-            {
-                Mode = "payment",
-                Customer = stripeCustomer.Id,
-                ClientReferenceId = quote.QuoteReference,
-                LineItems =
-                [
-                    new SessionLineItemOptions
-                    {
-                        Price = priceId,
-                        Quantity = 1
-                    }
-                ],
-                AutomaticTax = new SessionAutomaticTaxOptions
-                {
-                    Enabled = true // Enable automatic tax calculation
-                },
-                Metadata = new Dictionary<string, string>
-                {
-                    { nameof(PaymentMetadata.QuoteReference), quote.QuoteReference },
-                    { nameof(PaymentMetadata.CustomerEmail), user.Email },
-                    { nameof(PaymentMetadata.PaymentAmount), request.Amount.ToString("F2") },
-                    { nameof(PaymentMetadata.ExtraChargesDescription), request.Description },
-                    { metadata.Key, metadata.Value }
-                },
-                SuccessUrl = configuration["CHECKOUT_SESSION_SUCCESS_URL"],
-                CancelUrl = configuration["CHECKOUT_SESSION_CANCEL_URL"]
-            };
-
-            var sessionService = new SessionService(stripeClient);
-            var session = await sessionService.CreateAsync(sessionOptions, cancellationToken: cancellationToken);
-
-            quote.StripeSessionId = session.Id;
-            await quoteRepository.UpdateQuoteAsync(quote, cancellationToken);
-
-            // Email checkout URL to customer
-            bool emailSent = false;
-            try
-            {
-                var templateData = new
-                {
-                    customerName = user.FullName,
-                    paymentAmount = request.Amount.ToString("N2"),
-                    quoteReference = quote.QuoteReference,
-                    checkoutUrl = session.Url,
-                    description = string.IsNullOrWhiteSpace(request.Description)
-                        ? $"Payment for quote #{quote.QuoteReference}"
-                        : request.Description,
-                    currentYear = timeService.NowInUtc().Year,
-                    cardErrorReason
-                };
-
-                var subject = $"Checkout Link - #{quote.QuoteReference}";
-                var htmlEmail = templateService.GenerateEmail($"{emailTemplateName}.html", templateData);
-                var textEmail = templateService.GenerateEmail($"{emailTemplateName}.txt", templateData);
-                await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, user.Email, htmlEmail,
-                    textEmail, bbcRecipients);
-                emailSent = true;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Failed to send checkout session email to {Email}", user.Email);
-            }
-
-            return Ok(new CreateCheckoutSessionResponse
-            {
-                SessionId = session.Id,
-                Url = session.Url,
-                QuoteReference = quote.QuoteReference,
-                Amount = request.Amount,
-                EmailSent = emailSent
-            });
-        }
-
-        return null;
-    }
-
+    [MapToApiVersion(1)]
     [HttpGet("session")]
     public async Task<ActionResult<GetCheckoutSessionResponse>> GetCheckoutSession([FromQuery] string id,
         CancellationToken ct)
@@ -238,6 +132,7 @@ public class CheckoutController(
         });
     }
 
+    [MapToApiVersion(1)]
     [HttpPost("payment-sheet", Name = "CreateStripeIntent")]
     public async Task<ActionResult<PaymentSheetCreateResponse>> CreatePaymentSheet(
         [FromBody] SaveQuoteRequest? saveQuoteRequest, CancellationToken ct)
@@ -485,67 +380,7 @@ public class CheckoutController(
         };
     }
 
-    private async Task<string> CreateOrGetPriceAsync(decimal amount, string description, string quoteReference)
-    {
-        try
-        {
-            // Create a unique product name for this quote
-            var productName = $"Tranzr Moves - Quote #{quoteReference}";
-
-            // First, try to find an existing product
-            var productSearchOptions = new ProductSearchOptions
-            {
-                Query = $"name:'{productName}'",
-                Limit = 1
-            };
-
-            var existingProducts = await stripeClient.V1.Products.SearchAsync(productSearchOptions);
-
-            Product product;
-            if (existingProducts.Data.Any())
-            {
-                product = existingProducts.Data.First();
-            }
-            else
-            {
-                // Create new product
-                var productOptions = new ProductCreateOptions
-                {
-                    Name = productName,
-                    Description = description,
-                    Type = "service"
-                };
-                product = await stripeClient.V1.Products.CreateAsync(productOptions);
-            }
-
-            // Create price for this product
-            var priceOptions = new PriceCreateOptions
-            {
-                Product = product.Id,
-                Currency = Currency,
-                UnitAmount = (long)Math.Round(amount * 100, 0, MidpointRounding.AwayFromZero),
-                TaxBehavior = TaxBehavior // Tell Stripe that tax is included in the price
-            };
-
-            var price = await stripeClient.V1.Prices.CreateAsync(priceOptions);
-            return price.Id;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error creating or getting Stripe price for amount {Amount}", amount);
-            throw;
-        }
-    }
-
-    private async Task<SaveQuoteResponse> UpdateQuoteAsync(SaveQuoteRequest saveQuoteRequest,
-        CancellationToken ct = default)
-    {
-        var command = new SaveQuoteCommand(saveQuoteRequest.Quote, saveQuoteRequest.Customer, saveQuoteRequest.ETag);
-        var result = await mediator.Send(command, ct);
-
-        return result.Value;
-    }
-
+    [MapToApiVersion(1)]
     [HttpGet("payment-intent", Name = "GetPaymentIntent")]
     public async Task<ActionResult<PaymentIntentResponse>> GetPaymentIntent([FromQuery] string paymentIntentId)
     {
@@ -574,6 +409,7 @@ public class CheckoutController(
         };
     }
 
+    [MapToApiVersion(1)]
     [HttpPost("deposit-balance-payment", Name = "CreateFuturePayment")]
     public async Task<ActionResult<PaymentIntentResponse>> CreateFuturePayment([FromBody] FuturePaymentRequest request,
         CancellationToken cancellationToken)
@@ -713,7 +549,7 @@ public class CheckoutController(
         }
     }
 
-
+    [MapToApiVersion(1)]
     [HttpPost("pay-later-collection")]
     public async Task<ActionResult<PaymentIntentResponse>> CollectLaterPayment(CancellationToken cancellationToken)
     {
@@ -731,222 +567,8 @@ public class CheckoutController(
         return NoContent();
     }
 
-    private async Task<ErrorOr<Success>> ProcessLaterPayment(FuturePaymentRequest request,
-        CancellationToken cancellationToken)
-    {
-        // This endpoint handles creating PaymentIntents for the remaining balance
-        // after a deposit has been paid, using saved payment methods
-
-        User? user = null;
-
-        var quote = await quoteRepository.GetQuoteByReferenceAsync(request.QuoteReference, cancellationToken);
-        if (quote == null)
-        {
-            logger.LogWarning("Quote not found for future payment: {QuoteReference}", request.QuoteReference);
-            return Error.NotFound("Quote not found");
-        }
-
-        var customerQuote = await userQuoteRepository.GetUserQuoteByQuoteIdAsync(quote.Id, cancellationToken);
-        if (customerQuote == null)
-        {
-            logger.LogWarning("Customer quote relationship not found for quote {QuoteReference}",
-                request.QuoteReference);
-            return Error.Failure("Customer quote relationship not found");
-        }
-
-        user = await userRepository.GetUserAsync(customerQuote.UserId, cancellationToken);
-
-        logger.LogInformation(
-            "Collecting payment for pay later for customer {CustomerId} for the full amount of £{Amount}",
-            user!.Id, quote.TotalCost - quote.DepositAmount);
-
-        var customerSearchResult = await stripeClient.V1.Customers.SearchAsync(new CustomerSearchOptions
-        {
-            Query = $"email:'{user.Email}'",
-        }, cancellationToken: cancellationToken);
-
-        var customer = customerSearchResult.Data.FirstOrDefault();
-
-        if (customer == null)
-        {
-            logger.LogWarning("Customer not found for future payment for quote: {QuoteReference}",
-                request.QuoteReference);
-            return Error.Failure("Customer not found");
-        }
-
-        var amountInCurrencyUnit = (long)Math.Round(quote.TotalCost!.Value * 100, 0, MidpointRounding.AwayFromZero);
-
-        // 1. Create a tax calculation with tax-inclusive pricing
-        var calculationOptions = new CalculationCreateOptions
-        {
-            Currency = Currency,
-            LineItems =
-            [
-                new CalculationLineItemOptions
-                {
-                    Amount = amountInCurrencyUnit,
-                    Reference = request.QuoteReference,
-                    TaxCode = TaxCode,
-                    TaxBehavior = TaxBehavior // This specifies that the price already includes tax
-                }
-            ],
-            Customer = customer.Id
-        };
-
-        var taxCalculationService = stripeClient.V1.Tax.Calculations;
-        Calculation calculation =
-            await taxCalculationService.CreateAsync(calculationOptions, cancellationToken: cancellationToken);
-
-        var paymentIntentOptions = new PaymentIntentCreateOptions
-        {
-            Amount = calculation.AmountTotal,
-            Currency = Currency,
-            Customer = customer.Id,
-            PaymentMethod = quote.PaymentMethodId, // Use the saved payment method
-            Description = "Tranzr Moves - Remaining balance payment",
-            ReceiptEmail = customer.Email,
-            Confirm = true, // Automatically confirm the payment
-            OffSession = true, // This is an off-session payment (automatic)
-            AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
-            {
-                Enabled = true,
-                AllowRedirects = "always"
-            },
-            Metadata = new Dictionary<string, string>
-            {
-                { nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Balance) },
-                { nameof(PaymentMetadata.QuoteReference), request.QuoteReference }
-            }
-        };
-
-        try
-        {
-            var paymentIntent =
-                await stripeClient.V1.PaymentIntents.CreateAsync(paymentIntentOptions,
-                    cancellationToken: cancellationToken);
-
-            logger.LogInformation(
-                "Future payment intent created {PaymentIntentId} for remaining amount {Amount} using saved payment method",
-                paymentIntent.Id, quote.TotalCost!.Value);
-
-            return new ErrorOr<Success>();
-        }
-        catch (StripeException ex)
-        {
-            if (ex.StripeError.Type == "card_error")
-            {
-                var cardErrorReason = string.Empty;
-                var paymentMethod = await stripeClient.V1.PaymentMethods.GetAsync(quote.PaymentMethodId, cancellationToken: cancellationToken);
-                var cardLast4Digits = paymentMethod.Card.Last4;
-                var cardBrand = paymentMethod.Card.Brand;
-
-                switch (ex.StripeError.Code)
-                {
-                    case "card_declined" when ex.StripeError.DeclineCode == "insufficient_funds":
-                        cardErrorReason = "the card was declined due to insufficient funds";
-                        logger.LogWarning(ex, "the was declined.");
-                        break;
-                    case "card_declined":
-                        cardErrorReason = "the was declined.";
-                        logger.LogWarning(ex, "the was declined.");
-                        break;
-                    case "expired_card":
-                        cardErrorReason = "the card has expired.";
-                        logger.LogWarning(ex, "the has expired.");
-                        break;
-                    case "incorrect_cvc":
-                        cardErrorReason = "the card's security code is incorrect.";
-                        logger.LogWarning(ex, "the card's security code is incorrect.");
-                        break;
-                    case "incorrect_number":
-                        cardErrorReason = "the card number is incorrect.";
-                        logger.LogWarning(ex, "the card's security code is incorrect.");
-                        break;
-                    case "invalid_cvc":
-                        cardErrorReason = "the card's security code is invalid.";
-                        logger.LogWarning(ex, "the card's security code is invalid.");
-                        break;
-                    case "invalid_expiry_month":
-                        cardErrorReason = "the expiry month is invalid.";
-                        logger.LogWarning(ex, "the expiry month is invalid.");
-                        break;
-                    case "invalid_expiry_year":
-                        cardErrorReason = "the expiry year is invalid.";
-                        logger.LogWarning(ex, "the expiry year is invalid.");
-                        break;
-                    case "processing_error":
-                        cardErrorReason = "an error occurred while processing the card.";
-                        logger.LogWarning(ex, "an error occurred while processing the card.");
-                        break;
-                    case "incorrect_zip":
-                        cardErrorReason = "the card's post code failed validation.";
-                        logger.LogWarning(ex, "the card's post code failed validation.");
-                        break;
-                    case "authentication_required":
-                        cardErrorReason = "the card's authorization is required";
-                        logger.LogWarning(ex, "the card's authorization is required.");
-                        break;
-                    case "approve_with_id":
-                        cardErrorReason = "the payment cannot be authorized";
-                        logger.LogWarning(ex, "the payment cannot be authorized.");
-                        break;
-                    case "call_issuer":
-                        cardErrorReason = "the card has been declined, call issuer";
-                        logger.LogWarning(ex, "the card has been declined.");
-                        break;
-                    case "do_not_honor":
-                        cardErrorReason = "the card has been declined";
-                        logger.LogWarning(ex, "the card has been declined.");
-                        break;
-                    case "insufficient_funds":
-                        cardErrorReason = "the card has insufficient funds.";
-                        logger.LogWarning(ex, "the card has insufficient funds.");
-                        break;
-                    case "invalid_account":
-                        cardErrorReason = "the card or account is invalid.";
-                        logger.LogWarning(ex, "the card or account is invalid.");
-                        break;
-                    case "currency_not_supported":
-                        cardErrorReason = "the card does not support this currency.";
-                        logger.LogWarning(ex, "the card does not support this currency.");
-                        break;
-                    case "lost_card":
-                        cardErrorReason = "the card has been reported lost.";
-                        logger.LogWarning(ex, "the card has been reported lost.");
-                        break;
-                    case "stolen_card":
-                        cardErrorReason = "the card has been reported stolen.";
-                        logger.LogWarning(ex, "the card has been reported stolen.");
-                        break;
-                    default:
-                        Console.WriteLine($"Other card error: {ex.StripeError.Message}");
-                        break;
-                }
-
-                var cardErrorDescription = $"<b>We couldn't charge your {cardBrand} card ending with {cardLast4Digits}, because {cardErrorReason}.</b> " +
-                                           $"<p>Please use the secure link below to complete the payment for your quotation {quote.QuoteReference} with Tranzr Moves.</p> " +
-                                           $"To avoid any delay or cancellation of your scheduled service on " +
-                                           $"{FormatLocalDateIso(quote.CollectionDate?.InUtc().Date)}, kindly make your payment as soon as possible or contact us to arrange an alternative payment option.";
-
-                await CreateCheckoutSession(new CreateCheckoutSessionRequest
-                {
-                    Amount = quote.TotalCost!.Value,
-                    QuoteReference = quote.QuoteReference,
-                    Description = $"Full payment for quote #{quote.QuoteReference}"
-                }, user, quote, "checkout-session-payment-error",
-                    new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Full)),
-                    cancellationToken, cardErrorDescription, [ToBccEmails.PayLaterWarning]);
-            }
-
-            return Error.Failure($"Payment failed: {ex.StripeError.Message}");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to create future payment for customer {UserId}", user!.Id);
-            return Error.Failure("500", "Failed to create future payment");
-        }
-    }
-
+    [MapToApiVersion(1)]
+    [Obsolete("Use Checkout session instead of payment link!")]
     [HttpPost("create-payment-link", Name = "CreatePaymentLink")]
     public async Task<ActionResult<CreatePaymentLinkResponse>> CreatePaymentLink(
         [FromBody] CreatePaymentLinkRequest request, CancellationToken ct)
@@ -1177,6 +799,7 @@ public class CheckoutController(
         }
     }
 
+    [MapToApiVersion(1)]
     [HttpPost("webhook")]
     public async Task<IActionResult> ProcessPaymentWebhook()
     {
@@ -1241,6 +864,156 @@ public class CheckoutController(
         {
             return StatusCode(500);
         }
+    }
+
+    [MapToApiVersion(1)]
+    [HttpGet("test-template/{templateName}")]
+    public IActionResult TestTemplate(string templateName)
+    {
+        try
+        {
+            var testData = new
+            {
+                customerName = "John Doe",
+                depositAmount = "125.00",
+                totalAmount = "500.00",
+                remainingAmount = "375.00",
+                balanceAmount = "375.00",
+                quoteReference = "TEST123",
+                paymentDate = "Monday, January 15, 2024",
+                paymentTime = "14:30 GMT",
+                setupDate = "Monday, January 15, 2024",
+                setupTime = "14:30 GMT",
+                currentYear = timeService.NowInUtc().Year
+            };
+
+            var result = templateService.GenerateEmail(templateName, testData);
+            return Ok(new { templateName, result });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    #endregion
+
+    private async Task<ActionResult<CreateCheckoutSessionResponse>?> CreateCheckoutSession(
+        CreateCheckoutSessionRequest request, User user,
+        Quote quote, string emailTemplateName, KeyValuePair<string, string> metadata,
+        CancellationToken cancellationToken, string? cardErrorReason = null, List<string>? bbcRecipients = null)
+    {
+        // Create or find stripe customer
+        var sr = await stripeClient.V1.Customers.SearchAsync(
+            new CustomerSearchOptions { Query = $"email:'{user.Email}'" }, cancellationToken: cancellationToken);
+
+        var stripeCustomer = sr.Data.FirstOrDefault();
+
+        if (stripeCustomer is null)
+        {
+            stripeCustomer = await stripeClient.V1.Customers.CreateAsync(new CustomerCreateOptions
+            {
+                Email = user.Email,
+                Name = user.FullName,
+                Address = user.BillingAddress != null
+                    ? new AddressOptions
+                    {
+                        Line1 = user.BillingAddress.Line1,
+                        Line2 = user.BillingAddress.Line2,
+                        City = user.BillingAddress.City,
+                        PostalCode = user.BillingAddress.PostCode,
+                        Country = user.BillingAddress.Country ?? "United Kingdom",
+                        // Enhanced with extended Mapbox fields
+                        State = user.BillingAddress.Region
+                    }
+                    : null
+            }, cancellationToken: cancellationToken);
+        }
+
+        // Create Price for this amount/description
+        var priceId = await CreateOrGetPriceAsync(request.Amount,
+            string.IsNullOrWhiteSpace(request.Description)
+                ? $"Payment for quote #{quote.QuoteReference}"
+                : request.Description, quote.QuoteReference);
+
+        // Create Checkout Session
+        if (user.Email != null)
+        {
+            var sessionOptions = new SessionCreateOptions
+            {
+                Mode = "payment",
+                Customer = stripeCustomer.Id,
+                ClientReferenceId = quote.QuoteReference,
+                LineItems =
+                [
+                    new SessionLineItemOptions
+                    {
+                        Price = priceId,
+                        Quantity = 1
+                    }
+                ],
+                AutomaticTax = new SessionAutomaticTaxOptions
+                {
+                    Enabled = true // Enable automatic tax calculation
+                },
+                Metadata = new Dictionary<string, string>
+                {
+                    { nameof(PaymentMetadata.QuoteReference), quote.QuoteReference },
+                    { nameof(PaymentMetadata.CustomerEmail), user.Email },
+                    { nameof(PaymentMetadata.PaymentAmount), request.Amount.ToString("F2") },
+                    { nameof(PaymentMetadata.ExtraChargesDescription), request.Description },
+                    { metadata.Key, metadata.Value }
+                },
+                SuccessUrl = configuration["CHECKOUT_SESSION_SUCCESS_URL"],
+                CancelUrl = configuration["CHECKOUT_SESSION_CANCEL_URL"]
+            };
+
+            var sessionService = new SessionService(stripeClient);
+            var session = await sessionService.CreateAsync(sessionOptions, cancellationToken: cancellationToken);
+
+            quote.StripeSessionId = session.Id;
+            await quoteRepository.UpdateQuoteAsync(quote, cancellationToken);
+
+            // Email checkout URL to customer
+            bool emailSent = false;
+            try
+            {
+                var templateData = new
+                {
+                    customerName = user.FullName,
+                    paymentAmount = request.Amount.ToString("N2"),
+                    quoteReference = quote.QuoteReference,
+                    checkoutUrl = session.Url,
+                    description = string.IsNullOrWhiteSpace(request.Description)
+                        ? $"Payment for quote #{quote.QuoteReference}"
+                        : request.Description,
+                    currentYear = timeService.NowInUtc().Year,
+                    cardErrorReason
+                };
+
+                var subject = $"Checkout Link - #{quote.QuoteReference}";
+                var htmlEmail = templateService.GenerateEmail($"{emailTemplateName}.html", templateData);
+                var textEmail = templateService.GenerateEmail($"{emailTemplateName}.txt", templateData);
+                await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, user.Email, htmlEmail,
+                    textEmail, bbcRecipients);
+                emailSent = true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to send checkout session email to {Email}", user.Email);
+            }
+
+            return Ok(new CreateCheckoutSessionResponse
+            {
+                SessionId = session.Id,
+                Url = session.Url,
+                QuoteReference = quote.QuoteReference,
+                Amount = request.Amount,
+                EmailSent = emailSent
+            });
+        }
+
+        return null;
     }
 
     private async Task HandlePaymentIntentSucceeded(PaymentIntent paymentIntent)
@@ -1750,32 +1523,500 @@ public class CheckoutController(
         }
     }
 
-    [HttpGet("test-template/{templateName}")]
-    public IActionResult TestTemplate(string templateName)
+    private async Task<string> CreateOrGetPriceAsync(decimal amount, string description, string quoteReference)
     {
         try
         {
-            var testData = new
+            // Create a unique product name for this quote
+            var productName = $"Tranzr Moves - Quote #{quoteReference}";
+
+            // First, try to find an existing product
+            var productSearchOptions = new ProductSearchOptions
             {
-                customerName = "John Doe",
-                depositAmount = "125.00",
-                totalAmount = "500.00",
-                remainingAmount = "375.00",
-                balanceAmount = "375.00",
-                quoteReference = "TEST123",
-                paymentDate = "Monday, January 15, 2024",
-                paymentTime = "14:30 GMT",
-                setupDate = "Monday, January 15, 2024",
-                setupTime = "14:30 GMT",
-                currentYear = timeService.NowInUtc().Year
+                Query = $"name:'{productName}'",
+                Limit = 1
             };
 
-            var result = templateService.GenerateEmail(templateName, testData);
-            return Ok(new { templateName, result });
+            var existingProducts = await stripeClient.V1.Products.SearchAsync(productSearchOptions);
+
+            Product product;
+            if (existingProducts.Data.Any())
+            {
+                product = existingProducts.Data.First();
+            }
+            else
+            {
+                // Create new product
+                var productOptions = new ProductCreateOptions
+                {
+                    Name = productName,
+                    Description = description,
+                    Type = "service"
+                };
+                product = await stripeClient.V1.Products.CreateAsync(productOptions);
+            }
+
+            // Create price for this product
+            var priceOptions = new PriceCreateOptions
+            {
+                Product = product.Id,
+                Currency = Currency,
+                UnitAmount = (long)Math.Round(amount * 100, 0, MidpointRounding.AwayFromZero),
+                TaxBehavior = TaxBehavior // Tell Stripe that tax is included in the price
+            };
+
+            var price = await stripeClient.V1.Prices.CreateAsync(priceOptions);
+            return price.Id;
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = ex.Message });
+            logger.LogError(ex, "Error creating or getting Stripe price for amount {Amount}", amount);
+            throw;
         }
+    }
+
+    private async Task<SaveQuoteResponse> UpdateQuoteAsync(SaveQuoteRequest saveQuoteRequest,
+        CancellationToken ct = default)
+    {
+        var command = new SaveQuoteCommand(saveQuoteRequest.Quote, saveQuoteRequest.Customer, saveQuoteRequest.ETag);
+        var result = await mediator.Send(command, ct);
+
+        return result.Value;
+    }
+
+    private async Task<ErrorOr<Success>> ProcessLaterPayment(FuturePaymentRequest request,
+        CancellationToken cancellationToken)
+    {
+        // This endpoint handles creating PaymentIntents for the remaining balance
+        // after a deposit has been paid, using saved payment methods
+
+        User? user = null;
+
+        var quote = await quoteRepository.GetQuoteByReferenceAsync(request.QuoteReference, cancellationToken);
+        if (quote == null)
+        {
+            logger.LogWarning("Quote not found for future payment: {QuoteReference}", request.QuoteReference);
+            return Error.NotFound("Quote not found");
+        }
+
+        var customerQuote = await userQuoteRepository.GetUserQuoteByQuoteIdAsync(quote.Id, cancellationToken);
+        if (customerQuote == null)
+        {
+            logger.LogWarning("Customer quote relationship not found for quote {QuoteReference}",
+                request.QuoteReference);
+            return Error.Failure("Customer quote relationship not found");
+        }
+
+        user = await userRepository.GetUserAsync(customerQuote.UserId, cancellationToken);
+
+        logger.LogInformation(
+            "Collecting payment for pay later for customer {CustomerId} for the full amount of £{Amount}",
+            user!.Id, quote.TotalCost - quote.DepositAmount);
+
+        var customerSearchResult = await stripeClient.V1.Customers.SearchAsync(new CustomerSearchOptions
+        {
+            Query = $"email:'{user.Email}'",
+        }, cancellationToken: cancellationToken);
+
+        var customer = customerSearchResult.Data.FirstOrDefault();
+
+        if (customer == null)
+        {
+            logger.LogWarning("Customer not found for future payment for quote: {QuoteReference}",
+                request.QuoteReference);
+            return Error.Failure("Customer not found");
+        }
+
+        var amountInCurrencyUnit = (long)Math.Round(quote.TotalCost!.Value * 100, 0, MidpointRounding.AwayFromZero);
+
+        // 1. Create a tax calculation with tax-inclusive pricing
+        var calculationOptions = new CalculationCreateOptions
+        {
+            Currency = Currency,
+            LineItems =
+            [
+                new CalculationLineItemOptions
+                {
+                    Amount = amountInCurrencyUnit,
+                    Reference = request.QuoteReference,
+                    TaxCode = TaxCode,
+                    TaxBehavior = TaxBehavior // This specifies that the price already includes tax
+                }
+            ],
+            Customer = customer.Id
+        };
+
+        var taxCalculationService = stripeClient.V1.Tax.Calculations;
+        Calculation calculation =
+            await taxCalculationService.CreateAsync(calculationOptions, cancellationToken: cancellationToken);
+
+        var paymentIntentOptions = new PaymentIntentCreateOptions
+        {
+            Amount = calculation.AmountTotal,
+            Currency = Currency,
+            Customer = customer.Id,
+            PaymentMethod = quote.PaymentMethodId, // Use the saved payment method
+            Description = "Tranzr Moves - Remaining balance payment",
+            ReceiptEmail = customer.Email,
+            Confirm = true, // Automatically confirm the payment
+            OffSession = true, // This is an off-session payment (automatic)
+            AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+            {
+                Enabled = true,
+                AllowRedirects = "always"
+            },
+            Metadata = new Dictionary<string, string>
+            {
+                { nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Balance) },
+                { nameof(PaymentMetadata.QuoteReference), request.QuoteReference }
+            }
+        };
+
+        try
+        {
+            var paymentIntent =
+                await stripeClient.V1.PaymentIntents.CreateAsync(paymentIntentOptions,
+                    cancellationToken: cancellationToken);
+
+            logger.LogInformation(
+                "Future payment intent created {PaymentIntentId} for remaining amount {Amount} using saved payment method",
+                paymentIntent.Id, quote.TotalCost!.Value);
+
+            return new ErrorOr<Success>();
+        }
+        catch (StripeException ex)
+        {
+            if (ex.StripeError.Type == "card_error")
+            {
+                var cardErrorReason = string.Empty;
+                var paymentMethod = await stripeClient.V1.PaymentMethods.GetAsync(quote.PaymentMethodId, cancellationToken: cancellationToken);
+                var cardLast4Digits = paymentMethod.Card.Last4;
+                var cardBrand = paymentMethod.Card.Brand;
+
+                switch (ex.StripeError.Code)
+                {
+                    case "card_declined" when ex.StripeError.DeclineCode == "insufficient_funds":
+                        cardErrorReason = "the card was declined due to insufficient funds";
+                        logger.LogWarning(ex, "the was declined.");
+                        break;
+                    case "card_declined":
+                        cardErrorReason = "the was declined.";
+                        logger.LogWarning(ex, "the was declined.");
+                        break;
+                    case "expired_card":
+                        cardErrorReason = "the card has expired.";
+                        logger.LogWarning(ex, "the has expired.");
+                        break;
+                    case "incorrect_cvc":
+                        cardErrorReason = "the card's security code is incorrect.";
+                        logger.LogWarning(ex, "the card's security code is incorrect.");
+                        break;
+                    case "incorrect_number":
+                        cardErrorReason = "the card number is incorrect.";
+                        logger.LogWarning(ex, "the card's security code is incorrect.");
+                        break;
+                    case "invalid_cvc":
+                        cardErrorReason = "the card's security code is invalid.";
+                        logger.LogWarning(ex, "the card's security code is invalid.");
+                        break;
+                    case "invalid_expiry_month":
+                        cardErrorReason = "the expiry month is invalid.";
+                        logger.LogWarning(ex, "the expiry month is invalid.");
+                        break;
+                    case "invalid_expiry_year":
+                        cardErrorReason = "the expiry year is invalid.";
+                        logger.LogWarning(ex, "the expiry year is invalid.");
+                        break;
+                    case "processing_error":
+                        cardErrorReason = "an error occurred while processing the card.";
+                        logger.LogWarning(ex, "an error occurred while processing the card.");
+                        break;
+                    case "incorrect_zip":
+                        cardErrorReason = "the card's post code failed validation.";
+                        logger.LogWarning(ex, "the card's post code failed validation.");
+                        break;
+                    case "authentication_required":
+                        cardErrorReason = "the card's authorization is required";
+                        logger.LogWarning(ex, "the card's authorization is required.");
+                        break;
+                    case "approve_with_id":
+                        cardErrorReason = "the payment cannot be authorized";
+                        logger.LogWarning(ex, "the payment cannot be authorized.");
+                        break;
+                    case "call_issuer":
+                        cardErrorReason = "the card has been declined, call issuer";
+                        logger.LogWarning(ex, "the card has been declined.");
+                        break;
+                    case "do_not_honor":
+                        cardErrorReason = "the card has been declined";
+                        logger.LogWarning(ex, "the card has been declined.");
+                        break;
+                    case "insufficient_funds":
+                        cardErrorReason = "the card has insufficient funds.";
+                        logger.LogWarning(ex, "the card has insufficient funds.");
+                        break;
+                    case "invalid_account":
+                        cardErrorReason = "the card or account is invalid.";
+                        logger.LogWarning(ex, "the card or account is invalid.");
+                        break;
+                    case "currency_not_supported":
+                        cardErrorReason = "the card does not support this currency.";
+                        logger.LogWarning(ex, "the card does not support this currency.");
+                        break;
+                    case "lost_card":
+                        cardErrorReason = "the card has been reported lost.";
+                        logger.LogWarning(ex, "the card has been reported lost.");
+                        break;
+                    case "stolen_card":
+                        cardErrorReason = "the card has been reported stolen.";
+                        logger.LogWarning(ex, "the card has been reported stolen.");
+                        break;
+                    default:
+                        Console.WriteLine($"Other card error: {ex.StripeError.Message}");
+                        break;
+                }
+
+                var cardErrorDescription = $"<b>We couldn't charge your {cardBrand} card ending with {cardLast4Digits}, because {cardErrorReason}.</b> " +
+                                           $"<p>Please use the secure link below to complete the payment for your quotation {quote.QuoteReference} with Tranzr Moves.</p> " +
+                                           $"To avoid any delay or cancellation of your scheduled service on " +
+                                           $"{FormatLocalDateIso(quote.CollectionDate?.InUtc().Date)}, kindly make your payment as soon as possible or contact us to arrange an alternative payment option.";
+
+                await CreateCheckoutSession(new CreateCheckoutSessionRequest
+                {
+                    Amount = quote.TotalCost!.Value,
+                    QuoteReference = quote.QuoteReference,
+                    Description = $"Full payment for quote #{quote.QuoteReference}"
+                }, user, quote, "checkout-session-payment-error",
+                    new KeyValuePair<string, string>(nameof(PaymentMetadata.PaymentType), nameof(PaymentType.Full)),
+                    cancellationToken, cardErrorDescription, [ToBccEmails.PayLaterWarning]);
+            }
+
+            return Error.Failure($"Payment failed: {ex.StripeError.Message}");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to create future payment for customer {UserId}", user!.Id);
+            return Error.Failure("500", "Failed to create future payment");
+        }
+    }
+
+    [MapToApiVersion(2)]
+    [HttpPost("deposit-balance-payment", Name = "CreateFuturePaymentV2")]
+    [SwaggerOperation(
+        OperationId = "Checkout_CreateDepositBalancePaymentV2",
+        Summary = "Charge remaining balance after deposit (QuoteV2)",
+        Description =
+            "Creates an off-session PaymentIntent for the amount still owed after a paid deposit, " +
+            "using the payment method saved on the paid deposit `Payment` row. " +
+            "Body matches v1 (`quoteReference`, optional extra charges); resolves a QuoteV2 by reference.",
+        Tags = new[] { "Checkout (v2)" })]
+    [ProducesResponseType(typeof(PaymentIntentResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CreateFuturePaymentV2([FromBody] FuturePaymentRequest request, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CreateQuoteV2DepositBalancePaymentCommand(request), ct);
+        if (result.IsError)
+        {
+            return Problem(result.Errors);
+        }
+
+        var v = result.Value;
+        return Ok(new PaymentIntentResponse
+        {
+            ClientSecret = v.ClientSecret,
+            PaymentIntentId = v.IntentId
+        });
+    }
+
+    [MapToApiVersion(2)]
+    [HttpGet("payment-intent", Name = "GetPaymentIntentV2")]
+    [SwaggerOperation(
+        OperationId = "Checkout_GetPaymentIntentV2",
+        Summary = "Retrieve Stripe PaymentIntent or SetupIntent client secret",
+        Description =
+            "Same as v1: pass a Stripe id (`pi_...` or `seti_...`) to retrieve client secret for the mobile SDK.",
+        Tags = new[] { "Checkout (v2)" })]
+    [ProducesResponseType(typeof(PaymentIntentResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPaymentIntentV2([FromQuery] string paymentIntentId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetStripePaymentIntentSecretQuery(paymentIntentId), ct);
+        if (result.IsError)
+        {
+            return Problem(result.Errors);
+        }
+
+        var v = result.Value;
+        return Ok(new PaymentIntentResponse
+        {
+            ClientSecret = v.ClientSecret,
+            PaymentIntentId = v.IntentId
+        });
+    }
+
+    [MapToApiVersion(2)]
+    [HttpGet("payment-intent-by-quote", Name = "GetPaymentIntentByQuoteIdV2")]
+    [SwaggerOperation(
+        OperationId = "Checkout_GetPaymentIntentByQuoteIdV2",
+        Summary = "Retrieve Stripe PaymentIntent or SetupIntent by QuoteV2 id",
+        Description =
+            "Loads the customer-selected Full/Deposit/Later payment row (or the latest with an intent) " +
+            "and returns the Stripe client secret and intent id (`pi_...` or `seti_...`) for the mobile SDK.",
+        Tags = new[] { "Checkout (v2)" })]
+    [ProducesResponseType(typeof(PaymentIntentResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetPaymentIntentByQuoteIdV2([FromQuery] Guid quoteId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetQuoteV2StripeIntentSecretQuery(quoteId), ct);
+        if (result.IsError)
+        {
+            return Problem(result.Errors);
+        }
+
+        var v = result.Value;
+        return Ok(new PaymentIntentResponse
+        {
+            ClientSecret = v.ClientSecret,
+            PaymentIntentId = v.IntentId
+        });
+    }
+
+    [MapToApiVersion(2)]
+    [HttpPost("payment-sheet", Name = "CreateStripeIntentV2")]
+    [SwaggerOperation(
+        OperationId = "Checkout_CreatePaymentSheetV2",
+        Summary = "Create Stripe payment sheet from persisted QuoteV2",
+        Description =
+            "Creates a Stripe payment/setup intent using only persisted QuoteV2 data. " +
+            "Request includes quoteId, expectedVersion, and paymentType for optimistic concurrency " +
+            "and explicit customer payment option selection.",
+        Tags = new[] { "Checkout (v2)" })]
+    [Produces("application/json")]
+    [Consumes("application/json")]
+    [ProducesResponseType(typeof(PaymentSheetCreateResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status412PreconditionFailed)]
+    public async Task<IActionResult> CreatePaymentSheetV2(
+        [FromBody] CreateQuoteV2PaymentSheetRequest request,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new CreateQuoteV2PaymentSheetCommand(request.QuoteId, request.ExpectedVersion, request.PaymentType),
+            ct);
+
+        if (result.IsError)
+        {
+            return Problem(result.Errors);
+        }
+
+        var v = result.Value;
+        return Ok(new PaymentSheetCreateResponse
+        {
+            PaymentIntent = v.ClientSecret,
+            PaymentIntentId = v.IntentId,
+            EphemeralKey = v.EphemeralKey,
+            Customer = v.CustomerId
+        });
+    }
+
+    [MapToApiVersion(2)]
+    [HttpGet("session")]
+    [SwaggerOperation(
+        OperationId = "Checkout_GetCheckoutSessionV2",
+        Summary = "Retrieve Stripe Checkout session by id",
+        Description = "Same as v1: loads the Checkout Session from Stripe (session id from hosted checkout).",
+        Tags = new[] { "Checkout (v2)" })]
+    [ProducesResponseType(typeof(GetCheckoutSessionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetCheckoutSessionV2([FromQuery] string id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetStripeCheckoutSessionQuery(id), ct);
+        if (result.IsError)
+        {
+            return Problem(result.Errors);
+        }
+
+        var s = result.Value;
+        return Ok(new GetCheckoutSessionResponse
+        {
+            SessionId = s.SessionId,
+            CustomerId = s.CustomerId,
+            PaymentIntentId = s.PaymentIntentId,
+            Status = s.Status,
+            PaymentStatus = s.PaymentStatus,
+            Url = s.Url
+        });
+    }
+
+    [MapToApiVersion(2)]
+    [HttpPost("session")]
+    [SwaggerOperation(
+        OperationId = "Checkout_CreateQuoteV2CheckoutSession",
+        Summary = "Create hosted Stripe Checkout session (QuoteV2)",
+        Description =
+            "Creates a Stripe Checkout Session from persisted QuoteV2 data with optimistic concurrency (expectedVersion).",
+        Tags = new[] { "Checkout (v2)" })]
+    [ProducesResponseType(typeof(CreateQuoteV2CheckoutSessionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status412PreconditionFailed)]
+    public async Task<IActionResult> CreateCheckoutSessionV2(
+        [FromBody] CreateQuoteV2CheckoutSessionRequest request,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(
+            new CreateQuoteV2CheckoutSessionCommand(
+                request.QuoteId,
+                request.ExpectedVersion,
+                request.Amount,
+                request.Description ?? string.Empty),
+            ct);
+
+        if (result.IsError)
+        {
+            return Problem(result.Errors);
+        }
+
+        return Ok(result.Value);
+    }
+
+    [MapToApiVersion(2)]
+    [HttpPost("pay-later-collection")]
+    [SwaggerOperation(
+        OperationId = "Checkout_CollectQuoteV2PayLater",
+        Summary = "Collect QuoteV2 pay-later balances due today",
+        Tags = new[] { "Checkout (v2)" })]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> CollectPayLaterQuoteV2(CancellationToken ct)
+    {
+        _ = await mediator.Send(new CollectQuoteV2PayLaterPaymentsCommand(), ct);
+        return NoContent();
+    }
+
+    [MapToApiVersion(2)]
+    [HttpPost("webhook")]
+    [SwaggerOperation(
+        OperationId = "Checkout_StripeWebhookV2",
+        Summary = "Stripe webhook (QuoteV2 pipeline)",
+        Description =
+            "Uses TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET_V2. Configure a separate Stripe webhook endpoint for /api/v2/checkout/webhook.",
+        Tags = new[] { "Checkout (v2)" })]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> ProcessPaymentWebhookV2(CancellationToken ct)
+    {
+        var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync(ct);
+        var signatureHeader = Request.Headers["Stripe-Signature"].ToString();
+        var result = await mediator.Send(new ProcessCheckoutStripeWebhookV2Command(json, signatureHeader), ct);
+        if (result.IsError)
+        {
+            return Problem(result.Errors);
+        }
+
+        return Ok();
     }
 }

@@ -18,10 +18,29 @@ namespace TranzrMoves.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DataProtectionKeys", "tranzrmoves");
+                });
 
             modelBuilder.Entity("TranzrMoves.Domain.Entities.AdditionalPrice", b =>
                 {
@@ -82,6 +101,93 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.HasIndex("Type", "IsActive", "EffectiveFrom", "EffectiveTo");
 
                     b.ToTable("AdditionalPrices", "tranzrmoves");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.AddressV2", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Accuracy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AddressNumber")
+                        .HasColumnType("text");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CountryCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("County")
+                        .HasColumnType("text");
+
+                    b.Property<string>("District")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Floor")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FullAddress")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("HasElevator")
+                        .HasColumnType("boolean");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Line1")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Line2")
+                        .HasColumnType("text");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("MapboxId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Neighborhood")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PlaceName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Region")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RegionCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Street")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Type")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AddressesV2_UserId_Type");
+
+                    b.ToTable("AddressesV2", "tranzrmoves");
                 });
 
             modelBuilder.Entity("TranzrMoves.Domain.Entities.CustomerQuote", b =>
@@ -346,6 +452,190 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.ToTable("LegalDocuments", "tranzrmoves");
                 });
 
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.Payment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasDefaultValueSql("gen_random_uuid()");
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("CustomerSelectedOption")
+                        .HasColumnType("boolean");
+
+                    b.Property<LocalDate?>("DueDate")
+                        .HasColumnType("date");
+
+                    b.Property<Instant>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PaymentIntentId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PaymentMethodId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PaymentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReceiptUrl")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("RemainingAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("SetupIntentId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StripeSessionId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuoteId")
+                        .HasDatabaseName("IX_Payments_QuoteId");
+
+                    b.ToTable("Payments", "tranzrmoves");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.Pricing", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("AssemblyCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("BaseToOriginCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("BaseVanCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("CallOutCharge")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("CongestionChargeApplies")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("CongestionZoneSurcharge")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("CostPerHourAfterStandard")
+                        .HasColumnType("numeric");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("CrewCount")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("DestinationFloorSurcharge")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("DismantleCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("DistanceCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("InsuranceUplift")
+                        .HasColumnType("numeric");
+
+                    b.Property<bool>("IsSelected")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("LabourCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<Instant>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("NumberOfItemsToAssemble")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NumberOfItemsToDismantle")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("OriginFloorSurcharge")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("QuoteType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SelectedVanCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ServiceLevel")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("SpecialHandlingCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("StandardBlockHours")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("SubtotalWithoutVat")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("TotalCostWithVat")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("UlezSurcharge")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("Vat")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("VatAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal>("VatRate")
+                        .HasColumnType("numeric");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuoteId")
+                        .HasDatabaseName("IX_Pricings_QuoteId");
+
+                    b.ToTable("Pricings", "tranzrmoves");
+                });
+
             modelBuilder.Entity("TranzrMoves.Domain.Entities.Quote", b =>
                 {
                     b.Property<Guid>("Id")
@@ -462,6 +752,134 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.ToTable("Quotes", "tranzrmoves");
                 });
 
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteAddress", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Accuracy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("AddressNumber")
+                        .HasColumnType("text");
+
+                    b.Property<string>("City")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("text");
+
+                    b.Property<string>("CountryCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("County")
+                        .HasColumnType("text");
+
+                    b.Property<string>("District")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Floor")
+                        .HasColumnType("integer");
+
+                    b.Property<bool?>("FreeParkingAccess")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("FullAddress")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("HasElevator")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Line1")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Line2")
+                        .HasColumnType("text");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("MapboxId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Neighborhood")
+                        .HasColumnType("text");
+
+                    b.Property<decimal?>("PackingCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("PlaceName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PostCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Region")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RegionCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Street")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuoteId")
+                        .HasDatabaseName("IX_QuoteAddresses_QuoteId");
+
+                    b.ToTable("QuoteAddresses", "tranzrmoves");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteInventoryItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Depth")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuoteId")
+                        .HasDatabaseName("IX_InventoryItemsV2_QuoteId");
+
+                    b.ToTable("InventoryItemsV2", "tranzrmoves");
+                });
+
             modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteSession", b =>
                 {
                     b.Property<string>("SessionId")
@@ -491,6 +909,134 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.HasKey("SessionId");
 
                     b.ToTable("QuoteSessions", "tranzrmoves");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteV2", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long?>("BaseToOriginDistanceInMiles")
+                        .HasColumnType("bigint");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("CrewCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal?>("EffectiveVanCapacityM3")
+                        .HasColumnType("numeric");
+
+                    b.Property<Instant?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastCompletedStepKey")
+                        .HasColumnType("text");
+
+                    b.Property<Instant?>("LastResumeEmailSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Instant>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("NumberOfItemsToAssemble")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NumberOfItemsToDismantle")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OriginDestinationRoute")
+                        .HasColumnType("text");
+
+                    b.Property<long?>("OriginToDestinationDistanceInMiles")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("PaymentStatus")
+                        .HasColumnType("text");
+
+                    b.Property<Instant?>("PriceCalculatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("QuotePrice")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("QuoteReference")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("RecommendedVanCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SelectedVanCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ServiceTier")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("StepsCompleted")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal?>("TotalCost")
+                        .HasColumnType("numeric");
+
+                    b.Property<decimal?>("TotalInventoryVolumeM3")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VanCapacityStatus")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VanCapacityWarning")
+                        .HasColumnType("text");
+
+                    b.Property<Instant?>("VanRecommendationCalculatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VanType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_QuotesV2_CreatedAt");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("IX_QuotesV2_UserId");
+
+                    b.HasIndex("QuoteReference")
+                        .HasDatabaseName("IX_QuotesV2_QuoteReference");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("IX_QuotesV2_SessionId");
+
+                    b.ToTable("QuotesV2", "tranzrmoves");
                 });
 
             modelBuilder.Entity("TranzrMoves.Domain.Entities.RateCard", b =>
@@ -558,6 +1104,53 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.HasIndex("Movers", "ServiceLevel", "IsActive", "EffectiveFrom", "EffectiveTo");
 
                     b.ToTable("RateCards", "tranzrmoves");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.Schedule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Instant?>("CollectionDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Instant?>("DeliveryDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool?>("FlexibleTime")
+                        .HasColumnType("boolean");
+
+                    b.Property<int?>("Hours")
+                        .HasColumnType("integer");
+
+                    b.Property<Instant>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("QuoteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TimeSlot")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuoteId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Schedules_QuoteId");
+
+                    b.ToTable("Schedules", "tranzrmoves");
                 });
 
             modelBuilder.Entity("TranzrMoves.Domain.Entities.ServiceFeature", b =>
@@ -665,6 +1258,57 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.ToTable("Users", "tranzrmoves");
                 });
 
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.UserV2", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("text");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("text");
+
+                    b.Property<Instant>("ModifiedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ModifiedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UsersV2_Email");
+
+                    b.ToTable("UsersV2", "tranzrmoves");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.AddressV2", b =>
+                {
+                    b.HasOne("TranzrMoves.Domain.Entities.UserV2", "User")
+                        .WithMany("Addresses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("TranzrMoves.Domain.Entities.CustomerQuote", b =>
                 {
                     b.HasOne("TranzrMoves.Domain.Entities.Quote", "Quote")
@@ -712,6 +1356,28 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.Payment", b =>
+                {
+                    b.HasOne("TranzrMoves.Domain.Entities.QuoteV2", "Quote")
+                        .WithMany("Payments")
+                        .HasForeignKey("QuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quote");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.Pricing", b =>
+                {
+                    b.HasOne("TranzrMoves.Domain.Entities.QuoteV2", "Quote")
+                        .WithMany("Pricings")
+                        .HasForeignKey("QuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quote");
+                });
+
             modelBuilder.Entity("TranzrMoves.Domain.Entities.Quote", b =>
                 {
                     b.HasOne("TranzrMoves.Domain.Entities.QuoteSession", null)
@@ -744,6 +1410,9 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.Property<int?>("Quantity")
                                 .HasColumnType("integer");
 
+                            b1.Property<Guid?>("QuoteId1")
+                                .HasColumnType("uuid");
+
                             b1.Property<int?>("Width")
                                 .HasColumnType("integer");
 
@@ -752,10 +1421,18 @@ namespace TranzrMoves.Infrastructure.Migrations
                             b1.HasIndex("QuoteId")
                                 .HasDatabaseName("IX_InventoryItems_QuoteId");
 
+                            b1.HasIndex("QuoteId1");
+
                             b1.ToTable("InventoryItems", "tranzrmoves");
 
                             b1.WithOwner()
                                 .HasForeignKey("QuoteId");
+
+                            b1.HasOne("TranzrMoves.Domain.Entities.QuoteV2", "Quote")
+                                .WithMany()
+                                .HasForeignKey("QuoteId1");
+
+                            b1.Navigation("Quote");
                         });
 
                     b.OwnsOne("TranzrMoves.Domain.Entities.Address", "Destination", b1 =>
@@ -980,6 +1657,49 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.Navigation("QuoteAdditionalPayments");
                 });
 
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteAddress", b =>
+                {
+                    b.HasOne("TranzrMoves.Domain.Entities.QuoteV2", "Quote")
+                        .WithMany("Addresses")
+                        .HasForeignKey("QuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quote");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteInventoryItem", b =>
+                {
+                    b.HasOne("TranzrMoves.Domain.Entities.QuoteV2", "Quote")
+                        .WithMany("InventoryItems")
+                        .HasForeignKey("QuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quote");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteV2", b =>
+                {
+                    b.HasOne("TranzrMoves.Domain.Entities.UserV2", "Customer")
+                        .WithMany("Quotes")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.Schedule", b =>
+                {
+                    b.HasOne("TranzrMoves.Domain.Entities.QuoteV2", "Quote")
+                        .WithOne("Schedule")
+                        .HasForeignKey("TranzrMoves.Domain.Entities.Schedule", "QuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quote");
+                });
+
             modelBuilder.Entity("TranzrMoves.Domain.Entities.User", b =>
                 {
                     b.OwnsOne("TranzrMoves.Domain.Entities.Address", "BillingAddress", b1 =>
@@ -1084,11 +1804,31 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.Navigation("Quotes");
                 });
 
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.QuoteV2", b =>
+                {
+                    b.Navigation("Addresses");
+
+                    b.Navigation("InventoryItems");
+
+                    b.Navigation("Payments");
+
+                    b.Navigation("Pricings");
+
+                    b.Navigation("Schedule");
+                });
+
             modelBuilder.Entity("TranzrMoves.Domain.Entities.User", b =>
                 {
                     b.Navigation("CustomerQuotes");
 
                     b.Navigation("DriverQuotes");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Domain.Entities.UserV2", b =>
+                {
+                    b.Navigation("Addresses");
+
+                    b.Navigation("Quotes");
                 });
 #pragma warning restore 612, 618
         }

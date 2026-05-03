@@ -1,0 +1,20 @@
+wing: tranzr_moves_services
+rooms:
+- name: src
+  description: Files from Src/
+  keywords:
+  - src
+  - src
+- name: testing
+  description: Files from Tests/
+  keywords:
+  - testing
+  - tests
+- name: planning
+  description: Files from specs/
+  keywords:
+  - planning
+  - specs
+- name: general
+  description: Files that don't fit other rooms
+  keywords: []

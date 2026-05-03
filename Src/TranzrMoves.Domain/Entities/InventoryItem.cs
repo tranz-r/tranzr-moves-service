@@ -10,4 +10,5 @@ public class InventoryItem
     public int? Height { get; set; }
     public int? Depth { get; set; }
     public int? Quantity { get; set; }
+    public QuoteV2? Quote { get; set; }
 }

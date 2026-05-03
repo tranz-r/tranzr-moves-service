@@ -1,11 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using TranzrMoves.Domain.Interfaces;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Mvc;
+using TranzrMoves.Application.Services;
 
 namespace TranzrMoves.Api.Controllers;
 
-[Route("api/v1/[controller]")]
-public class MapController(IMapBoxService mapBoxService, ILogger<MapController> logger) : ApiControllerBase
+[ApiVersion(1)]
+[ApiVersion(2)]
+[ApiController]
+[Route("api/v{v:apiVersion}/[controller]")]
+public class MapController(IMapBoxService mapBoxService,
+    ILogger<MapController> logger) : ApiControllerBase
 {
+    [MapToApiVersion("1")]
     [HttpGet("route")]
     public async Task<ActionResult<MapRouteDto>> GetRouteAsync(
         [FromQuery] string originAddress,
@@ -35,4 +41,23 @@ public class MapController(IMapBoxService mapBoxService, ILogger<MapController> 
             return BadRequest(new { error = "Failed to calculate route. Please check your addresses." });
         }
     }
+
+    // [MapToApiVersion("2")]
+    // [HttpGet("route")]
+    // public async Task<IActionResult> GetRouteAsyncV2(
+    //     [FromQuery] Guid quoteId,
+    //     [FromQuery] string originAddress,
+    //     [FromQuery] string destinationAddress,
+    //     CancellationToken cancellationToken)
+    // {
+    //     var response = await mediator.Send(
+    //             new PatchAddressesCommand
+    //             {
+    //                 QuoteId = quoteId,
+    //                 DestinationAddress = destinationAddress,
+    //                 OriginAddress = originAddress
+    //             }, cancellationToken);
+    //
+    //     return response.Match(Ok, Problem);
+    // }
 }

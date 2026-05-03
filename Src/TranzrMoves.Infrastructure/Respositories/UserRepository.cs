@@ -37,6 +37,24 @@ public class UserRepository(TranzrMovesDbContext dbContext, ILogger<UserReposito
         return user;
     }
 
+    public async Task<ErrorOr<UserV2>> AddUserAsync(UserV2 user, CancellationToken cancellationToken)
+    {
+        dbContext.Set<UserV2>().Add(user);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            logger.LogError(ex, "Concurrency exception occurred while updating User with UserId {UserId}",
+                user.Id);
+            return Error.Conflict();
+        }
+
+        return user;
+    }
+
     public async Task<User?> GetUserAsync(Guid userId, CancellationToken cancellationToken)
         => await dbContext.Set<User>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == userId, cancellationToken);
@@ -50,6 +68,25 @@ public class UserRepository(TranzrMovesDbContext dbContext, ILogger<UserReposito
         CancellationToken cancellationToken)
     {
         dbContext.Set<User>().Update(user);
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            logger.LogError(ex, "Concurrency exception occurred while updating User with UserId {UserId}",
+                user.Id);
+            return Error.Conflict();
+        }
+
+        return user;
+    }
+
+    public async Task<ErrorOr<UserV2>> UpdateUserAsync(UserV2 user,
+        CancellationToken cancellationToken)
+    {
+        dbContext.Set<UserV2>().Update(user);
 
         try
         {

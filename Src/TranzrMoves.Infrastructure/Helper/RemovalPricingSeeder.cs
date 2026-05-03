@@ -104,12 +104,12 @@ public static class RemovalPricingSeeder
                 db.Add(RC(movers, level, hours, block, after, today));
         }
 
-        await EnsureRateAsync(1, ServiceLevel.Standard, 3, 250, 65);
-        await EnsureRateAsync(1, ServiceLevel.Premium, 4, 350, 75);
-        await EnsureRateAsync(2, ServiceLevel.Standard, 3, 300, 75);
-        await EnsureRateAsync(2, ServiceLevel.Premium, 4, 450, 85);
-        await EnsureRateAsync(3, ServiceLevel.Standard, 3, 350, 85);
-        await EnsureRateAsync(3, ServiceLevel.Premium, 4, 500, 95);
+        await EnsureRateAsync(1, ServiceLevel.Standard, 3, 300, 65);
+        await EnsureRateAsync(1, ServiceLevel.Premium, 4, 400, 75);
+        await EnsureRateAsync(2, ServiceLevel.Standard, 3, 400, 75);
+        await EnsureRateAsync(2, ServiceLevel.Premium, 4, 500, 85);
+        await EnsureRateAsync(3, ServiceLevel.Standard, 3, 450, 85);
+        await EnsureRateAsync(3, ServiceLevel.Premium, 4, 600, 95);
 
         async Task EnsureFeatureAsync(ServiceLevel level, int order, string text)
         {
