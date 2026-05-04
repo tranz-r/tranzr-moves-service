@@ -17,6 +17,8 @@ public class PatchSummaryStepCommandHandler(
     IQuoteProgressCalculator progressCalculator,
     IRemovalPricingRepository removalPricingRepository,
     IAdditionalPriceRepository additionalPriceRepository,
+    IQuoteStepInvalidationService quoteStepInvalidationService,
+    IQuoteJourneyProvider quoteJourneyProvider,
     IClock clock,
     ILogger<PatchSummaryStepCommandHandler> logger)
     : ICommandHandler<PatchSummaryStepCommand, ErrorOr<QuoteJourneyResponse>>
@@ -46,9 +48,20 @@ public class PatchSummaryStepCommandHandler(
         if (quote.InventoryItems.Count == 0)
             throw new InvalidOperationException("Inventory items are required before pricing.");
 
+        if (!QuoteCompletionRules.HasQuoteSummaryPreflightComplete(quote))
+        {
+            return Error.Validation(
+                "Quote.Summary.PreflightIncomplete",
+                "All quote details must be completed before confirming the summary.");
+        }
+
+        quote.SummaryConfirmedAt = clock.GetCurrentInstant();
+
         var mapper = new QuoteMapper();
 
-        RecalculateStepState(quote!, QuoteSteps.QuoteSummary, QuoteStepKeys.QuoteSummary);
+        PricingHelper.RecalculateStepState(quote!, QuoteSteps.QuoteSummary,
+            QuoteStepKeys.QuoteSummary, quoteStepInvalidationService, progressCalculator,
+            quoteJourneyProvider);
 
         var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
         if (saveResult.IsError)
@@ -72,15 +85,5 @@ public class PatchSummaryStepCommandHandler(
             Journey = resumeResolver.Resolve(quote),
             Quote = quoteSnapShot
         };
-    }
-
-    private void RecalculateStepState(QuoteV2 quote, QuoteSteps justPatchedStep, string justPatchedStepKey)
-    {
-        quote.StepsCompleted = progressCalculator.CalculateCompletedSteps(quote);
-
-        if ((quote.StepsCompleted & justPatchedStep) == justPatchedStep)
-        {
-            quote.LastCompletedStepKey = justPatchedStepKey;
-        }
     }
 }

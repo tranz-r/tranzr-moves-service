@@ -10,10 +10,21 @@ public static class QuoteCompletionRules
 {
     public static bool HasCompletedCustomerInfo(QuoteV2 quote)
     {
-        return quote.Customer?.FirstName is not null
-               && quote.Customer.LastName is not null
-               && quote.Customer.BillingAddress is not null
-               && quote.Customer.PhoneNumber is not null;
+        var customer = quote.Customer;
+
+        var res = customer is not null
+               && !string.IsNullOrWhiteSpace(customer.FirstName)
+               && !string.IsNullOrWhiteSpace(customer.LastName)
+               && !string.IsNullOrWhiteSpace(customer.PhoneNumber)
+               && HasBillingAddress(customer);
+
+        return res;
+    }
+
+    private static bool HasBillingAddress(UserV2 customer)
+    {
+        return customer.BillingAddress is not null
+               || customer.Addresses.Any(x => x.Type == AddressType.Billing);
     }
 
     public static bool HasCompletedCustomerEmailAndPhoneNumber(QuoteV2 quote)
@@ -55,8 +66,11 @@ public static class QuoteCompletionRules
                && HasAccessDetails(pickupAddress);
     }
 
-    public static bool HasCompletedInventory(QuoteV2 quote) =>
-        quote.InventoryItems.Count > 0;
+    public static bool HasCompletedInventory(QuoteV2 quote)
+    {
+        var res = quote.InventoryItems.Count > 0;
+        return res;
+    }
 
     public static bool HasCompletedSchedule(QuoteV2 quote)
     {
@@ -75,13 +89,20 @@ public static class QuoteCompletionRules
         && quote.TotalCost is > 0
         && quote.PriceCalculatedAt is not null;
 
-    public static bool HasCompletedQuoteSummary(QuoteV2 quote) =>
+    /// <summary>
+    /// All quote data required to show and validate the summary step, before the customer confirms it.
+    /// </summary>
+    public static bool HasQuoteSummaryPreflightComplete(QuoteV2 quote) =>
         HasCompletedAddresses(quote)
         && HasCompletedInventory(quote)
         && HasCompletedSchedule(quote)
         && HasCompletedCustomerEmailAndPhoneNumber(quote)
         && HasCompletedPricing(quote)
         && HasCompletedCustomerInfo(quote);
+
+    /// <summary>Preflight complete and the customer has called <c>PATCH .../quote-summary</c> at least once.</summary>
+    public static bool HasCompletedQuoteSummary(QuoteV2 quote) =>
+        HasQuoteSummaryPreflightComplete(quote) && quote.SummaryConfirmedAt is not null;
 
     public static bool HasCompletedAddresses(QuoteV2 quote) =>
         quote.Type switch
@@ -107,5 +128,6 @@ public static class QuoteCompletionRules
     public static bool HasCompletedPayment(QuoteV2 quote) =>
         HasCompletedQuoteSummary(quote)
         && quote.Payments != null
+        && quote.PaymentStatus is not null
         && quote.Payments.Any(x => x.CustomerSelectedOption);
 }

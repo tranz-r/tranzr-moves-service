@@ -1,5 +1,4 @@
-﻿using ErrorOr;
-using TranzrMoves.Domain.Constants;
+﻿using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Application.Common;

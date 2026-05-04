@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using TranzrMoves.Application.Contracts;
+using TranzrMoves.Application.Services;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
@@ -199,6 +200,52 @@ public static class PricingHelper
                 }).FirstOrDefault()
         };
         return (standardTexts, premiumTexts, additionalServices);
+    }
+
+    public static void RecalculateStepState(
+        QuoteV2 quote,
+        QuoteSteps patchedStep,
+        string patchedStepKey,
+        IQuoteStepInvalidationService quoteStepInvalidationService,
+        IQuoteProgressCalculator progressCalculator,
+        IQuoteJourneyProvider quoteJourneyProvider)
+    {
+        var journey = quoteJourneyProvider.Get(quote.Type);
+        var step = journey.Steps.Single(x => x.Flag == patchedStep);
+
+        // Capture state before this PATCH changes completion/dirty flags.
+        var previousCompletedSteps = quote.StepsCompleted;
+
+        var wasPatchedStepPreviouslyCompleted =
+            (previousCompletedSteps & patchedStep) == patchedStep;
+
+        // This PATCH means the customer has reviewed/submitted this step.
+        quote.StepsDirty &= ~patchedStep;
+
+        // If after patching, the step still does not satisfy its completion rule,
+        // mark it dirty/incomplete again.
+        if (!step.IsComplete(quote))
+        {
+            quote.StepsDirty |= patchedStep;
+        }
+
+        // Only invalidate downstream when editing an already-completed step.
+        // Normal first-time forward progression must not make later steps stale.
+        if (wasPatchedStepPreviouslyCompleted)
+        {
+            quoteStepInvalidationService.InvalidateStepsAfter(
+                quote,
+                patchedStep,
+                previousCompletedSteps);
+        }
+
+        // Recalculate final completed state.
+        quote.StepsCompleted = progressCalculator.CalculateCompletedSteps(quote);
+
+        if ((quote.StepsCompleted & patchedStep) == patchedStep)
+        {
+            quote.LastCompletedStepKey = patchedStepKey;
+        }
     }
 
     private static decimal CalculateUnitVolumeInCubicMeters(int height, int width, int depth) => (height * width * depth) / 1_000_000m;

@@ -6,7 +6,6 @@ using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.Quote.Patch.Inventory;
 using TranzrMoves.Application.Mapper;
 using TranzrMoves.Application.Services;
-using TranzrMoves.Application.Statics;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
@@ -16,7 +15,6 @@ public class PatchCustomerEmailAndPhoneCommandHandler(
     IQuoteRepository quoteRepository,
     IUserV2Repository userV2Repository,
     IQuoteResumeResolver resumeResolver,
-    IQuoteProgressCalculator progressCalculator,
     IRemovalPricingRepository removalPricingRepository,
     IAdditionalPriceRepository additionalPriceRepository,
     IClock clock,
@@ -27,7 +25,7 @@ public class PatchCustomerEmailAndPhoneCommandHandler(
         PatchCustomerEmailAndPhoneCommand command,
         CancellationToken cancellationToken)
     {
-        logger.LogInformation("Patching move date and time");
+        logger.LogInformation("Patching customer email and phone number");
         var quote = await quoteRepository.GetQuoteByIdAsync(command.QuoteId, cancellationToken, true);
 
         if (quote == null)
@@ -70,7 +68,10 @@ public class PatchCustomerEmailAndPhoneCommandHandler(
             quote.CustomerId = newUser.Value.Id;
         }
 
-        RecalculateStepState(quote!, QuoteSteps.CustomerEmailAndPhoneNumber, QuoteStepKeys.EmailAndPhoneNumber);
+        // Lead capture only.
+        // This should not affect the main quote journey navigation.
+        quote.StepsDirty &= ~QuoteSteps.CustomerEmailAndPhoneNumber;
+        quote.StepsCompleted |= QuoteSteps.CustomerEmailAndPhoneNumber;
 
         var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
         if (saveResult.IsError)
@@ -95,15 +96,5 @@ public class PatchCustomerEmailAndPhoneCommandHandler(
             Journey = resumeResolver.Resolve(quote),
             Quote = quoteSnapShot
         };
-    }
-
-    private void RecalculateStepState(QuoteV2 quote, QuoteSteps justPatchedStep, string justPatchedStepKey)
-    {
-        quote.StepsCompleted = progressCalculator.CalculateCompletedSteps(quote);
-
-        if ((quote.StepsCompleted & justPatchedStep) == justPatchedStep)
-        {
-            quote.LastCompletedStepKey = justPatchedStepKey;
-        }
     }
 }

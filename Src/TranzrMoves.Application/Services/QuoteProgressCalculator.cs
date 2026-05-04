@@ -7,7 +7,8 @@ using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Application.Services;
 
-public sealed class QuoteProgressCalculator(IQuoteJourneyProvider journeyProvider) : IQuoteProgressCalculator
+public sealed class QuoteProgressCalculator(
+    IQuoteJourneyProvider journeyProvider) : IQuoteProgressCalculator
 {
     public QuoteSteps CalculateCompletedSteps(QuoteV2 quote)
     {
@@ -17,10 +18,12 @@ public sealed class QuoteProgressCalculator(IQuoteJourneyProvider journeyProvide
 
         foreach (var step in journey.Steps)
         {
-            if (step.IsComplete(quote))
-            {
-                completed |= step.Flag;
-            }
+            var isDirty = (quote.StepsDirty & step.Flag) == step.Flag;
+
+            if (isDirty || !step.IsComplete(quote))
+                break;
+
+            completed |= step.Flag;
         }
 
         return completed;

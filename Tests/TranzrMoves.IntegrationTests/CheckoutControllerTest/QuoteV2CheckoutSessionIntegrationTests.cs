@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Entities;
-using TranzrMoves.Infrastructure;
 
 namespace TranzrMoves.IntegrationTests.CheckoutControllerTest;
 

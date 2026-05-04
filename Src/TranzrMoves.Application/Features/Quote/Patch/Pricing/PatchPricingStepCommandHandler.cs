@@ -18,6 +18,8 @@ public class PatchPricingStepCommandHandler(
     PricingContext pricingContext,
     IRemovalPricingRepository removalPricingRepository,
     IAdditionalPriceRepository additionalPriceRepository,
+    IQuoteStepInvalidationService quoteStepInvalidationService,
+    IQuoteJourneyProvider quoteJourneyProvider,
     IClock clock,
     ILogger<PatchPricingStepCommandHandler> logger)
     : ICommandHandler<PatchPricingStepCommand, ErrorOr<QuoteJourneyResponse>>
@@ -60,7 +62,9 @@ public class PatchPricingStepCommandHandler(
             ? (QuoteSteps.RemovalPricing, QuoteStepKeys.RemovalPricing)
             : (QuoteSteps.Pricing, QuoteStepKeys.Pricing);
 
-        RecalculateStepState(quote, stepFlag, stepKey);
+        PricingHelper.RecalculateStepState(quote!, stepFlag, stepKey,
+            quoteStepInvalidationService, progressCalculator,
+            quoteJourneyProvider);
 
         var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
         if (saveResult.IsError)
@@ -90,15 +94,5 @@ public class PatchPricingStepCommandHandler(
     private async Task CalculatePrice(QuoteV2 quote, Guid pricingId, int numberOfItemsToAssemble, int numberOfItemsToDismantle, int numberOfSelectedVans, CancellationToken cancellationToken)
     {
         await pricingContext.SelectPricingOption(quote!, pricingId, numberOfItemsToDismantle, numberOfItemsToAssemble, numberOfSelectedVans, cancellationToken);
-    }
-
-    private void RecalculateStepState(QuoteV2 quote, QuoteSteps justPatchedStep, string justPatchedStepKey)
-    {
-        quote.StepsCompleted = progressCalculator.CalculateCompletedSteps(quote);
-
-        if ((quote.StepsCompleted & justPatchedStep) == justPatchedStep)
-        {
-            quote.LastCompletedStepKey = justPatchedStepKey;
-        }
     }
 }

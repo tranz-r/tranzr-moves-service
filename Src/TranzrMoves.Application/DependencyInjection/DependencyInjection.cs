@@ -35,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<IQuoteProgressCalculator, QuoteProgressCalculator>();
         services.AddScoped<IQuoteResumeResolver, QuoteResumeResolver>();
         services.AddScoped<IQuoteResumeTokenService, QuoteResumeTokenService>();
+        services.AddScoped<IQuoteStepInvalidationService, QuoteStepInvalidationService>();
 
         services.AddTransient<IPricingStrategy, PickAndDropPricingStrategy>();
         services.AddTransient<IPricingStrategy, RemovalPricingStrategy>();

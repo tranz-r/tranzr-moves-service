@@ -790,7 +790,7 @@ public class QuoteController(
             PhoneNumber = request.PhoneNumber
         };
         var response = await mediator.Send(command, ct);
-        return response.Match(OkWithQuoteJourneyEtag, Problem);
+        return response.Match(NoContentWithQuoteJourneyEtag, Problem);
     }
 
     [MapToApiVersion(2)]
@@ -875,6 +875,12 @@ public class QuoteController(
     {
         Response.Headers.ETag = body.Quote.Version.ToString(CultureInfo.InvariantCulture);
         return Ok(body);
+    }
+
+    private IActionResult NoContentWithQuoteJourneyEtag(QuoteJourneyResponse body)
+    {
+        Response.Headers.ETag = body.Quote.Version.ToString(CultureInfo.InvariantCulture);
+        return NoContent();
     }
 
     private BadRequestObjectResult IfMatchRequiredBadRequest() =>

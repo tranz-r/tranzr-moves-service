@@ -42,7 +42,11 @@ public class QuoteV2 : IAuditable
     public Instant? PriceCalculatedAt { get; set; }
 
     public QuoteSteps StepsCompleted { get; set; }
+    public QuoteSteps StepsDirty { get; set; } = QuoteSteps.None;
     public string? LastCompletedStepKey { get; set; }
+
+    /// <summary>Set when the customer explicitly confirms the quote summary step (<c>PATCH .../quote-summary</c>).</summary>
+    public Instant? SummaryConfirmedAt { get; set; }
 
     public PaymentStatus? PaymentStatus { get; set; }
     public uint Version { get; set; }

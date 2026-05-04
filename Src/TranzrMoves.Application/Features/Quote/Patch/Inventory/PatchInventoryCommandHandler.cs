@@ -17,6 +17,8 @@ public class PatchInventoryCommandHandler(
     IQuoteProgressCalculator progressCalculator,
     IRemovalPricingRepository removalPricingRepository,
     IAdditionalPriceRepository additionalPriceRepository,
+    IQuoteStepInvalidationService quoteStepInvalidationService,
+    IQuoteJourneyProvider quoteJourneyProvider,
     IClock clock,
     ILogger<PatchInventoryCommandHandler> logger)
     : ICommandHandler<PatchInventoryCommand, ErrorOr<QuoteJourneyResponse>>
@@ -57,7 +59,9 @@ public class PatchInventoryCommandHandler(
         quote.TotalInventoryVolumeM3 = PricingHelper.Round(totalVolume);
         quote.EffectiveVanCapacityM3 = PricingHelper.Round(PricingHelper.EffectiveVanCapacityM3);
 
-        RecalculateStepState(quote!, QuoteSteps.Inventory, QuoteStepKeys.Inventory);
+        PricingHelper.RecalculateStepState(quote!, QuoteSteps.Inventory,
+            QuoteStepKeys.Inventory, quoteStepInvalidationService, progressCalculator,
+            quoteJourneyProvider);
 
         var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
         if (saveResult.IsError)
@@ -81,15 +85,5 @@ public class PatchInventoryCommandHandler(
             Journey = resumeResolver.Resolve(quote),
             Quote = quoteSnapShot
         };
-    }
-
-    private void RecalculateStepState(QuoteV2 quote, QuoteSteps justPatchedStep, string justPatchedStepKey)
-    {
-        quote.StepsCompleted = progressCalculator.CalculateCompletedSteps(quote);
-
-        if ((quote.StepsCompleted & justPatchedStep) == justPatchedStep)
-        {
-            quote.LastCompletedStepKey = justPatchedStepKey;
-        }
     }
 }

@@ -47,7 +47,7 @@ public sealed class QuoteResumeResolver : IQuoteResumeResolver
         quote.StepsCompleted = _progressCalculator.CalculateCompletedSteps(quote);
 
         var firstIncomplete = journey.Steps
-            .FirstOrDefault(x => x.Required && !x.IsComplete(quote));
+            .FirstOrDefault(x => x.Required && !IsEffectivelyComplete(quote, x));
 
         var resumeStep = firstIncomplete ?? journey.Steps.Last();
 
@@ -75,13 +75,24 @@ public sealed class QuoteResumeResolver : IQuoteResumeResolver
             steps);
     }
 
+    private static bool IsEffectivelyComplete(QuoteV2 quote, QuoteJourneyStep step)
+    {
+        var isDirty = (quote.StepsDirty & step.Flag) == step.Flag;
+        var isComplete = step.IsComplete(quote);
+
+        return isComplete && !isDirty;
+    }
+
     private static string BuildStatus(QuoteJourneyStep step, QuoteJourneyStep resumeStep, QuoteV2 quote)
     {
-        if (step.IsComplete(quote))
+        if (IsEffectivelyComplete(quote, step))
             return "complete";
 
         if (step.Key == resumeStep.Key)
             return "current";
+
+        if ((quote.StepsDirty & step.Flag) == step.Flag)
+            return "stale";
 
         return "locked";
     }

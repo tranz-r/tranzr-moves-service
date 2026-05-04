@@ -17,6 +17,8 @@ public class PatchCustomerInfoStepCommandHandler(
     IQuoteProgressCalculator progressCalculator,
     IRemovalPricingRepository removalPricingRepository,
     IAdditionalPriceRepository additionalPriceRepository,
+    IQuoteStepInvalidationService quoteStepInvalidationService,
+    IQuoteJourneyProvider quoteJourneyProvider,
     IClock clock,
     ILogger<PatchCustomerInfoStepCommandHandler> logger)
     : ICommandHandler<PatchCustomerInfoStepCommand, ErrorOr<QuoteJourneyResponse>>
@@ -57,7 +59,9 @@ public class PatchCustomerInfoStepCommandHandler(
             return Error.Failure(e.Message);
         }
 
-        RecalculateStepState(quote!, QuoteSteps.CustomerInfo, QuoteStepKeys.CustomerInfo);
+        PricingHelper.RecalculateStepState(quote!, QuoteSteps.CustomerInfo, QuoteStepKeys.CustomerInfo,
+            quoteStepInvalidationService, progressCalculator,
+            quoteJourneyProvider);
 
         var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
         if (saveResult.IsError)
@@ -116,16 +120,6 @@ public class PatchCustomerInfoStepCommandHandler(
                 PostCode = customerInfo.Address.PostCode,
                 Country = customerInfo.Address.Country
             });
-        }
-    }
-
-    private void RecalculateStepState(QuoteV2 quote, QuoteSteps justPatchedStep, string justPatchedStepKey)
-    {
-        quote.StepsCompleted = progressCalculator.CalculateCompletedSteps(quote);
-
-        if ((quote.StepsCompleted & justPatchedStep) == justPatchedStep)
-        {
-            quote.LastCompletedStepKey = justPatchedStepKey;
         }
     }
 }

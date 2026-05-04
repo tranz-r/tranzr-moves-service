@@ -1,7 +1,6 @@
 using System.Globalization;
 using ErrorOr;
 using Microsoft.Extensions.Logging;
-using NodaTime;
 using NodaTime.Text;
 using Stripe;
 using Stripe.Checkout;

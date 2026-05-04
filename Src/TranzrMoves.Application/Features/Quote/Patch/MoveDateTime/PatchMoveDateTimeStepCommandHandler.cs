@@ -18,6 +18,8 @@ public class PatchMoveDateTimeStepCommandHandler(
     PricingContext pricingContext,
     IRemovalPricingRepository removalPricingRepository,
     IAdditionalPriceRepository additionalPriceRepository,
+    IQuoteStepInvalidationService quoteStepInvalidationService,
+    IQuoteJourneyProvider quoteJourneyProvider,
     IClock clock,
     ILogger<PatchMoveDateTimeStepCommandHandler> logger)
     : ICommandHandler<PatchMoveDateTimeStepCommand, ErrorOr<QuoteJourneyResponse>>
@@ -42,7 +44,9 @@ public class PatchMoveDateTimeStepCommandHandler(
 
         await GeneratePricingAsync(quote, cancellationToken);
 
-        RecalculateStepState(quote, QuoteSteps.MoveDateAndTimeSlot, QuoteStepKeys.MoveDateTime);
+        PricingHelper.RecalculateStepState(quote!, QuoteSteps.MoveDateAndTimeSlot,
+            QuoteStepKeys.MoveDateTime, quoteStepInvalidationService, progressCalculator,
+            quoteJourneyProvider);
 
         var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
         if (saveResult.IsError)
@@ -73,15 +77,5 @@ public class PatchMoveDateTimeStepCommandHandler(
     {
         var baseToOriginCost = RemovalQuoteEngine.CalculateBaseToOriginPrice(quote.BaseToOriginDistanceInMiles);
         await pricingContext.GenerateAsync(quote, baseToOriginCost, cancellationToken);
-    }
-
-    private void RecalculateStepState(QuoteV2 quote, QuoteSteps justPatchedStep, string justPatchedStepKey)
-    {
-        quote.StepsCompleted = progressCalculator.CalculateCompletedSteps(quote);
-
-        if ((quote.StepsCompleted & justPatchedStep) == justPatchedStep)
-        {
-            quote.LastCompletedStepKey = justPatchedStepKey;
-        }
     }
 }

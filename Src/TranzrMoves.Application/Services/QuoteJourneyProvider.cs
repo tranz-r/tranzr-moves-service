@@ -14,16 +14,16 @@ public sealed class QuoteJourneyProvider : IQuoteJourneyProvider
     public QuoteJourney Get(QuoteType quoteType) =>
         quoteType switch
         {
-            QuoteType.Send => BuildSendOrReceiveJourneySteps(),
-            QuoteType.Receive => BuildSendOrReceiveJourneySteps(),
+            QuoteType.Send => BuildSendOrReceiveJourneySteps(QuoteType.Send),
+            QuoteType.Receive => BuildSendOrReceiveJourneySteps(QuoteType.Receive),
             QuoteType.Removals => BuildRemovalsJourney(),
             _ => throw new ArgumentOutOfRangeException(nameof(quoteType))
         };
 
-    private static QuoteJourney BuildSendOrReceiveJourneySteps() =>
+    private static QuoteJourney BuildSendOrReceiveJourneySteps(QuoteType quoteType) =>
         new()
         {
-            QuoteType = QuoteType.Send,
+            QuoteType = quoteType,
             Steps =
             [
                 new(
@@ -46,13 +46,6 @@ public sealed class QuoteJourneyProvider : IQuoteJourneyProvider
                     QuoteSteps.MoveDateAndTimeSlot,
                     true,
                     QuoteCompletionRules.HasCompletedSchedule),
-
-                new(
-                    QuoteStepKeys.EmailAndPhoneNumber,
-                    "/pricing",
-                    QuoteSteps.CustomerEmailAndPhoneNumber,
-                    true,
-                    QuoteCompletionRules.HasCompletedCustomerEmailAndPhoneNumber),
 
                 new(
                     QuoteStepKeys.Pricing,

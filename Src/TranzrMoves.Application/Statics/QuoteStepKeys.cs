@@ -12,7 +12,7 @@ public static class QuoteStepKeys
     public const string EmailAndPhoneNumber = "email-and-phone-number";
     public const string CustomerInfo = "customer-info";
     public const string Pricing = "pricing";
-    public const string RemovalPricing = "removal-pricing";
+    public const string RemovalPricing = "pricing";
     public const string QuoteSummary = "quote-summary";
     public const string Payment = "payment";
     public const string Complete = "complete";

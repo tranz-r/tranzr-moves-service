@@ -4,7 +4,6 @@ using TranzrMoves.Application.Common.Strategy;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Mapper;
 using TranzrMoves.Application.Services;
-using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Application.Features.Quote.Journey.State;

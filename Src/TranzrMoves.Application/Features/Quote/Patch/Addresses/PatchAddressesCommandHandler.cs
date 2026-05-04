@@ -17,6 +17,8 @@ public class PatchAddressesCommandHandler(
     IQuoteResumeResolver resumeResolver,
     IRemovalPricingRepository removalPricingRepository,
     IAdditionalPriceRepository additionalPriceRepository,
+    IQuoteStepInvalidationService quoteStepInvalidationService,
+    IQuoteJourneyProvider quoteJourneyProvider,
     IClock clock,
     IQuoteProgressCalculator progressCalculator,
     ILogger<PatchAddressesCommandHandler> logger)
@@ -71,7 +73,10 @@ public class PatchAddressesCommandHandler(
         }
 
         UpdateQuoteDistance(quote!, quoteOriginToDestinationRoute, baseToOriginRoute);
-        RecalculateStepState(quote!, QuoteSteps.CollectionDeliveryAddresses, QuoteStepKeys.CollectionDeliveryAddresses);
+
+        PricingHelper.RecalculateStepState(quote!, QuoteSteps.CollectionDeliveryAddresses,
+            QuoteStepKeys.CollectionDeliveryAddresses, quoteStepInvalidationService, progressCalculator,
+            quoteJourneyProvider);
 
         var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
         if (saveResult.IsError)
@@ -106,16 +111,6 @@ public class PatchAddressesCommandHandler(
 
         quote.OriginToDestinationDistanceInMiles = quoteOriginToDestinationDistanceInMiles;
         quote.BaseToOriginDistanceInMiles = baseToQuoteOriginDistanceInMiles;
-    }
-
-    private void RecalculateStepState(QuoteV2 quote, QuoteSteps justPatchedStep, string justPatchedStepKey)
-    {
-        quote.StepsCompleted = progressCalculator.CalculateCompletedSteps(quote);
-
-        if ((quote.StepsCompleted & justPatchedStep) == justPatchedStep)
-        {
-            quote.LastCompletedStepKey = justPatchedStepKey;
-        }
     }
 
     private static void UpsertQuoteAddresses(QuoteV2 quote, IReadOnlyCollection<QuoteAddressDto> incoming, QuoteMapper mapper)

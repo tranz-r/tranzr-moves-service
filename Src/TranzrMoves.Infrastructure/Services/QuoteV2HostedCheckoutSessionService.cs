@@ -2,7 +2,6 @@ using System.Globalization;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using NodaTime;
 using Stripe;
 using Stripe.Checkout;
 using TranzrMoves.Application.Common.Time;

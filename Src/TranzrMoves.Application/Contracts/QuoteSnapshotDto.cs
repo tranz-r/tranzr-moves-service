@@ -30,6 +30,7 @@ public sealed class QuoteSnapshotDto
     public decimal TotalInventoryVolumeM3 { get; set; }
     public VanCapacityStatus? VanCapacityStatus { get; set; }
     public string? VanCapacityWarning { get; set; }
+    public QuoteSteps StepsDirty { get; set; }
     public long CrewCount { get; init; }
     public ScheduleV2Dto? Schedule { get; init; }
     public IReadOnlyList<InventoryItemDto> InventoryItems { get; init; } = [];
@@ -41,6 +42,9 @@ public sealed class QuoteSnapshotDto
     public decimal? QuotePrice { get; init; }
     public decimal? TotalCost { get; init; }
     public ExtraPricesDto? AdditionalServices { get; set; }
+
+    /// <summary>Set when the customer has confirmed the summary step via <c>PATCH .../quote-summary</c>.</summary>
+    public Instant? SummaryConfirmedAt { get; init; }
 }
 
 public sealed class QuoteCustomerDto

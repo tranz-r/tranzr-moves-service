@@ -17,6 +17,8 @@ public class PatchPaymentStepCommandHandler(
     IQuoteProgressCalculator progressCalculator,
     IRemovalPricingRepository removalPricingRepository,
     IAdditionalPriceRepository additionalPriceRepository,
+    IQuoteStepInvalidationService quoteStepInvalidationService,
+    IQuoteJourneyProvider quoteJourneyProvider,
     IClock clock,
     ILogger<PatchPaymentStepCommandHandler> logger)
     : ICommandHandler<PatchPaymentStepCommand, ErrorOr<QuoteJourneyResponse>>
@@ -48,7 +50,9 @@ public class PatchPaymentStepCommandHandler(
 
         var mapper = new QuoteMapper();
 
-        RecalculateStepState(quote!, QuoteSteps.Payment, QuoteStepKeys.Payment);
+        PricingHelper.RecalculateStepState(quote!, QuoteSteps.Payment, QuoteStepKeys.Payment,
+            quoteStepInvalidationService, progressCalculator,
+            quoteJourneyProvider);
 
         var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
         if (saveResult.IsError)
@@ -72,15 +76,5 @@ public class PatchPaymentStepCommandHandler(
             Journey = resumeResolver.Resolve(quote),
             Quote = quoteSnapShot
         };
-    }
-
-    private void RecalculateStepState(QuoteV2 quote, QuoteSteps justPatchedStep, string justPatchedStepKey)
-    {
-        quote.StepsCompleted = progressCalculator.CalculateCompletedSteps(quote);
-
-        if ((quote.StepsCompleted & justPatchedStep) == justPatchedStep)
-        {
-            quote.LastCompletedStepKey = justPatchedStepKey;
-        }
     }
 }
