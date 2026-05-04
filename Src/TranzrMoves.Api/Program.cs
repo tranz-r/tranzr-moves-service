@@ -1,17 +1,19 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.Extensions.Options;
 using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
-
 using Serilog;
 using Stripe;
 using Supabase;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using TranzrMoves.Api.Configuration;
 using TranzrMoves.Application.DependencyInjection;
+using TranzrMoves.Application.Services;
 using TranzrMoves.Domain.Constants;
-using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.DependencyInjection;
 using TranzrMoves.Infrastructure.Helper;
 using TranzrMoves.Infrastructure.Services;
@@ -52,6 +54,17 @@ try
         configureNodaTime(options.JsonSerializerOptions);
     });
 
+    builder.Services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+    }).AddMvc().AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
@@ -62,6 +75,9 @@ try
 
     // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
     builder.Services.AddOpenApi();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+    builder.Services.AddSwaggerGen();
     builder.Services.AddHttpLogging(o => o.CombineLogs = true);
     builder.Services.AddHealthChecks();
     builder.Services.AddMemoryCache();
@@ -73,6 +89,7 @@ try
 
     // Email service is handled by IAwsEmailService in Infrastructure layer
 
+    //Find a way to move this registration to the application layer.
     builder.Services.AddHttpClient<IMapBoxService, MapBoxService>(
         client =>
         {
@@ -112,14 +129,22 @@ try
     });
 
     var app = builder.Build();
+    var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
 
     await app.Services.SeedAsync();
 
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
+    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
     {
-        app.MapOpenApi();
-    }
+        foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint(
+                $"/swagger/{description.GroupName}/swagger.json",
+                description.GroupName.ToUpperInvariant());
+        }
+    });
 
     app.UseHttpLogging();
     app.UseHttpsRedirection();

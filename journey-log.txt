@@ -1,0 +1,1393 @@
+[20:11:32 INF] Request starting HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/init - null null
+[20:11:32 INF] CORS policy execution successful.
+[20:11:32 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: OPTIONS
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/init
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Access-Control-Request-Headers: [Redacted]
+Access-Control-Request-Method: [Redacted]
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 204
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Headers: [Redacted]
+Access-Control-Allow-Methods: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Vary: [Redacted]
+[20:11:32 INF] Request finished HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/init - 204 null null 5.4884ms
+[20:11:32 INF] Request starting HTTP/1.1 POST http://localhost:5247/api/v2/Quote/init - application/json 20
+[20:11:32 INF] CORS policy execution successful.
+[20:11:32 INF] Executing endpoint 'TranzrMoves.Api.Controllers.QuoteController.InitQuoteV2 (TranzrMoves.Api)'
+[20:11:32 INF] Route matched with {action = "InitQuoteV2", controller = "Quote"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] InitQuoteV2(TranzrMoves.Api.Controllers.InitQuoteV2Request, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.QuoteController (TranzrMoves.Api).
+[20:11:32 INF] Executing action method TranzrMoves.Api.Controllers.QuoteController.InitQuoteV2 (TranzrMoves.Api) - Validation state: Valid
+[20:11:32 INF] [START] InitQuoteJourneyCommand [714664aa-928e-4686-a8da-2e27fddcf3de]
+[20:11:32 INF] [PROPS] InitQuoteJourneyCommand [714664aa-928e-4686-a8da-2e27fddcf3de] InitQuoteJourneyCommand { GuestId = b5a084d3-fc80-48b6-a007-3b7f342ce689, QuoteType = Send }
+[20:11:32 INF] Executed DbCommand (1ms) [Parameters=[@guestId='?'], CommandType='Text', CommandTimeout='30']
+SELECT q."SessionId", q."CreatedAt", q."CreatedBy", q."ETag", q."ExpiresUtc", q."ModifiedAt", q."ModifiedBy"
+FROM tranzrmoves."QuoteSessions" AS q
+WHERE q."SessionId" = @guestId
+LIMIT 1
+[20:11:32 WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+[20:11:32 INF] Executed DbCommand (6ms) [Parameters=[@guestId='?', @quoteType='?'], CommandType='Text', CommandTimeout='30']
+SELECT s0."Id", s0."BaseToOriginDistanceInMiles", s0."CreatedAt", s0."CreatedBy", s0."CrewCount", s0."CustomerId", s0."EffectiveVanCapacityM3", s0."ExpiresAt", s0."LastCompletedStepKey", s0."LastResumeEmailSentAt", s0."ModifiedAt", s0."ModifiedBy", s0."NumberOfItemsToAssemble", s0."NumberOfItemsToDismantle", s0."OriginDestinationRoute", s0."OriginToDestinationDistanceInMiles", s0."PaymentStatus", s0."PriceCalculatedAt", s0."QuotePrice", s0."QuoteReference", s0."RecommendedVanCount", s0."SelectedVanCount", s0."ServiceTier", s0."SessionId", s0."StepsCompleted", s0."StepsDirty", s0."TotalCost", s0."TotalInventoryVolumeM3", s0."Type", s0."VanCapacityStatus", s0."VanCapacityWarning", s0."VanRecommendationCalculatedAt", s0."VanType", s0.xmin, s0."Id0", s0."Id1", q0."Id", q0."Accuracy", q0."AddressNumber", q0."City", q0."Country", q0."CountryCode", q0."County", q0."District", q0."Floor", q0."FreeParkingAccess", q0."FullAddress", q0."HasElevator", q0."Kind", q0."Latitude", q0."Line1", q0."Line2", q0."Longitude", q0."MapboxId", q0."Neighborhood", q0."PackingCost", q0."PlaceName", q0."PostCode", q0."QuoteId", q0."Region", q0."RegionCode", q0."Street", p."Id", p."AssemblyCost", p."BaseToOriginCost", p."BaseVanCost", p."CallOutCharge", p."CongestionChargeApplies", p."CongestionZoneSurcharge", p."CostPerHourAfterStandard", p."CreatedAt", p."CreatedBy", p."CrewCount", p."DestinationFloorSurcharge", p."DismantleCost", p."DistanceCost", p."InsuranceUplift", p."IsSelected", p."LabourCost", p."ModifiedAt", p."ModifiedBy", p."NumberOfItemsToAssemble", p."NumberOfItemsToDismantle", p."OriginFloorSurcharge", p."QuoteId", p."QuoteType", p."SelectedVanCount", p."ServiceLevel", p."SpecialHandlingCost", p."StandardBlockHours", p."SubtotalWithoutVat", p."TotalCostWithVat", p."UlezSurcharge", p."Vat", p."VatAmount", p."VatRate", s0."CollectionDate", s0."CreatedAt0", s0."CreatedBy0", s0."DeliveryDate", s0."FlexibleTime", s0."Hours", s0."ModifiedAt0", s0."ModifiedBy0", s0."QuoteId", s0."TimeSlot", p0."Id", p0."Amount", p0."CreatedAt", p0."CreatedBy", p0."CustomerSelectedOption", p0."DueDate", p0."ModifiedAt", p0."ModifiedBy", p0."PaymentIntentId", p0."PaymentMethodId", p0."PaymentType", p0."QuoteId", p0."ReceiptUrl", p0."RemainingAmount", p0."SetupIntentId", p0."Status", p0."StripeSessionId", i."Id", i."Depth", i."Description", i."Height", i."Name", i."Quantity", i."QuoteId", i."Width", s0."CreatedAt1", s0."CreatedBy1", s0."Email", s0."FirstName", s0."LastName", s0."ModifiedAt1", s0."ModifiedBy1", s0."PhoneNumber", a."Id", a."Accuracy", a."AddressNumber", a."City", a."Country", a."CountryCode", a."County", a."District", a."Floor", a."FullAddress", a."HasElevator", a."Latitude", a."Line1", a."Line2", a."Longitude", a."MapboxId", a."Neighborhood", a."PlaceName", a."PostCode", a."Region", a."RegionCode", a."Street", a."Type", a."UserId"
+FROM (
+    SELECT q."Id", q."BaseToOriginDistanceInMiles", q."CreatedAt", q."CreatedBy", q."CrewCount", q."CustomerId", q."EffectiveVanCapacityM3", q."ExpiresAt", q."LastCompletedStepKey", q."LastResumeEmailSentAt", q."ModifiedAt", q."ModifiedBy", q."NumberOfItemsToAssemble", q."NumberOfItemsToDismantle", q."OriginDestinationRoute", q."OriginToDestinationDistanceInMiles", q."PaymentStatus", q."PriceCalculatedAt", q."QuotePrice", q."QuoteReference", q."RecommendedVanCount", q."SelectedVanCount", q."ServiceTier", q."SessionId", q."StepsCompleted", q."StepsDirty", q."TotalCost", q."TotalInventoryVolumeM3", q."Type", q."VanCapacityStatus", q."VanCapacityWarning", q."VanRecommendationCalculatedAt", q."VanType", q.xmin, s."Id" AS "Id0", s."CollectionDate", s."CreatedAt" AS "CreatedAt0", s."CreatedBy" AS "CreatedBy0", s."DeliveryDate", s."FlexibleTime", s."Hours", s."ModifiedAt" AS "ModifiedAt0", s."ModifiedBy" AS "ModifiedBy0", s."QuoteId", s."TimeSlot", u."Id" AS "Id1", u."CreatedAt" AS "CreatedAt1", u."CreatedBy" AS "CreatedBy1", u."Email", u."FirstName", u."LastName", u."ModifiedAt" AS "ModifiedAt1", u."ModifiedBy" AS "ModifiedBy1", u."PhoneNumber"
+    FROM tranzrmoves."QuotesV2" AS q
+    LEFT JOIN tranzrmoves."Schedules" AS s ON q."Id" = s."QuoteId"
+    LEFT JOIN tranzrmoves."UsersV2" AS u ON q."CustomerId" = u."Id"
+    WHERE q."SessionId" = @guestId AND q."Type" = @quoteType AND q."LastCompletedStepKey" IS NOT NULL AND q."LastCompletedStepKey" <> 'payment'
+    LIMIT 1
+) AS s0
+LEFT JOIN tranzrmoves."QuoteAddresses" AS q0 ON s0."Id" = q0."QuoteId"
+LEFT JOIN tranzrmoves."Pricings" AS p ON s0."Id" = p."QuoteId"
+LEFT JOIN tranzrmoves."Payments" AS p0 ON s0."Id" = p0."QuoteId"
+LEFT JOIN tranzrmoves."InventoryItemsV2" AS i ON s0."Id" = i."QuoteId"
+LEFT JOIN tranzrmoves."AddressesV2" AS a ON s0."Id1" = a."UserId"
+ORDER BY s0."Id", s0."Id0", s0."Id1", q0."Id", p."Id", p0."Id", i."Id"
+[20:11:32 INF] Executed DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT s."Value"
+FROM (
+    SELECT nextval('tranzrmoves.quote_reference_seq') AS "Value" 
+) AS s
+LIMIT 2
+[20:11:33 INF] Executed DbCommand (8ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int64), @p2='?' (DbType = DateTime), @p3='?', @p4='?' (DbType = Int64), @p5='?' (DbType = Guid), @p6='?' (DbType = Decimal), @p7='?' (DbType = DateTime), @p8='?', @p9='?' (DbType = DateTime), @p10='?' (DbType = DateTime), @p11='?', @p12='?' (DbType = Int32), @p13='?' (DbType = Int32), @p14='?', @p15='?' (DbType = Int64), @p16='?', @p17='?' (DbType = DateTime), @p18='?' (DbType = Decimal), @p19='?', @p20='?' (DbType = Int32), @p21='?' (DbType = Int32), @p22='?', @p23='?', @p24='?' (DbType = Int64), @p25='?' (DbType = Int32), @p26='?' (DbType = Decimal), @p27='?' (DbType = Decimal), @p28='?', @p29='?', @p30='?', @p31='?' (DbType = DateTime), @p32='?'], CommandType='Text', CommandTimeout='30']
+INSERT INTO tranzrmoves."QuotesV2" ("Id", "BaseToOriginDistanceInMiles", "CreatedAt", "CreatedBy", "CrewCount", "CustomerId", "EffectiveVanCapacityM3", "ExpiresAt", "LastCompletedStepKey", "LastResumeEmailSentAt", "ModifiedAt", "ModifiedBy", "NumberOfItemsToAssemble", "NumberOfItemsToDismantle", "OriginDestinationRoute", "OriginToDestinationDistanceInMiles", "PaymentStatus", "PriceCalculatedAt", "QuotePrice", "QuoteReference", "RecommendedVanCount", "SelectedVanCount", "ServiceTier", "SessionId", "StepsCompleted", "StepsDirty", "TotalCost", "TotalInventoryVolumeM3", "Type", "VanCapacityStatus", "VanCapacityWarning", "VanRecommendationCalculatedAt", "VanType")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23, @p24, @p25, @p26, @p27, @p28, @p29, @p30, @p31, @p32)
+RETURNING xmin;
+[20:11:33 INF] QuoteJourney.Resolve quoteId=019df467-2293-7158-b1cf-022f2b12744a type=Send resumeStep=collection-delivery-addresses resumeUrl=/collection-delivery lastCompleted=null stepsCompleted=0 stepsDirty=0
+[20:11:33 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=collection-delivery-addresses route=/collection-delivery status=current
+[20:11:33 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=inventory route=/inventory status=locked
+[20:11:33 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=move-date-time route=/van-and-date status=locked
+[20:11:33 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=pricing route=/pricing status=locked
+[20:11:33 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=customer-info route=/origin-destination status=locked
+[20:11:33 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=quote-summary route=/summary status=locked
+[20:11:33 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=payment route=/pay status=locked
+[20:11:33 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=complete route=/confirmation status=locked
+[20:11:33 INF] [END] InitQuoteJourneyCommand [714664aa-928e-4686-a8da-2e27fddcf3de]; Execution time=608ms
+[20:11:33 INF] Executed action method TranzrMoves.Api.Controllers.QuoteController.InitQuoteV2 (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 629.6631ms.
+[20:11:33 INF] Executing OkObjectResult, writing value of type 'TranzrMoves.Application.Contracts.QuoteJourneyResponse'.
+[20:11:33 INF] Executed action TranzrMoves.Api.Controllers.QuoteController.InitQuoteV2 (TranzrMoves.Api) in 1149.7186ms
+[20:11:33 INF] Executed endpoint 'TranzrMoves.Api.Controllers.QuoteController.InitQuoteV2 (TranzrMoves.Api)'
+[20:11:33 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: POST
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/init
+Accept: application/json
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Content-Type: application/json
+Cookie: [Redacted]
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Content-Length: 20
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:11:33 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+ETag: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:11:33 INF] Request finished HTTP/1.1 POST http://localhost:5247/api/v2/Quote/init - 200 null application/json; charset=utf-8 1156.4053ms
+[20:11:43 INF] Request starting HTTP/1.1 GET http://localhost:5247/api/v1/map/route?originAddress=11+Dante+Way%2C+KT19+9FZ&destinationAddress=23+Luke+Close%2C+NR5+0QG - null null
+[20:11:43 INF] CORS policy execution successful.
+[20:11:43 INF] Executing endpoint 'TranzrMoves.Api.Controllers.MapController.GetRouteAsync (TranzrMoves.Api)'
+[20:11:43 INF] Route matched with {action = "GetRoute", controller = "Map"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.ActionResult`1[TranzrMoves.Application.Services.MapRouteDto]] GetRouteAsync(System.String, System.String, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.MapController (TranzrMoves.Api).
+[20:11:43 INF] Executing action method TranzrMoves.Api.Controllers.MapController.GetRouteAsync (TranzrMoves.Api) - Validation state: Valid
+[20:11:43 INF] Getting route from 11 Dante Way, KT19 9FZ to 23 Luke Close, NR5 0QG
+[20:11:44 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+KT19+9FZ.json?*
+[20:11:44 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+KT19+9FZ.json?*
+[20:11:44 INF] Received HTTP response headers after 378.4777ms - 200
+[20:11:44 INF] End processing HTTP request after 388.86ms - 200
+[20:11:44 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/23+Luke+Close%2c+NR5+0QG.json?*
+[20:11:44 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/23+Luke+Close%2c+NR5+0QG.json?*
+[20:11:44 INF] Received HTTP response headers after 102.8008ms - 200
+[20:11:44 INF] End processing HTTP request after 103.6843ms - 200
+[20:11:44 INF] Start processing HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/-0.2726,51.35994;1.21402,52.64853?*
+[20:11:44 INF] Sending HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/-0.2726,51.35994;1.21402,52.64853?*
+[20:11:44 INF] Received HTTP response headers after 310.1534ms - 200
+[20:11:44 INF] End processing HTTP request after 310.8786ms - 200
+[20:11:44 INF] Executed action method TranzrMoves.Api.Controllers.MapController.GetRouteAsync (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 883.239ms.
+[20:11:44 INF] Executing OkObjectResult, writing value of type 'TranzrMoves.Application.Services.MapRouteDto'.
+[20:11:44 INF] Executed action TranzrMoves.Api.Controllers.MapController.GetRouteAsync (TranzrMoves.Api) in 931.7621ms
+[20:11:44 INF] Executed endpoint 'TranzrMoves.Api.Controllers.MapController.GetRouteAsync (TranzrMoves.Api)'
+[20:11:44 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: GET
+Scheme: http
+PathBase: 
+Path: /api/v1/map/route
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:11:44 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:11:44 INF] Request finished HTTP/1.1 GET http://localhost:5247/api/v1/map/route?originAddress=11+Dante+Way%2C+KT19+9FZ&destinationAddress=23+Luke+Close%2C+NR5+0QG - 200 null application/json; charset=utf-8 952.3403ms
+[20:11:50 INF] Request starting HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses - null null
+[20:11:50 INF] CORS policy execution successful.
+[20:11:50 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: OPTIONS
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Access-Control-Request-Headers: [Redacted]
+Access-Control-Request-Method: [Redacted]
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 204
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Headers: [Redacted]
+Access-Control-Allow-Methods: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Vary: [Redacted]
+[20:11:50 INF] Request finished HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses - 204 null null 1.3035ms
+[20:11:50 INF] Request starting HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses - application/json 613
+[20:11:50 INF] CORS policy execution successful.
+[20:11:50 INF] Executing endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api)'
+[20:11:50 INF] Route matched with {action = "PatchAddresses", controller = "Quote"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] PatchAddresses(System.Guid, TranzrMoves.Application.Contracts.PatchAddressesRequest, System.String, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.QuoteController (TranzrMoves.Api).
+[20:11:50 INF] Executing action method TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api) - Validation state: Valid
+[20:11:50 INF] [START] PatchAddressesCommand [85c2dca2-3417-44b6-9704-053370f54a16]
+[20:11:50 INF] [PROPS] PatchAddressesCommand [85c2dca2-3417-44b6-9704-053370f54a16] PatchAddressesCommand { QuoteId = 019df467-2293-7158-b1cf-022f2b12744a, ExpectedVersion = 9977, Addresses = System.Collections.Generic.List`1[TranzrMoves.Application.Contracts.QuoteAddressDto] }
+[20:11:50 INF] Patching collection and delivery addresses
+[20:11:50 WRN] Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+[20:11:50 INF] Executed DbCommand (4ms) [Parameters=[@quoteId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+SELECT s0."Id", s0."BaseToOriginDistanceInMiles", s0."CreatedAt", s0."CreatedBy", s0."CrewCount", s0."CustomerId", s0."EffectiveVanCapacityM3", s0."ExpiresAt", s0."LastCompletedStepKey", s0."LastResumeEmailSentAt", s0."ModifiedAt", s0."ModifiedBy", s0."NumberOfItemsToAssemble", s0."NumberOfItemsToDismantle", s0."OriginDestinationRoute", s0."OriginToDestinationDistanceInMiles", s0."PaymentStatus", s0."PriceCalculatedAt", s0."QuotePrice", s0."QuoteReference", s0."RecommendedVanCount", s0."SelectedVanCount", s0."ServiceTier", s0."SessionId", s0."StepsCompleted", s0."StepsDirty", s0."TotalCost", s0."TotalInventoryVolumeM3", s0."Type", s0."VanCapacityStatus", s0."VanCapacityWarning", s0."VanRecommendationCalculatedAt", s0."VanType", s0.xmin, s0."Id0", s0."Id1", q0."Id", q0."Accuracy", q0."AddressNumber", q0."City", q0."Country", q0."CountryCode", q0."County", q0."District", q0."Floor", q0."FreeParkingAccess", q0."FullAddress", q0."HasElevator", q0."Kind", q0."Latitude", q0."Line1", q0."Line2", q0."Longitude", q0."MapboxId", q0."Neighborhood", q0."PackingCost", q0."PlaceName", q0."PostCode", q0."QuoteId", q0."Region", q0."RegionCode", q0."Street", p."Id", p."AssemblyCost", p."BaseToOriginCost", p."BaseVanCost", p."CallOutCharge", p."CongestionChargeApplies", p."CongestionZoneSurcharge", p."CostPerHourAfterStandard", p."CreatedAt", p."CreatedBy", p."CrewCount", p."DestinationFloorSurcharge", p."DismantleCost", p."DistanceCost", p."InsuranceUplift", p."IsSelected", p."LabourCost", p."ModifiedAt", p."ModifiedBy", p."NumberOfItemsToAssemble", p."NumberOfItemsToDismantle", p."OriginFloorSurcharge", p."QuoteId", p."QuoteType", p."SelectedVanCount", p."ServiceLevel", p."SpecialHandlingCost", p."StandardBlockHours", p."SubtotalWithoutVat", p."TotalCostWithVat", p."UlezSurcharge", p."Vat", p."VatAmount", p."VatRate", s0."CollectionDate", s0."CreatedAt0", s0."CreatedBy0", s0."DeliveryDate", s0."FlexibleTime", s0."Hours", s0."ModifiedAt0", s0."ModifiedBy0", s0."QuoteId", s0."TimeSlot", p0."Id", p0."Amount", p0."CreatedAt", p0."CreatedBy", p0."CustomerSelectedOption", p0."DueDate", p0."ModifiedAt", p0."ModifiedBy", p0."PaymentIntentId", p0."PaymentMethodId", p0."PaymentType", p0."QuoteId", p0."ReceiptUrl", p0."RemainingAmount", p0."SetupIntentId", p0."Status", p0."StripeSessionId", i."Id", i."Depth", i."Description", i."Height", i."Name", i."Quantity", i."QuoteId", i."Width", s0."CreatedAt1", s0."CreatedBy1", s0."Email", s0."FirstName", s0."LastName", s0."ModifiedAt1", s0."ModifiedBy1", s0."PhoneNumber", a."Id", a."Accuracy", a."AddressNumber", a."City", a."Country", a."CountryCode", a."County", a."District", a."Floor", a."FullAddress", a."HasElevator", a."Latitude", a."Line1", a."Line2", a."Longitude", a."MapboxId", a."Neighborhood", a."PlaceName", a."PostCode", a."Region", a."RegionCode", a."Street", a."Type", a."UserId"
+FROM (
+    SELECT q."Id", q."BaseToOriginDistanceInMiles", q."CreatedAt", q."CreatedBy", q."CrewCount", q."CustomerId", q."EffectiveVanCapacityM3", q."ExpiresAt", q."LastCompletedStepKey", q."LastResumeEmailSentAt", q."ModifiedAt", q."ModifiedBy", q."NumberOfItemsToAssemble", q."NumberOfItemsToDismantle", q."OriginDestinationRoute", q."OriginToDestinationDistanceInMiles", q."PaymentStatus", q."PriceCalculatedAt", q."QuotePrice", q."QuoteReference", q."RecommendedVanCount", q."SelectedVanCount", q."ServiceTier", q."SessionId", q."StepsCompleted", q."StepsDirty", q."TotalCost", q."TotalInventoryVolumeM3", q."Type", q."VanCapacityStatus", q."VanCapacityWarning", q."VanRecommendationCalculatedAt", q."VanType", q.xmin, s."Id" AS "Id0", s."CollectionDate", s."CreatedAt" AS "CreatedAt0", s."CreatedBy" AS "CreatedBy0", s."DeliveryDate", s."FlexibleTime", s."Hours", s."ModifiedAt" AS "ModifiedAt0", s."ModifiedBy" AS "ModifiedBy0", s."QuoteId", s."TimeSlot", u."Id" AS "Id1", u."CreatedAt" AS "CreatedAt1", u."CreatedBy" AS "CreatedBy1", u."Email", u."FirstName", u."LastName", u."ModifiedAt" AS "ModifiedAt1", u."ModifiedBy" AS "ModifiedBy1", u."PhoneNumber"
+    FROM tranzrmoves."QuotesV2" AS q
+    LEFT JOIN tranzrmoves."Schedules" AS s ON q."Id" = s."QuoteId"
+    LEFT JOIN tranzrmoves."UsersV2" AS u ON q."CustomerId" = u."Id"
+    WHERE q."Id" = @quoteId
+    LIMIT 1
+) AS s0
+LEFT JOIN tranzrmoves."QuoteAddresses" AS q0 ON s0."Id" = q0."QuoteId"
+LEFT JOIN tranzrmoves."Pricings" AS p ON s0."Id" = p."QuoteId"
+LEFT JOIN tranzrmoves."Payments" AS p0 ON s0."Id" = p0."QuoteId"
+LEFT JOIN tranzrmoves."InventoryItemsV2" AS i ON s0."Id" = i."QuoteId"
+LEFT JOIN tranzrmoves."AddressesV2" AS a ON s0."Id1" = a."UserId"
+ORDER BY s0."Id", s0."Id0", s0."Id1", q0."Id", p."Id", p0."Id", i."Id"
+[20:11:50 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+Ewell%2c+Epsom%2c+KT19+9FZ%2c+United+Kingdom.json?*
+[20:11:50 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+Ewell%2c+Epsom%2c+KT19+9FZ%2c+United+Kingdom.json?*
+[20:11:50 INF] Received HTTP response headers after 116.6311ms - 200
+[20:11:50 INF] End processing HTTP request after 117.228ms - 200
+[20:11:50 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/23+Luke+Close%2c+Norwich%2c+NR5+0QG%2c+United+Kingdom.json?*
+[20:11:50 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/23+Luke+Close%2c+Norwich%2c+NR5+0QG%2c+United+Kingdom.json?*
+[20:11:50 INF] Received HTTP response headers after 103.0053ms - 200
+[20:11:50 INF] End processing HTTP request after 103.5985ms - 200
+[20:11:50 INF] Start processing HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/-0.2726,51.35994;1.21402,52.64853?*
+[20:11:50 INF] Sending HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/-0.2726,51.35994;1.21402,52.64853?*
+[20:11:50 INF] Received HTTP response headers after 20.4324ms - 200
+[20:11:50 INF] End processing HTTP request after 21.0764ms - 200
+[20:11:50 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/26+Sandyhill+lane%2c+Northampton+NN3+7AW%2c+United+Kingdom.json?*
+[20:11:50 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/26+Sandyhill+lane%2c+Northampton+NN3+7AW%2c+United+Kingdom.json?*
+[20:11:51 INF] Received HTTP response headers after 15.7849ms - 200
+[20:11:51 INF] End processing HTTP request after 16.5821ms - 200
+[20:11:51 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+Ewell%2c+Epsom%2c+KT19+9FZ%2c+United+Kingdom.json?*
+[20:11:51 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+Ewell%2c+Epsom%2c+KT19+9FZ%2c+United+Kingdom.json?*
+[20:11:51 INF] Received HTTP response headers after 19.8143ms - 200
+[20:11:51 INF] End processing HTTP request after 20.4421ms - 200
+[20:11:51 INF] Start processing HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/1.166061,52.037889;-0.2726,51.35994?*
+[20:11:51 INF] Sending HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/1.166061,52.037889;-0.2726,51.35994?*
+[20:11:51 INF] Received HTTP response headers after 218.9588ms - 200
+[20:11:51 INF] End processing HTTP request after 219.5336ms - 200
+[20:11:51 INF] Executed DbCommand (9ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?', @p2='?', @p3='?', @p4='?', @p5='?', @p6='?', @p7='?', @p8='?' (DbType = Int32), @p9='?' (DbType = Boolean), @p10='?', @p11='?' (DbType = Boolean), @p12='?', @p13='?' (DbType = Double), @p14='?', @p15='?', @p16='?' (DbType = Double), @p17='?', @p18='?', @p19='?' (DbType = Decimal), @p20='?', @p21='?', @p22='?' (DbType = Guid), @p23='?', @p24='?', @p25='?', @p26='?' (DbType = Guid), @p27='?', @p28='?', @p29='?', @p30='?', @p31='?', @p32='?', @p33='?', @p34='?' (DbType = Int32), @p35='?' (DbType = Boolean), @p36='?', @p37='?' (DbType = Boolean), @p38='?', @p39='?' (DbType = Double), @p40='?', @p41='?', @p42='?' (DbType = Double), @p43='?', @p44='?', @p45='?' (DbType = Decimal), @p46='?', @p47='?', @p48='?' (DbType = Guid), @p49='?', @p50='?', @p51='?', @p57='?' (DbType = Guid), @p52='?' (DbType = Int64), @p53='?', @p54='?' (DbType = DateTime), @p55='?' (DbType = Int64), @p56='?' (DbType = Int64), @p58='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']
+INSERT INTO tranzrmoves."QuoteAddresses" ("Id", "Accuracy", "AddressNumber", "City", "Country", "CountryCode", "County", "District", "Floor", "FreeParkingAccess", "FullAddress", "HasElevator", "Kind", "Latitude", "Line1", "Line2", "Longitude", "MapboxId", "Neighborhood", "PackingCost", "PlaceName", "PostCode", "QuoteId", "Region", "RegionCode", "Street")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23, @p24, @p25);
+INSERT INTO tranzrmoves."QuoteAddresses" ("Id", "Accuracy", "AddressNumber", "City", "Country", "CountryCode", "County", "District", "Floor", "FreeParkingAccess", "FullAddress", "HasElevator", "Kind", "Latitude", "Line1", "Line2", "Longitude", "MapboxId", "Neighborhood", "PackingCost", "PlaceName", "PostCode", "QuoteId", "Region", "RegionCode", "Street")
+VALUES (@p26, @p27, @p28, @p29, @p30, @p31, @p32, @p33, @p34, @p35, @p36, @p37, @p38, @p39, @p40, @p41, @p42, @p43, @p44, @p45, @p46, @p47, @p48, @p49, @p50, @p51);
+UPDATE tranzrmoves."QuotesV2" SET "BaseToOriginDistanceInMiles" = @p52, "LastCompletedStepKey" = @p53, "ModifiedAt" = @p54, "OriginToDestinationDistanceInMiles" = @p55, "StepsCompleted" = @p56
+WHERE "Id" = @p57 AND xmin = @p58
+RETURNING xmin;
+[20:11:51 INF] Executed DbCommand (1ms) [Parameters=[@at='?' (DbType = DateTime), @at1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+SELECT s."Id", s."CreatedAt", s."CreatedBy", s."DisplayOrder", s."EffectiveFrom", s."EffectiveTo", s."IsActive", s."ModifiedAt", s."ModifiedBy", s."ServiceLevel", s."Text", s.xmin
+FROM tranzrmoves."ServiceFeatures" AS s
+WHERE s."IsActive" AND s."EffectiveFrom" <= @at AND (s."EffectiveTo" IS NULL OR s."EffectiveTo" > @at1)
+ORDER BY s."ServiceLevel", s."DisplayOrder"
+[20:11:51 INF] Executed DbCommand (2ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:11:51 INF] QuoteJourney.Resolve quoteId=019df467-2293-7158-b1cf-022f2b12744a type=Send resumeStep=inventory resumeUrl=/inventory lastCompleted=collection-delivery-addresses stepsCompleted=1 stepsDirty=0
+[20:11:51 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=collection-delivery-addresses route=/collection-delivery status=complete
+[20:11:51 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=inventory route=/inventory status=current
+[20:11:51 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=move-date-time route=/van-and-date status=locked
+[20:11:51 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=pricing route=/pricing status=locked
+[20:11:51 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=customer-info route=/origin-destination status=locked
+[20:11:51 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=quote-summary route=/summary status=locked
+[20:11:51 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=payment route=/pay status=locked
+[20:11:51 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=complete route=/confirmation status=locked
+[20:11:51 INF] [END] PatchAddressesCommand [85c2dca2-3417-44b6-9704-053370f54a16]; Execution time=925ms
+[20:11:51 INF] Executed action method TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 936.3144ms.
+[20:11:51 INF] Executing OkObjectResult, writing value of type 'TranzrMoves.Application.Contracts.QuoteJourneyResponse'.
+[20:11:51 INF] Executed action TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api) in 1024.8403ms
+[20:11:51 INF] Executed endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api)'
+[20:11:51 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: PATCH
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses
+Accept: application/json
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Content-Type: application/json
+Cookie: [Redacted]
+If-Match: [Redacted]
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Content-Length: 613
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:11:50 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+ETag: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:11:51 INF] Request finished HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses - 200 null application/json; charset=utf-8 1032.057ms
+[20:11:52 INF] Request starting HTTP/1.1 GET http://localhost:5247/api/v1/inventory/categories - null null
+[20:11:52 INF] CORS policy execution successful.
+[20:11:52 INF] Executing endpoint 'TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api)'
+[20:11:52 INF] Route matched with {action = "GetCategories", controller = "Inventory"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetCategories(System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.InventoryController (TranzrMoves.Api).
+[20:11:52 INF] Executing action method TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api) - Validation state: Valid
+[20:11:52 INF] [START] CategoriesQuery [2fedd13a-3d7e-4c10-8758-f2e4946f2e9b]
+[20:11:52 INF] [PROPS] CategoriesQuery [2fedd13a-3d7e-4c10-8758-f2e4946f2e9b] CategoriesQuery { }
+[20:11:52 INF] Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT i."Id", i."Icon", i."Name"
+FROM tranzrmoves."InventoryCategories" AS i
+ORDER BY i."Name"
+[20:11:52 INF] [END] CategoriesQuery [2fedd13a-3d7e-4c10-8758-f2e4946f2e9b]; Execution time=22ms
+[20:11:52 INF] Executed action method TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 28.3208ms.
+[20:11:52 INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[TranzrMoves.Application.Contracts.InventoryCategoryImportDto, TranzrMoves.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+[20:11:52 INF] Executed action TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api) in 31.8388ms
+[20:11:52 INF] Executed endpoint 'TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api)'
+[20:11:52 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: GET
+Scheme: http
+PathBase: 
+Path: /api/v1/inventory/categories
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:11:51 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:11:52 INF] Request finished HTTP/1.1 GET http://localhost:5247/api/v1/inventory/categories - 200 null application/json; charset=utf-8 41.8255ms
+[20:11:55 INF] Request starting HTTP/1.1 GET http://localhost:5247/api/v1/inventory/categories/18/goods - null null
+[20:11:55 INF] CORS policy execution successful.
+[20:11:55 INF] Executing endpoint 'TranzrMoves.Api.Controllers.InventoryController.GetGoodsByCategoryId (TranzrMoves.Api)'
+[20:11:55 INF] Route matched with {action = "GetGoodsByCategoryId", controller = "Inventory"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetGoodsByCategoryId(Int32, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.InventoryController (TranzrMoves.Api).
+[20:11:55 INF] Executing action method TranzrMoves.Api.Controllers.InventoryController.GetGoodsByCategoryId (TranzrMoves.Api) - Validation state: Valid
+[20:11:55 INF] [START] GoodsByCategoryIdQuery [776dc1db-30e6-4c51-8060-43f9ee8c4c52]
+[20:11:55 INF] [PROPS] GoodsByCategoryIdQuery [776dc1db-30e6-4c51-8060-43f9ee8c4c52] GoodsByCategoryIdQuery { CategoryId = 18 }
+[20:11:55 INF] Executed DbCommand (3ms) [Parameters=[@categoryId='?' (DbType = Int32)], CommandType='Text', CommandTimeout='30']
+SELECT i."Id", i."CategoryId", i."HeightCm", i."LengthCm", i."Name", i."PopularityIndex", i."SearchAliases", i."SearchText", i."VolumeM3", i."WidthCm", i0."Id", i0."Icon", i0."Name"
+FROM tranzrmoves."InventoryGoods" AS i
+INNER JOIN tranzrmoves."InventoryCategories" AS i0 ON i."CategoryId" = i0."Id"
+WHERE i."CategoryId" = @categoryId
+ORDER BY i."PopularityIndex" DESC, i."Name"
+[20:11:55 INF] [END] GoodsByCategoryIdQuery [776dc1db-30e6-4c51-8060-43f9ee8c4c52]; Execution time=199ms
+[20:11:55 INF] Executed action method TranzrMoves.Api.Controllers.InventoryController.GetGoodsByCategoryId (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 204.2788ms.
+[20:11:55 INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[TranzrMoves.Application.Contracts.InventoryGoodImportDto, TranzrMoves.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+[20:11:55 INF] Executed action TranzrMoves.Api.Controllers.InventoryController.GetGoodsByCategoryId (TranzrMoves.Api) in 216.7018ms
+[20:11:55 INF] Executed endpoint 'TranzrMoves.Api.Controllers.InventoryController.GetGoodsByCategoryId (TranzrMoves.Api)'
+[20:11:55 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: GET
+Scheme: http
+PathBase: 
+Path: /api/v1/inventory/categories/18/goods
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:11:55 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:11:55 INF] Request finished HTTP/1.1 GET http://localhost:5247/api/v1/inventory/categories/18/goods - 200 null application/json; charset=utf-8 223.2131ms
+[20:12:04 INF] Request starting HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/inventory - null null
+[20:12:04 INF] CORS policy execution successful.
+[20:12:04 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: OPTIONS
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/inventory
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Access-Control-Request-Headers: [Redacted]
+Access-Control-Request-Method: [Redacted]
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 204
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Headers: [Redacted]
+Access-Control-Allow-Methods: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Vary: [Redacted]
+[20:12:04 INF] Request finished HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/inventory - 204 null null 1.2648ms
+[20:12:04 INF] Request starting HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/inventory - application/json 585
+[20:12:04 INF] CORS policy execution successful.
+[20:12:04 INF] Executing endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchInventory (TranzrMoves.Api)'
+[20:12:04 INF] Route matched with {action = "PatchInventory", controller = "Quote"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] PatchInventory(System.Guid, TranzrMoves.Application.Contracts.PatchInventoryRequest, System.String, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.QuoteController (TranzrMoves.Api).
+[20:12:04 INF] Executing action method TranzrMoves.Api.Controllers.QuoteController.PatchInventory (TranzrMoves.Api) - Validation state: Valid
+[20:12:04 INF] [START] PatchInventoryCommand [d2a2f382-9a22-48ae-a151-bf61dd0132ee]
+[20:12:04 INF] [PROPS] PatchInventoryCommand [d2a2f382-9a22-48ae-a151-bf61dd0132ee] PatchInventoryCommand { QuoteId = 019df467-2293-7158-b1cf-022f2b12744a, ExpectedVersion = 9978, InventoryItems = System.Collections.Generic.List`1[TranzrMoves.Application.Contracts.InventoryItemDto] }
+[20:12:04 INF] Patching move date and time
+[20:12:04 INF] Executed DbCommand (6ms) [Parameters=[@quoteId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+SELECT s0."Id", s0."BaseToOriginDistanceInMiles", s0."CreatedAt", s0."CreatedBy", s0."CrewCount", s0."CustomerId", s0."EffectiveVanCapacityM3", s0."ExpiresAt", s0."LastCompletedStepKey", s0."LastResumeEmailSentAt", s0."ModifiedAt", s0."ModifiedBy", s0."NumberOfItemsToAssemble", s0."NumberOfItemsToDismantle", s0."OriginDestinationRoute", s0."OriginToDestinationDistanceInMiles", s0."PaymentStatus", s0."PriceCalculatedAt", s0."QuotePrice", s0."QuoteReference", s0."RecommendedVanCount", s0."SelectedVanCount", s0."ServiceTier", s0."SessionId", s0."StepsCompleted", s0."StepsDirty", s0."TotalCost", s0."TotalInventoryVolumeM3", s0."Type", s0."VanCapacityStatus", s0."VanCapacityWarning", s0."VanRecommendationCalculatedAt", s0."VanType", s0.xmin, s0."Id0", s0."Id1", q0."Id", q0."Accuracy", q0."AddressNumber", q0."City", q0."Country", q0."CountryCode", q0."County", q0."District", q0."Floor", q0."FreeParkingAccess", q0."FullAddress", q0."HasElevator", q0."Kind", q0."Latitude", q0."Line1", q0."Line2", q0."Longitude", q0."MapboxId", q0."Neighborhood", q0."PackingCost", q0."PlaceName", q0."PostCode", q0."QuoteId", q0."Region", q0."RegionCode", q0."Street", p."Id", p."AssemblyCost", p."BaseToOriginCost", p."BaseVanCost", p."CallOutCharge", p."CongestionChargeApplies", p."CongestionZoneSurcharge", p."CostPerHourAfterStandard", p."CreatedAt", p."CreatedBy", p."CrewCount", p."DestinationFloorSurcharge", p."DismantleCost", p."DistanceCost", p."InsuranceUplift", p."IsSelected", p."LabourCost", p."ModifiedAt", p."ModifiedBy", p."NumberOfItemsToAssemble", p."NumberOfItemsToDismantle", p."OriginFloorSurcharge", p."QuoteId", p."QuoteType", p."SelectedVanCount", p."ServiceLevel", p."SpecialHandlingCost", p."StandardBlockHours", p."SubtotalWithoutVat", p."TotalCostWithVat", p."UlezSurcharge", p."Vat", p."VatAmount", p."VatRate", s0."CollectionDate", s0."CreatedAt0", s0."CreatedBy0", s0."DeliveryDate", s0."FlexibleTime", s0."Hours", s0."ModifiedAt0", s0."ModifiedBy0", s0."QuoteId", s0."TimeSlot", p0."Id", p0."Amount", p0."CreatedAt", p0."CreatedBy", p0."CustomerSelectedOption", p0."DueDate", p0."ModifiedAt", p0."ModifiedBy", p0."PaymentIntentId", p0."PaymentMethodId", p0."PaymentType", p0."QuoteId", p0."ReceiptUrl", p0."RemainingAmount", p0."SetupIntentId", p0."Status", p0."StripeSessionId", i."Id", i."Depth", i."Description", i."Height", i."Name", i."Quantity", i."QuoteId", i."Width", s0."CreatedAt1", s0."CreatedBy1", s0."Email", s0."FirstName", s0."LastName", s0."ModifiedAt1", s0."ModifiedBy1", s0."PhoneNumber", a."Id", a."Accuracy", a."AddressNumber", a."City", a."Country", a."CountryCode", a."County", a."District", a."Floor", a."FullAddress", a."HasElevator", a."Latitude", a."Line1", a."Line2", a."Longitude", a."MapboxId", a."Neighborhood", a."PlaceName", a."PostCode", a."Region", a."RegionCode", a."Street", a."Type", a."UserId"
+FROM (
+    SELECT q."Id", q."BaseToOriginDistanceInMiles", q."CreatedAt", q."CreatedBy", q."CrewCount", q."CustomerId", q."EffectiveVanCapacityM3", q."ExpiresAt", q."LastCompletedStepKey", q."LastResumeEmailSentAt", q."ModifiedAt", q."ModifiedBy", q."NumberOfItemsToAssemble", q."NumberOfItemsToDismantle", q."OriginDestinationRoute", q."OriginToDestinationDistanceInMiles", q."PaymentStatus", q."PriceCalculatedAt", q."QuotePrice", q."QuoteReference", q."RecommendedVanCount", q."SelectedVanCount", q."ServiceTier", q."SessionId", q."StepsCompleted", q."StepsDirty", q."TotalCost", q."TotalInventoryVolumeM3", q."Type", q."VanCapacityStatus", q."VanCapacityWarning", q."VanRecommendationCalculatedAt", q."VanType", q.xmin, s."Id" AS "Id0", s."CollectionDate", s."CreatedAt" AS "CreatedAt0", s."CreatedBy" AS "CreatedBy0", s."DeliveryDate", s."FlexibleTime", s."Hours", s."ModifiedAt" AS "ModifiedAt0", s."ModifiedBy" AS "ModifiedBy0", s."QuoteId", s."TimeSlot", u."Id" AS "Id1", u."CreatedAt" AS "CreatedAt1", u."CreatedBy" AS "CreatedBy1", u."Email", u."FirstName", u."LastName", u."ModifiedAt" AS "ModifiedAt1", u."ModifiedBy" AS "ModifiedBy1", u."PhoneNumber"
+    FROM tranzrmoves."QuotesV2" AS q
+    LEFT JOIN tranzrmoves."Schedules" AS s ON q."Id" = s."QuoteId"
+    LEFT JOIN tranzrmoves."UsersV2" AS u ON q."CustomerId" = u."Id"
+    WHERE q."Id" = @quoteId
+    LIMIT 1
+) AS s0
+LEFT JOIN tranzrmoves."QuoteAddresses" AS q0 ON s0."Id" = q0."QuoteId"
+LEFT JOIN tranzrmoves."Pricings" AS p ON s0."Id" = p."QuoteId"
+LEFT JOIN tranzrmoves."Payments" AS p0 ON s0."Id" = p0."QuoteId"
+LEFT JOIN tranzrmoves."InventoryItemsV2" AS i ON s0."Id" = i."QuoteId"
+LEFT JOIN tranzrmoves."AddressesV2" AS a ON s0."Id1" = a."UserId"
+ORDER BY s0."Id", s0."Id0", s0."Id1", q0."Id", p."Id", p0."Id", i."Id"
+[20:12:04 INF] Executed DbCommand (7ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Int32), @p2='?', @p3='?' (DbType = Int32), @p4='?', @p5='?' (DbType = Int32), @p6='?' (DbType = Guid), @p7='?' (DbType = Int32), @p8='?' (DbType = Guid), @p9='?' (DbType = Int32), @p10='?', @p11='?' (DbType = Int32), @p12='?', @p13='?' (DbType = Int32), @p14='?' (DbType = Guid), @p15='?' (DbType = Int32), @p16='?' (DbType = Guid), @p17='?' (DbType = Int32), @p18='?', @p19='?' (DbType = Int32), @p20='?', @p21='?' (DbType = Int32), @p22='?' (DbType = Guid), @p23='?' (DbType = Int32), @p24='?' (DbType = Guid), @p25='?' (DbType = Int32), @p26='?', @p27='?' (DbType = Int32), @p28='?', @p29='?' (DbType = Int32), @p30='?' (DbType = Guid), @p31='?' (DbType = Int32), @p32='?' (DbType = Guid), @p33='?' (DbType = Int32), @p34='?', @p35='?' (DbType = Int32), @p36='?', @p37='?' (DbType = Int32), @p38='?' (DbType = Guid), @p39='?' (DbType = Int32), @p46='?' (DbType = Guid), @p40='?' (DbType = Decimal), @p41='?', @p42='?' (DbType = DateTime), @p43='?' (DbType = Int32), @p44='?' (DbType = Int64), @p45='?' (DbType = Decimal), @p47='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']
+INSERT INTO tranzrmoves."InventoryItemsV2" ("Id", "Depth", "Description", "Height", "Name", "Quantity", "QuoteId", "Width")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7);
+INSERT INTO tranzrmoves."InventoryItemsV2" ("Id", "Depth", "Description", "Height", "Name", "Quantity", "QuoteId", "Width")
+VALUES (@p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15);
+INSERT INTO tranzrmoves."InventoryItemsV2" ("Id", "Depth", "Description", "Height", "Name", "Quantity", "QuoteId", "Width")
+VALUES (@p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23);
+INSERT INTO tranzrmoves."InventoryItemsV2" ("Id", "Depth", "Description", "Height", "Name", "Quantity", "QuoteId", "Width")
+VALUES (@p24, @p25, @p26, @p27, @p28, @p29, @p30, @p31);
+INSERT INTO tranzrmoves."InventoryItemsV2" ("Id", "Depth", "Description", "Height", "Name", "Quantity", "QuoteId", "Width")
+VALUES (@p32, @p33, @p34, @p35, @p36, @p37, @p38, @p39);
+UPDATE tranzrmoves."QuotesV2" SET "EffectiveVanCapacityM3" = @p40, "LastCompletedStepKey" = @p41, "ModifiedAt" = @p42, "RecommendedVanCount" = @p43, "StepsCompleted" = @p44, "TotalInventoryVolumeM3" = @p45
+WHERE "Id" = @p46 AND xmin = @p47
+RETURNING xmin;
+[20:12:04 INF] Executed DbCommand (1ms) [Parameters=[@at='?' (DbType = DateTime), @at1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+SELECT s."Id", s."CreatedAt", s."CreatedBy", s."DisplayOrder", s."EffectiveFrom", s."EffectiveTo", s."IsActive", s."ModifiedAt", s."ModifiedBy", s."ServiceLevel", s."Text", s.xmin
+FROM tranzrmoves."ServiceFeatures" AS s
+WHERE s."IsActive" AND s."EffectiveFrom" <= @at AND (s."EffectiveTo" IS NULL OR s."EffectiveTo" > @at1)
+ORDER BY s."ServiceLevel", s."DisplayOrder"
+[20:12:04 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:04 INF] QuoteJourney.Resolve quoteId=019df467-2293-7158-b1cf-022f2b12744a type=Send resumeStep=move-date-time resumeUrl=/van-and-date lastCompleted=inventory stepsCompleted=3 stepsDirty=0
+[20:12:04 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=collection-delivery-addresses route=/collection-delivery status=complete
+[20:12:04 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=inventory route=/inventory status=complete
+[20:12:04 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=move-date-time route=/van-and-date status=current
+[20:12:04 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=pricing route=/pricing status=locked
+[20:12:04 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=customer-info route=/origin-destination status=locked
+[20:12:04 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=quote-summary route=/summary status=locked
+[20:12:04 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=payment route=/pay status=locked
+[20:12:04 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=complete route=/confirmation status=locked
+[20:12:04 INF] [END] PatchInventoryCommand [d2a2f382-9a22-48ae-a151-bf61dd0132ee]; Execution time=105ms
+[20:12:04 INF] Executed action method TranzrMoves.Api.Controllers.QuoteController.PatchInventory (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 115.2478ms.
+[20:12:04 INF] Executing OkObjectResult, writing value of type 'TranzrMoves.Application.Contracts.QuoteJourneyResponse'.
+[20:12:04 INF] Executed action TranzrMoves.Api.Controllers.QuoteController.PatchInventory (TranzrMoves.Api) in 130.1482ms
+[20:12:04 INF] Executed endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchInventory (TranzrMoves.Api)'
+[20:12:04 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: PATCH
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/inventory
+Accept: application/json
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Content-Type: application/json
+Cookie: [Redacted]
+If-Match: [Redacted]
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Content-Length: 585
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:12:03 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+ETag: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:12:04 INF] Request finished HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/inventory - 200 null application/json; charset=utf-8 136.0754ms
+[20:12:11 INF] Request starting HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/move-date-time - null null
+[20:12:11 INF] CORS policy execution successful.
+[20:12:11 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: OPTIONS
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/move-date-time
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Access-Control-Request-Headers: [Redacted]
+Access-Control-Request-Method: [Redacted]
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 204
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Headers: [Redacted]
+Access-Control-Allow-Methods: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Vary: [Redacted]
+[20:12:11 INF] Request finished HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/move-date-time - 204 null null 1.3348ms
+[20:12:11 INF] Request starting HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/move-date-time - application/json 227
+[20:12:11 INF] CORS policy execution successful.
+[20:12:11 INF] Executing endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchMoveDateTime (TranzrMoves.Api)'
+[20:12:11 INF] Route matched with {action = "PatchMoveDateTime", controller = "Quote"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] PatchMoveDateTime(System.Guid, TranzrMoves.Application.Contracts.PatchMoveDateTimeStepRequest, System.String, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.QuoteController (TranzrMoves.Api).
+[20:12:11 INF] Executing action method TranzrMoves.Api.Controllers.QuoteController.PatchMoveDateTime (TranzrMoves.Api) - Validation state: Valid
+[20:12:11 INF] [START] PatchMoveDateTimeStepCommand [0dc28e2e-4434-4203-b651-32162329de02]
+[20:12:11 INF] [PROPS] PatchMoveDateTimeStepCommand [0dc28e2e-4434-4203-b651-32162329de02] PatchMoveDateTimeStepCommand { QuoteId = 019df467-2293-7158-b1cf-022f2b12744a, ExpectedVersion = 9979, Schedule = TranzrMoves.Domain.Entities.Schedule, SelectedVanCount = 1 }
+[20:12:11 INF] Patching move date and time
+[20:12:11 INF] Executed DbCommand (5ms) [Parameters=[@quoteId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+SELECT s0."Id", s0."BaseToOriginDistanceInMiles", s0."CreatedAt", s0."CreatedBy", s0."CrewCount", s0."CustomerId", s0."EffectiveVanCapacityM3", s0."ExpiresAt", s0."LastCompletedStepKey", s0."LastResumeEmailSentAt", s0."ModifiedAt", s0."ModifiedBy", s0."NumberOfItemsToAssemble", s0."NumberOfItemsToDismantle", s0."OriginDestinationRoute", s0."OriginToDestinationDistanceInMiles", s0."PaymentStatus", s0."PriceCalculatedAt", s0."QuotePrice", s0."QuoteReference", s0."RecommendedVanCount", s0."SelectedVanCount", s0."ServiceTier", s0."SessionId", s0."StepsCompleted", s0."StepsDirty", s0."TotalCost", s0."TotalInventoryVolumeM3", s0."Type", s0."VanCapacityStatus", s0."VanCapacityWarning", s0."VanRecommendationCalculatedAt", s0."VanType", s0.xmin, s0."Id0", s0."Id1", q0."Id", q0."Accuracy", q0."AddressNumber", q0."City", q0."Country", q0."CountryCode", q0."County", q0."District", q0."Floor", q0."FreeParkingAccess", q0."FullAddress", q0."HasElevator", q0."Kind", q0."Latitude", q0."Line1", q0."Line2", q0."Longitude", q0."MapboxId", q0."Neighborhood", q0."PackingCost", q0."PlaceName", q0."PostCode", q0."QuoteId", q0."Region", q0."RegionCode", q0."Street", p."Id", p."AssemblyCost", p."BaseToOriginCost", p."BaseVanCost", p."CallOutCharge", p."CongestionChargeApplies", p."CongestionZoneSurcharge", p."CostPerHourAfterStandard", p."CreatedAt", p."CreatedBy", p."CrewCount", p."DestinationFloorSurcharge", p."DismantleCost", p."DistanceCost", p."InsuranceUplift", p."IsSelected", p."LabourCost", p."ModifiedAt", p."ModifiedBy", p."NumberOfItemsToAssemble", p."NumberOfItemsToDismantle", p."OriginFloorSurcharge", p."QuoteId", p."QuoteType", p."SelectedVanCount", p."ServiceLevel", p."SpecialHandlingCost", p."StandardBlockHours", p."SubtotalWithoutVat", p."TotalCostWithVat", p."UlezSurcharge", p."Vat", p."VatAmount", p."VatRate", s0."CollectionDate", s0."CreatedAt0", s0."CreatedBy0", s0."DeliveryDate", s0."FlexibleTime", s0."Hours", s0."ModifiedAt0", s0."ModifiedBy0", s0."QuoteId", s0."TimeSlot", p0."Id", p0."Amount", p0."CreatedAt", p0."CreatedBy", p0."CustomerSelectedOption", p0."DueDate", p0."ModifiedAt", p0."ModifiedBy", p0."PaymentIntentId", p0."PaymentMethodId", p0."PaymentType", p0."QuoteId", p0."ReceiptUrl", p0."RemainingAmount", p0."SetupIntentId", p0."Status", p0."StripeSessionId", i."Id", i."Depth", i."Description", i."Height", i."Name", i."Quantity", i."QuoteId", i."Width", s0."CreatedAt1", s0."CreatedBy1", s0."Email", s0."FirstName", s0."LastName", s0."ModifiedAt1", s0."ModifiedBy1", s0."PhoneNumber", a."Id", a."Accuracy", a."AddressNumber", a."City", a."Country", a."CountryCode", a."County", a."District", a."Floor", a."FullAddress", a."HasElevator", a."Latitude", a."Line1", a."Line2", a."Longitude", a."MapboxId", a."Neighborhood", a."PlaceName", a."PostCode", a."Region", a."RegionCode", a."Street", a."Type", a."UserId"
+FROM (
+    SELECT q."Id", q."BaseToOriginDistanceInMiles", q."CreatedAt", q."CreatedBy", q."CrewCount", q."CustomerId", q."EffectiveVanCapacityM3", q."ExpiresAt", q."LastCompletedStepKey", q."LastResumeEmailSentAt", q."ModifiedAt", q."ModifiedBy", q."NumberOfItemsToAssemble", q."NumberOfItemsToDismantle", q."OriginDestinationRoute", q."OriginToDestinationDistanceInMiles", q."PaymentStatus", q."PriceCalculatedAt", q."QuotePrice", q."QuoteReference", q."RecommendedVanCount", q."SelectedVanCount", q."ServiceTier", q."SessionId", q."StepsCompleted", q."StepsDirty", q."TotalCost", q."TotalInventoryVolumeM3", q."Type", q."VanCapacityStatus", q."VanCapacityWarning", q."VanRecommendationCalculatedAt", q."VanType", q.xmin, s."Id" AS "Id0", s."CollectionDate", s."CreatedAt" AS "CreatedAt0", s."CreatedBy" AS "CreatedBy0", s."DeliveryDate", s."FlexibleTime", s."Hours", s."ModifiedAt" AS "ModifiedAt0", s."ModifiedBy" AS "ModifiedBy0", s."QuoteId", s."TimeSlot", u."Id" AS "Id1", u."CreatedAt" AS "CreatedAt1", u."CreatedBy" AS "CreatedBy1", u."Email", u."FirstName", u."LastName", u."ModifiedAt" AS "ModifiedAt1", u."ModifiedBy" AS "ModifiedBy1", u."PhoneNumber"
+    FROM tranzrmoves."QuotesV2" AS q
+    LEFT JOIN tranzrmoves."Schedules" AS s ON q."Id" = s."QuoteId"
+    LEFT JOIN tranzrmoves."UsersV2" AS u ON q."CustomerId" = u."Id"
+    WHERE q."Id" = @quoteId
+    LIMIT 1
+) AS s0
+LEFT JOIN tranzrmoves."QuoteAddresses" AS q0 ON s0."Id" = q0."QuoteId"
+LEFT JOIN tranzrmoves."Pricings" AS p ON s0."Id" = p."QuoteId"
+LEFT JOIN tranzrmoves."Payments" AS p0 ON s0."Id" = p0."QuoteId"
+LEFT JOIN tranzrmoves."InventoryItemsV2" AS i ON s0."Id" = i."QuoteId"
+LEFT JOIN tranzrmoves."AddressesV2" AS a ON s0."Id1" = a."UserId"
+ORDER BY s0."Id", s0."Id0", s0."Id1", q0."Id", p."Id", p0."Id", i."Id"
+[20:12:11 INF] Executed DbCommand (2ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:11 INF] Executed DbCommand (7ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Decimal), @p2='?' (DbType = Decimal), @p3='?' (DbType = Decimal), @p4='?' (DbType = Decimal), @p5='?' (DbType = Boolean), @p6='?' (DbType = Decimal), @p7='?' (DbType = Decimal), @p8='?' (DbType = DateTime), @p9='?', @p10='?' (DbType = Int32), @p11='?' (DbType = Decimal), @p12='?' (DbType = Decimal), @p13='?' (DbType = Decimal), @p14='?' (DbType = Decimal), @p15='?' (DbType = Boolean), @p16='?' (DbType = Decimal), @p17='?' (DbType = DateTime), @p18='?', @p19='?' (DbType = Int32), @p20='?' (DbType = Int32), @p21='?' (DbType = Decimal), @p22='?' (DbType = Guid), @p23='?', @p24='?' (DbType = Int32), @p25='?', @p26='?' (DbType = Decimal), @p27='?' (DbType = Int32), @p28='?' (DbType = Decimal), @p29='?' (DbType = Decimal), @p30='?' (DbType = Decimal), @p31='?' (DbType = Int32), @p32='?' (DbType = Decimal), @p33='?' (DbType = Decimal), @p34='?' (DbType = Guid), @p35='?' (DbType = Decimal), @p36='?' (DbType = Decimal), @p37='?' (DbType = Decimal), @p38='?' (DbType = Decimal), @p39='?' (DbType = Boolean), @p40='?' (DbType = Decimal), @p41='?' (DbType = Decimal), @p42='?' (DbType = DateTime), @p43='?', @p44='?' (DbType = Int32), @p45='?' (DbType = Decimal), @p46='?' (DbType = Decimal), @p47='?' (DbType = Decimal), @p48='?' (DbType = Decimal), @p49='?' (DbType = Boolean), @p50='?' (DbType = Decimal), @p51='?' (DbType = DateTime), @p52='?', @p53='?' (DbType = Int32), @p54='?' (DbType = Int32), @p55='?' (DbType = Decimal), @p56='?' (DbType = Guid), @p57='?', @p58='?' (DbType = Int32), @p59='?', @p60='?' (DbType = Decimal), @p61='?' (DbType = Int32), @p62='?' (DbType = Decimal), @p63='?' (DbType = Decimal), @p64='?' (DbType = Decimal), @p65='?' (DbType = Int32), @p66='?' (DbType = Decimal), @p67='?' (DbType = Decimal), @p68='?' (DbType = Guid), @p69='?' (DbType = Decimal), @p70='?' (DbType = Decimal), @p71='?' (DbType = Decimal), @p72='?' (DbType = Decimal), @p73='?' (DbType = Boolean), @p74='?' (DbType = Decimal), @p75='?' (DbType = Decimal), @p76='?' (DbType = DateTime), @p77='?', @p78='?' (DbType = Int32), @p79='?' (DbType = Decimal), @p80='?' (DbType = Decimal), @p81='?' (DbType = Decimal), @p82='?' (DbType = Decimal), @p83='?' (DbType = Boolean), @p84='?' (DbType = Decimal), @p85='?' (DbType = DateTime), @p86='?', @p87='?' (DbType = Int32), @p88='?' (DbType = Int32), @p89='?' (DbType = Decimal), @p90='?' (DbType = Guid), @p91='?', @p92='?' (DbType = Int32), @p93='?', @p94='?' (DbType = Decimal), @p95='?' (DbType = Int32), @p96='?' (DbType = Decimal), @p97='?' (DbType = Decimal), @p98='?' (DbType = Decimal), @p99='?' (DbType = Int32), @p100='?' (DbType = Decimal), @p101='?' (DbType = Decimal), @p102='?' (DbType = Guid), @p103='?' (DbType = Decimal), @p104='?' (DbType = Decimal), @p105='?' (DbType = Decimal), @p106='?' (DbType = Decimal), @p107='?' (DbType = Boolean), @p108='?' (DbType = Decimal), @p109='?' (DbType = Decimal), @p110='?' (DbType = DateTime), @p111='?', @p112='?' (DbType = Int32), @p113='?' (DbType = Decimal), @p114='?' (DbType = Decimal), @p115='?' (DbType = Decimal), @p116='?' (DbType = Decimal), @p117='?' (DbType = Boolean), @p118='?' (DbType = Decimal), @p119='?' (DbType = DateTime), @p120='?', @p121='?' (DbType = Int32), @p122='?' (DbType = Int32), @p123='?' (DbType = Decimal), @p124='?' (DbType = Guid), @p125='?', @p126='?' (DbType = Int32), @p127='?', @p128='?' (DbType = Decimal), @p129='?' (DbType = Int32), @p130='?' (DbType = Decimal), @p131='?' (DbType = Decimal), @p132='?' (DbType = Decimal), @p133='?' (DbType = Int32), @p134='?' (DbType = Decimal), @p135='?' (DbType = Decimal), @p136='?' (DbType = Guid), @p137='?' (DbType = Decimal), @p138='?' (DbType = Decimal), @p139='?' (DbType = Decimal), @p140='?' (DbType = Decimal), @p141='?' (DbType = Boolean), @p142='?' (DbType = Decimal), @p143='?' (DbType = Decimal), @p144='?' (DbType = DateTime), @p145='?', @p146='?' (DbType = Int32), @p147='?' (DbType = Decimal), @p148='?' (DbType = Decimal), @p149='?' (DbType = Decimal), @p150='?' (DbType = Decimal), @p151='?' (DbType = Boolean), @p152='?' (DbType = Decimal), @p153='?' (DbType = DateTime), @p154='?', @p155='?' (DbType = Int32), @p156='?' (DbType = Int32), @p157='?' (DbType = Decimal), @p158='?' (DbType = Guid), @p159='?', @p160='?' (DbType = Int32), @p161='?', @p162='?' (DbType = Decimal), @p163='?' (DbType = Int32), @p164='?' (DbType = Decimal), @p165='?' (DbType = Decimal), @p166='?' (DbType = Decimal), @p167='?' (DbType = Int32), @p168='?' (DbType = Decimal), @p169='?' (DbType = Decimal), @p170='?' (DbType = Guid), @p171='?' (DbType = Decimal), @p172='?' (DbType = Decimal), @p173='?' (DbType = Decimal), @p174='?' (DbType = Decimal), @p175='?' (DbType = Boolean), @p176='?' (DbType = Decimal), @p177='?' (DbType = Decimal), @p178='?' (DbType = DateTime), @p179='?', @p180='?' (DbType = Int32), @p181='?' (DbType = Decimal), @p182='?' (DbType = Decimal), @p183='?' (DbType = Decimal), @p184='?' (DbType = Decimal), @p185='?' (DbType = Boolean), @p186='?' (DbType = Decimal), @p187='?' (DbType = DateTime), @p188='?', @p189='?' (DbType = Int32), @p190='?' (DbType = Int32), @p191='?' (DbType = Decimal), @p192='?' (DbType = Guid), @p193='?', @p194='?' (DbType = Int32), @p195='?', @p196='?' (DbType = Decimal), @p197='?' (DbType = Int32), @p198='?' (DbType = Decimal), @p199='?' (DbType = Decimal), @p200='?' (DbType = Decimal), @p201='?' (DbType = Int32), @p202='?' (DbType = Decimal), @p203='?' (DbType = Decimal), @p210='?' (DbType = Guid), @p204='?', @p205='?' (DbType = DateTime), @p206='?' (DbType = DateTime), @p207='?' (DbType = Int32), @p208='?' (DbType = Int64), @p209='?', @p211='?' (DbType = Object), @p212='?' (DbType = Guid), @p213='?' (DbType = DateTime), @p214='?' (DbType = DateTime), @p215='?', @p216='?' (DbType = DateTime), @p217='?' (DbType = Boolean), @p218='?' (DbType = Int32), @p219='?' (DbType = DateTime), @p220='?', @p221='?' (DbType = Guid), @p222='?'], CommandType='Text', CommandTimeout='30']
+INSERT INTO tranzrmoves."Pricings" ("Id", "AssemblyCost", "BaseToOriginCost", "BaseVanCost", "CallOutCharge", "CongestionChargeApplies", "CongestionZoneSurcharge", "CostPerHourAfterStandard", "CreatedAt", "CreatedBy", "CrewCount", "DestinationFloorSurcharge", "DismantleCost", "DistanceCost", "InsuranceUplift", "IsSelected", "LabourCost", "ModifiedAt", "ModifiedBy", "NumberOfItemsToAssemble", "NumberOfItemsToDismantle", "OriginFloorSurcharge", "QuoteId", "QuoteType", "SelectedVanCount", "ServiceLevel", "SpecialHandlingCost", "StandardBlockHours", "SubtotalWithoutVat", "TotalCostWithVat", "UlezSurcharge", "Vat", "VatAmount", "VatRate")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23, @p24, @p25, @p26, @p27, @p28, @p29, @p30, @p31, @p32, @p33);
+INSERT INTO tranzrmoves."Pricings" ("Id", "AssemblyCost", "BaseToOriginCost", "BaseVanCost", "CallOutCharge", "CongestionChargeApplies", "CongestionZoneSurcharge", "CostPerHourAfterStandard", "CreatedAt", "CreatedBy", "CrewCount", "DestinationFloorSurcharge", "DismantleCost", "DistanceCost", "InsuranceUplift", "IsSelected", "LabourCost", "ModifiedAt", "ModifiedBy", "NumberOfItemsToAssemble", "NumberOfItemsToDismantle", "OriginFloorSurcharge", "QuoteId", "QuoteType", "SelectedVanCount", "ServiceLevel", "SpecialHandlingCost", "StandardBlockHours", "SubtotalWithoutVat", "TotalCostWithVat", "UlezSurcharge", "Vat", "VatAmount", "VatRate")
+VALUES (@p34, @p35, @p36, @p37, @p38, @p39, @p40, @p41, @p42, @p43, @p44, @p45, @p46, @p47, @p48, @p49, @p50, @p51, @p52, @p53, @p54, @p55, @p56, @p57, @p58, @p59, @p60, @p61, @p62, @p63, @p64, @p65, @p66, @p67);
+INSERT INTO tranzrmoves."Pricings" ("Id", "AssemblyCost", "BaseToOriginCost", "BaseVanCost", "CallOutCharge", "CongestionChargeApplies", "CongestionZoneSurcharge", "CostPerHourAfterStandard", "CreatedAt", "CreatedBy", "CrewCount", "DestinationFloorSurcharge", "DismantleCost", "DistanceCost", "InsuranceUplift", "IsSelected", "LabourCost", "ModifiedAt", "ModifiedBy", "NumberOfItemsToAssemble", "NumberOfItemsToDismantle", "OriginFloorSurcharge", "QuoteId", "QuoteType", "SelectedVanCount", "ServiceLevel", "SpecialHandlingCost", "StandardBlockHours", "SubtotalWithoutVat", "TotalCostWithVat", "UlezSurcharge", "Vat", "VatAmount", "VatRate")
+VALUES (@p68, @p69, @p70, @p71, @p72, @p73, @p74, @p75, @p76, @p77, @p78, @p79, @p80, @p81, @p82, @p83, @p84, @p85, @p86, @p87, @p88, @p89, @p90, @p91, @p92, @p93, @p94, @p95, @p96, @p97, @p98, @p99, @p100, @p101);
+INSERT INTO tranzrmoves."Pricings" ("Id", "AssemblyCost", "BaseToOriginCost", "BaseVanCost", "CallOutCharge", "CongestionChargeApplies", "CongestionZoneSurcharge", "CostPerHourAfterStandard", "CreatedAt", "CreatedBy", "CrewCount", "DestinationFloorSurcharge", "DismantleCost", "DistanceCost", "InsuranceUplift", "IsSelected", "LabourCost", "ModifiedAt", "ModifiedBy", "NumberOfItemsToAssemble", "NumberOfItemsToDismantle", "OriginFloorSurcharge", "QuoteId", "QuoteType", "SelectedVanCount", "ServiceLevel", "SpecialHandlingCost", "StandardBlockHours", "SubtotalWithoutVat", "TotalCostWithVat", "UlezSurcharge", "Vat", "VatAmount", "VatRate")
+VALUES (@p102, @p103, @p104, @p105, @p106, @p107, @p108, @p109, @p110, @p111, @p112, @p113, @p114, @p115, @p116, @p117, @p118, @p119, @p120, @p121, @p122, @p123, @p124, @p125, @p126, @p127, @p128, @p129, @p130, @p131, @p132, @p133, @p134, @p135);
+INSERT INTO tranzrmoves."Pricings" ("Id", "AssemblyCost", "BaseToOriginCost", "BaseVanCost", "CallOutCharge", "CongestionChargeApplies", "CongestionZoneSurcharge", "CostPerHourAfterStandard", "CreatedAt", "CreatedBy", "CrewCount", "DestinationFloorSurcharge", "DismantleCost", "DistanceCost", "InsuranceUplift", "IsSelected", "LabourCost", "ModifiedAt", "ModifiedBy", "NumberOfItemsToAssemble", "NumberOfItemsToDismantle", "OriginFloorSurcharge", "QuoteId", "QuoteType", "SelectedVanCount", "ServiceLevel", "SpecialHandlingCost", "StandardBlockHours", "SubtotalWithoutVat", "TotalCostWithVat", "UlezSurcharge", "Vat", "VatAmount", "VatRate")
+VALUES (@p136, @p137, @p138, @p139, @p140, @p141, @p142, @p143, @p144, @p145, @p146, @p147, @p148, @p149, @p150, @p151, @p152, @p153, @p154, @p155, @p156, @p157, @p158, @p159, @p160, @p161, @p162, @p163, @p164, @p165, @p166, @p167, @p168, @p169);
+INSERT INTO tranzrmoves."Pricings" ("Id", "AssemblyCost", "BaseToOriginCost", "BaseVanCost", "CallOutCharge", "CongestionChargeApplies", "CongestionZoneSurcharge", "CostPerHourAfterStandard", "CreatedAt", "CreatedBy", "CrewCount", "DestinationFloorSurcharge", "DismantleCost", "DistanceCost", "InsuranceUplift", "IsSelected", "LabourCost", "ModifiedAt", "ModifiedBy", "NumberOfItemsToAssemble", "NumberOfItemsToDismantle", "OriginFloorSurcharge", "QuoteId", "QuoteType", "SelectedVanCount", "ServiceLevel", "SpecialHandlingCost", "StandardBlockHours", "SubtotalWithoutVat", "TotalCostWithVat", "UlezSurcharge", "Vat", "VatAmount", "VatRate")
+VALUES (@p170, @p171, @p172, @p173, @p174, @p175, @p176, @p177, @p178, @p179, @p180, @p181, @p182, @p183, @p184, @p185, @p186, @p187, @p188, @p189, @p190, @p191, @p192, @p193, @p194, @p195, @p196, @p197, @p198, @p199, @p200, @p201, @p202, @p203);
+UPDATE tranzrmoves."QuotesV2" SET "LastCompletedStepKey" = @p204, "ModifiedAt" = @p205, "PriceCalculatedAt" = @p206, "SelectedVanCount" = @p207, "StepsCompleted" = @p208, "VanCapacityStatus" = @p209
+WHERE "Id" = @p210 AND xmin = @p211
+RETURNING xmin;
+INSERT INTO tranzrmoves."Schedules" ("Id", "CollectionDate", "CreatedAt", "CreatedBy", "DeliveryDate", "FlexibleTime", "Hours", "ModifiedAt", "ModifiedBy", "QuoteId", "TimeSlot")
+VALUES (@p212, @p213, @p214, @p215, @p216, @p217, @p218, @p219, @p220, @p221, @p222);
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@at='?' (DbType = DateTime), @at1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+SELECT s."Id", s."CreatedAt", s."CreatedBy", s."DisplayOrder", s."EffectiveFrom", s."EffectiveTo", s."IsActive", s."ModifiedAt", s."ModifiedBy", s."ServiceLevel", s."Text", s.xmin
+FROM tranzrmoves."ServiceFeatures" AS s
+WHERE s."IsActive" AND s."EffectiveFrom" <= @at AND (s."EffectiveTo" IS NULL OR s."EffectiveTo" > @at1)
+ORDER BY s."ServiceLevel", s."DisplayOrder"
+[20:12:11 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:12 INF] QuoteJourney.Resolve quoteId=019df467-2293-7158-b1cf-022f2b12744a type=Send resumeStep=pricing resumeUrl=/pricing lastCompleted=move-date-time stepsCompleted=7 stepsDirty=0
+[20:12:12 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=collection-delivery-addresses route=/collection-delivery status=complete
+[20:12:12 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=inventory route=/inventory status=complete
+[20:12:12 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=move-date-time route=/van-and-date status=complete
+[20:12:12 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=pricing route=/pricing status=current
+[20:12:12 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=customer-info route=/origin-destination status=locked
+[20:12:12 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=quote-summary route=/summary status=locked
+[20:12:12 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=payment route=/pay status=locked
+[20:12:12 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=complete route=/confirmation status=locked
+[20:12:12 INF] [END] PatchMoveDateTimeStepCommand [0dc28e2e-4434-4203-b651-32162329de02]; Execution time=283ms
+[20:12:12 INF] Executed action method TranzrMoves.Api.Controllers.QuoteController.PatchMoveDateTime (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 289.369ms.
+[20:12:12 INF] Executing OkObjectResult, writing value of type 'TranzrMoves.Application.Contracts.QuoteJourneyResponse'.
+[20:12:12 INF] Executed action TranzrMoves.Api.Controllers.QuoteController.PatchMoveDateTime (TranzrMoves.Api) in 360.3185ms
+[20:12:12 INF] Executed endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchMoveDateTime (TranzrMoves.Api)'
+[20:12:12 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: PATCH
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/move-date-time
+Accept: application/json
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Content-Type: application/json
+Cookie: [Redacted]
+If-Match: [Redacted]
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Content-Length: 227
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:12:11 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+ETag: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:12:12 INF] Request finished HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/move-date-time - 200 null application/json; charset=utf-8 366.6048ms
+[20:12:28 INF] Request starting HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-email-phone - null null
+[20:12:28 INF] CORS policy execution successful.
+[20:12:28 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: OPTIONS
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-email-phone
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Access-Control-Request-Headers: [Redacted]
+Access-Control-Request-Method: [Redacted]
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 204
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Headers: [Redacted]
+Access-Control-Allow-Methods: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Vary: [Redacted]
+[20:12:28 INF] Request finished HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-email-phone - 204 null null 1.3302ms
+[20:12:28 INF] Request starting HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-email-phone - application/json 128
+[20:12:28 INF] CORS policy execution successful.
+[20:12:28 INF] Executing endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchCustomerEmailPhoneAsync (TranzrMoves.Api)'
+[20:12:28 INF] Route matched with {action = "PatchCustomerEmailPhone", controller = "Quote"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] PatchCustomerEmailPhoneAsync(System.Guid, TranzrMoves.Application.Contracts.PatchCustomerEmailPhoneRequest, System.String, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.QuoteController (TranzrMoves.Api).
+[20:12:28 INF] Executing action method TranzrMoves.Api.Controllers.QuoteController.PatchCustomerEmailPhoneAsync (TranzrMoves.Api) - Validation state: Valid
+[20:12:28 INF] [START] PatchCustomerEmailAndPhoneCommand [1ce343f6-9539-4a4a-942f-ea63793699af]
+[20:12:28 INF] [PROPS] PatchCustomerEmailAndPhoneCommand [1ce343f6-9539-4a4a-942f-ea63793699af] PatchCustomerEmailAndPhoneCommand { QuoteId = 019df467-2293-7158-b1cf-022f2b12744a, ExpectedVersion = 9980, Email = mcvavy@gmail.com, PhoneNumber = 07553635363 }
+[20:12:28 INF] Patching customer email and phone number
+[20:12:28 INF] Executed DbCommand (7ms) [Parameters=[@quoteId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+SELECT s0."Id", s0."BaseToOriginDistanceInMiles", s0."CreatedAt", s0."CreatedBy", s0."CrewCount", s0."CustomerId", s0."EffectiveVanCapacityM3", s0."ExpiresAt", s0."LastCompletedStepKey", s0."LastResumeEmailSentAt", s0."ModifiedAt", s0."ModifiedBy", s0."NumberOfItemsToAssemble", s0."NumberOfItemsToDismantle", s0."OriginDestinationRoute", s0."OriginToDestinationDistanceInMiles", s0."PaymentStatus", s0."PriceCalculatedAt", s0."QuotePrice", s0."QuoteReference", s0."RecommendedVanCount", s0."SelectedVanCount", s0."ServiceTier", s0."SessionId", s0."StepsCompleted", s0."StepsDirty", s0."TotalCost", s0."TotalInventoryVolumeM3", s0."Type", s0."VanCapacityStatus", s0."VanCapacityWarning", s0."VanRecommendationCalculatedAt", s0."VanType", s0.xmin, s0."Id0", s0."Id1", q0."Id", q0."Accuracy", q0."AddressNumber", q0."City", q0."Country", q0."CountryCode", q0."County", q0."District", q0."Floor", q0."FreeParkingAccess", q0."FullAddress", q0."HasElevator", q0."Kind", q0."Latitude", q0."Line1", q0."Line2", q0."Longitude", q0."MapboxId", q0."Neighborhood", q0."PackingCost", q0."PlaceName", q0."PostCode", q0."QuoteId", q0."Region", q0."RegionCode", q0."Street", p."Id", p."AssemblyCost", p."BaseToOriginCost", p."BaseVanCost", p."CallOutCharge", p."CongestionChargeApplies", p."CongestionZoneSurcharge", p."CostPerHourAfterStandard", p."CreatedAt", p."CreatedBy", p."CrewCount", p."DestinationFloorSurcharge", p."DismantleCost", p."DistanceCost", p."InsuranceUplift", p."IsSelected", p."LabourCost", p."ModifiedAt", p."ModifiedBy", p."NumberOfItemsToAssemble", p."NumberOfItemsToDismantle", p."OriginFloorSurcharge", p."QuoteId", p."QuoteType", p."SelectedVanCount", p."ServiceLevel", p."SpecialHandlingCost", p."StandardBlockHours", p."SubtotalWithoutVat", p."TotalCostWithVat", p."UlezSurcharge", p."Vat", p."VatAmount", p."VatRate", s0."CollectionDate", s0."CreatedAt0", s0."CreatedBy0", s0."DeliveryDate", s0."FlexibleTime", s0."Hours", s0."ModifiedAt0", s0."ModifiedBy0", s0."QuoteId", s0."TimeSlot", p0."Id", p0."Amount", p0."CreatedAt", p0."CreatedBy", p0."CustomerSelectedOption", p0."DueDate", p0."ModifiedAt", p0."ModifiedBy", p0."PaymentIntentId", p0."PaymentMethodId", p0."PaymentType", p0."QuoteId", p0."ReceiptUrl", p0."RemainingAmount", p0."SetupIntentId", p0."Status", p0."StripeSessionId", i."Id", i."Depth", i."Description", i."Height", i."Name", i."Quantity", i."QuoteId", i."Width", s0."CreatedAt1", s0."CreatedBy1", s0."Email", s0."FirstName", s0."LastName", s0."ModifiedAt1", s0."ModifiedBy1", s0."PhoneNumber", a."Id", a."Accuracy", a."AddressNumber", a."City", a."Country", a."CountryCode", a."County", a."District", a."Floor", a."FullAddress", a."HasElevator", a."Latitude", a."Line1", a."Line2", a."Longitude", a."MapboxId", a."Neighborhood", a."PlaceName", a."PostCode", a."Region", a."RegionCode", a."Street", a."Type", a."UserId"
+FROM (
+    SELECT q."Id", q."BaseToOriginDistanceInMiles", q."CreatedAt", q."CreatedBy", q."CrewCount", q."CustomerId", q."EffectiveVanCapacityM3", q."ExpiresAt", q."LastCompletedStepKey", q."LastResumeEmailSentAt", q."ModifiedAt", q."ModifiedBy", q."NumberOfItemsToAssemble", q."NumberOfItemsToDismantle", q."OriginDestinationRoute", q."OriginToDestinationDistanceInMiles", q."PaymentStatus", q."PriceCalculatedAt", q."QuotePrice", q."QuoteReference", q."RecommendedVanCount", q."SelectedVanCount", q."ServiceTier", q."SessionId", q."StepsCompleted", q."StepsDirty", q."TotalCost", q."TotalInventoryVolumeM3", q."Type", q."VanCapacityStatus", q."VanCapacityWarning", q."VanRecommendationCalculatedAt", q."VanType", q.xmin, s."Id" AS "Id0", s."CollectionDate", s."CreatedAt" AS "CreatedAt0", s."CreatedBy" AS "CreatedBy0", s."DeliveryDate", s."FlexibleTime", s."Hours", s."ModifiedAt" AS "ModifiedAt0", s."ModifiedBy" AS "ModifiedBy0", s."QuoteId", s."TimeSlot", u."Id" AS "Id1", u."CreatedAt" AS "CreatedAt1", u."CreatedBy" AS "CreatedBy1", u."Email", u."FirstName", u."LastName", u."ModifiedAt" AS "ModifiedAt1", u."ModifiedBy" AS "ModifiedBy1", u."PhoneNumber"
+    FROM tranzrmoves."QuotesV2" AS q
+    LEFT JOIN tranzrmoves."Schedules" AS s ON q."Id" = s."QuoteId"
+    LEFT JOIN tranzrmoves."UsersV2" AS u ON q."CustomerId" = u."Id"
+    WHERE q."Id" = @quoteId
+    LIMIT 1
+) AS s0
+LEFT JOIN tranzrmoves."QuoteAddresses" AS q0 ON s0."Id" = q0."QuoteId"
+LEFT JOIN tranzrmoves."Pricings" AS p ON s0."Id" = p."QuoteId"
+LEFT JOIN tranzrmoves."Payments" AS p0 ON s0."Id" = p0."QuoteId"
+LEFT JOIN tranzrmoves."InventoryItemsV2" AS i ON s0."Id" = i."QuoteId"
+LEFT JOIN tranzrmoves."AddressesV2" AS a ON s0."Id1" = a."UserId"
+ORDER BY s0."Id", s0."Id0", s0."Id1", q0."Id", p."Id", p0."Id", i."Id"
+[20:12:28 INF] Executed DbCommand (1ms) [Parameters=[@emailAddress='?'], CommandType='Text', CommandTimeout='30']
+SELECT u."Id", u."CreatedAt", u."CreatedBy", u."Email", u."FirstName", u."LastName", u."ModifiedAt", u."ModifiedBy", u."PhoneNumber"
+FROM tranzrmoves."UsersV2" AS u
+WHERE u."Email" = @emailAddress
+LIMIT 1
+[20:12:28 INF] Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p2='?', @p3='?', @p4='?', @p5='?', @p6='?' (DbType = DateTime), @p7='?', @p8='?'], CommandType='Text', CommandTimeout='30']
+INSERT INTO tranzrmoves."UsersV2" ("Id", "CreatedAt", "CreatedBy", "Email", "FirstName", "LastName", "ModifiedAt", "ModifiedBy", "PhoneNumber")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8);
+[20:12:28 INF] Executed DbCommand (2ms) [Parameters=[@p2='?' (DbType = Guid), @p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p3='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']
+UPDATE tranzrmoves."QuotesV2" SET "CustomerId" = @p0, "ModifiedAt" = @p1
+WHERE "Id" = @p2 AND xmin = @p3
+RETURNING xmin;
+[20:12:28 INF] Executed DbCommand (1ms) [Parameters=[@at='?' (DbType = DateTime), @at1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+SELECT s."Id", s."CreatedAt", s."CreatedBy", s."DisplayOrder", s."EffectiveFrom", s."EffectiveTo", s."IsActive", s."ModifiedAt", s."ModifiedBy", s."ServiceLevel", s."Text", s.xmin
+FROM tranzrmoves."ServiceFeatures" AS s
+WHERE s."IsActive" AND s."EffectiveFrom" <= @at AND (s."EffectiveTo" IS NULL OR s."EffectiveTo" > @at1)
+ORDER BY s."ServiceLevel", s."DisplayOrder"
+[20:12:28 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:28 INF] QuoteJourney.Resolve quoteId=019df467-2293-7158-b1cf-022f2b12744a type=Send resumeStep=pricing resumeUrl=/pricing lastCompleted=move-date-time stepsCompleted=7 stepsDirty=0
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=collection-delivery-addresses route=/collection-delivery status=complete
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=inventory route=/inventory status=complete
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=move-date-time route=/van-and-date status=complete
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=pricing route=/pricing status=current
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=customer-info route=/origin-destination status=locked
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=quote-summary route=/summary status=locked
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=payment route=/pay status=locked
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=complete route=/confirmation status=locked
+[20:12:28 INF] [END] PatchCustomerEmailAndPhoneCommand [1ce343f6-9539-4a4a-942f-ea63793699af]; Execution time=207ms
+[20:12:28 INF] Executed action method TranzrMoves.Api.Controllers.QuoteController.PatchCustomerEmailPhoneAsync (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.NoContentResult in 213.2461ms.
+[20:12:28 INF] Executing StatusCodeResult, setting HTTP status code 204
+[20:12:28 INF] Executed action TranzrMoves.Api.Controllers.QuoteController.PatchCustomerEmailPhoneAsync (TranzrMoves.Api) in 228.0741ms
+[20:12:28 INF] Executed endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchCustomerEmailPhoneAsync (TranzrMoves.Api)'
+[20:12:28 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: PATCH
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-email-phone
+Accept: application/json
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Content-Type: application/json
+Cookie: [Redacted]
+If-Match: [Redacted]
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Content-Length: 128
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 204
+ETag: [Redacted]
+[20:12:28 INF] Request finished HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-email-phone - 204 null null 239.3426ms
+[20:12:28 INF] Request starting HTTP/1.1 GET http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/journey-state - null null
+[20:12:28 INF] CORS policy execution successful.
+[20:12:28 INF] Executing endpoint 'TranzrMoves.Api.Controllers.QuoteController.GetJourneyState (TranzrMoves.Api)'
+[20:12:28 INF] Route matched with {action = "GetJourneyState", controller = "Quote"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetJourneyState(System.Guid, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.QuoteController (TranzrMoves.Api).
+[20:12:28 INF] Executing action method TranzrMoves.Api.Controllers.QuoteController.GetJourneyState (TranzrMoves.Api) - Validation state: Valid
+[20:12:28 INF] [START] QuoteJourneyStateQuery [82111456-6b6a-4f53-b73d-fd5876ef5e61]
+[20:12:28 INF] [PROPS] QuoteJourneyStateQuery [82111456-6b6a-4f53-b73d-fd5876ef5e61] QuoteJourneyStateQuery { QuoteId = 019df467-2293-7158-b1cf-022f2b12744a }
+[20:12:28 INF] Getting quote journey state
+[20:12:28 INF] Executed DbCommand (6ms) [Parameters=[@quoteId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+SELECT s0."Id", s0."BaseToOriginDistanceInMiles", s0."CreatedAt", s0."CreatedBy", s0."CrewCount", s0."CustomerId", s0."EffectiveVanCapacityM3", s0."ExpiresAt", s0."LastCompletedStepKey", s0."LastResumeEmailSentAt", s0."ModifiedAt", s0."ModifiedBy", s0."NumberOfItemsToAssemble", s0."NumberOfItemsToDismantle", s0."OriginDestinationRoute", s0."OriginToDestinationDistanceInMiles", s0."PaymentStatus", s0."PriceCalculatedAt", s0."QuotePrice", s0."QuoteReference", s0."RecommendedVanCount", s0."SelectedVanCount", s0."ServiceTier", s0."SessionId", s0."StepsCompleted", s0."StepsDirty", s0."TotalCost", s0."TotalInventoryVolumeM3", s0."Type", s0."VanCapacityStatus", s0."VanCapacityWarning", s0."VanRecommendationCalculatedAt", s0."VanType", s0.xmin, s0."Id0", s0."Id1", q0."Id", q0."Accuracy", q0."AddressNumber", q0."City", q0."Country", q0."CountryCode", q0."County", q0."District", q0."Floor", q0."FreeParkingAccess", q0."FullAddress", q0."HasElevator", q0."Kind", q0."Latitude", q0."Line1", q0."Line2", q0."Longitude", q0."MapboxId", q0."Neighborhood", q0."PackingCost", q0."PlaceName", q0."PostCode", q0."QuoteId", q0."Region", q0."RegionCode", q0."Street", p."Id", p."AssemblyCost", p."BaseToOriginCost", p."BaseVanCost", p."CallOutCharge", p."CongestionChargeApplies", p."CongestionZoneSurcharge", p."CostPerHourAfterStandard", p."CreatedAt", p."CreatedBy", p."CrewCount", p."DestinationFloorSurcharge", p."DismantleCost", p."DistanceCost", p."InsuranceUplift", p."IsSelected", p."LabourCost", p."ModifiedAt", p."ModifiedBy", p."NumberOfItemsToAssemble", p."NumberOfItemsToDismantle", p."OriginFloorSurcharge", p."QuoteId", p."QuoteType", p."SelectedVanCount", p."ServiceLevel", p."SpecialHandlingCost", p."StandardBlockHours", p."SubtotalWithoutVat", p."TotalCostWithVat", p."UlezSurcharge", p."Vat", p."VatAmount", p."VatRate", s0."CollectionDate", s0."CreatedAt0", s0."CreatedBy0", s0."DeliveryDate", s0."FlexibleTime", s0."Hours", s0."ModifiedAt0", s0."ModifiedBy0", s0."QuoteId", s0."TimeSlot", p0."Id", p0."Amount", p0."CreatedAt", p0."CreatedBy", p0."CustomerSelectedOption", p0."DueDate", p0."ModifiedAt", p0."ModifiedBy", p0."PaymentIntentId", p0."PaymentMethodId", p0."PaymentType", p0."QuoteId", p0."ReceiptUrl", p0."RemainingAmount", p0."SetupIntentId", p0."Status", p0."StripeSessionId", i."Id", i."Depth", i."Description", i."Height", i."Name", i."Quantity", i."QuoteId", i."Width", s0."CreatedAt1", s0."CreatedBy1", s0."Email", s0."FirstName", s0."LastName", s0."ModifiedAt1", s0."ModifiedBy1", s0."PhoneNumber", a."Id", a."Accuracy", a."AddressNumber", a."City", a."Country", a."CountryCode", a."County", a."District", a."Floor", a."FullAddress", a."HasElevator", a."Latitude", a."Line1", a."Line2", a."Longitude", a."MapboxId", a."Neighborhood", a."PlaceName", a."PostCode", a."Region", a."RegionCode", a."Street", a."Type", a."UserId"
+FROM (
+    SELECT q."Id", q."BaseToOriginDistanceInMiles", q."CreatedAt", q."CreatedBy", q."CrewCount", q."CustomerId", q."EffectiveVanCapacityM3", q."ExpiresAt", q."LastCompletedStepKey", q."LastResumeEmailSentAt", q."ModifiedAt", q."ModifiedBy", q."NumberOfItemsToAssemble", q."NumberOfItemsToDismantle", q."OriginDestinationRoute", q."OriginToDestinationDistanceInMiles", q."PaymentStatus", q."PriceCalculatedAt", q."QuotePrice", q."QuoteReference", q."RecommendedVanCount", q."SelectedVanCount", q."ServiceTier", q."SessionId", q."StepsCompleted", q."StepsDirty", q."TotalCost", q."TotalInventoryVolumeM3", q."Type", q."VanCapacityStatus", q."VanCapacityWarning", q."VanRecommendationCalculatedAt", q."VanType", q.xmin, s."Id" AS "Id0", s."CollectionDate", s."CreatedAt" AS "CreatedAt0", s."CreatedBy" AS "CreatedBy0", s."DeliveryDate", s."FlexibleTime", s."Hours", s."ModifiedAt" AS "ModifiedAt0", s."ModifiedBy" AS "ModifiedBy0", s."QuoteId", s."TimeSlot", u."Id" AS "Id1", u."CreatedAt" AS "CreatedAt1", u."CreatedBy" AS "CreatedBy1", u."Email", u."FirstName", u."LastName", u."ModifiedAt" AS "ModifiedAt1", u."ModifiedBy" AS "ModifiedBy1", u."PhoneNumber"
+    FROM tranzrmoves."QuotesV2" AS q
+    LEFT JOIN tranzrmoves."Schedules" AS s ON q."Id" = s."QuoteId"
+    LEFT JOIN tranzrmoves."UsersV2" AS u ON q."CustomerId" = u."Id"
+    WHERE q."Id" = @quoteId
+    LIMIT 1
+) AS s0
+LEFT JOIN tranzrmoves."QuoteAddresses" AS q0 ON s0."Id" = q0."QuoteId"
+LEFT JOIN tranzrmoves."Pricings" AS p ON s0."Id" = p."QuoteId"
+LEFT JOIN tranzrmoves."Payments" AS p0 ON s0."Id" = p0."QuoteId"
+LEFT JOIN tranzrmoves."InventoryItemsV2" AS i ON s0."Id" = i."QuoteId"
+LEFT JOIN tranzrmoves."AddressesV2" AS a ON s0."Id1" = a."UserId"
+ORDER BY s0."Id", s0."Id0", s0."Id1", q0."Id", p."Id", p0."Id", i."Id"
+[20:12:28 INF] Executed DbCommand (2ms) [Parameters=[@at='?' (DbType = DateTime), @at1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+SELECT s."Id", s."CreatedAt", s."CreatedBy", s."DisplayOrder", s."EffectiveFrom", s."EffectiveTo", s."IsActive", s."ModifiedAt", s."ModifiedBy", s."ServiceLevel", s."Text", s.xmin
+FROM tranzrmoves."ServiceFeatures" AS s
+WHERE s."IsActive" AND s."EffectiveFrom" <= @at AND (s."EffectiveTo" IS NULL OR s."EffectiveTo" > @at1)
+ORDER BY s."ServiceLevel", s."DisplayOrder"
+[20:12:28 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:28 INF] QuoteJourney.Resolve quoteId=019df467-2293-7158-b1cf-022f2b12744a type=Send resumeStep=pricing resumeUrl=/pricing lastCompleted=move-date-time stepsCompleted=7 stepsDirty=0
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=collection-delivery-addresses route=/collection-delivery status=complete
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=inventory route=/inventory status=complete
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=move-date-time route=/van-and-date status=complete
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=pricing route=/pricing status=current
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=customer-info route=/origin-destination status=locked
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=quote-summary route=/summary status=locked
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=payment route=/pay status=locked
+[20:12:28 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=complete route=/confirmation status=locked
+[20:12:28 INF] [END] QuoteJourneyStateQuery [82111456-6b6a-4f53-b73d-fd5876ef5e61]; Execution time=25ms
+[20:12:28 INF] Executed action method TranzrMoves.Api.Controllers.QuoteController.GetJourneyState (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 29.8486ms.
+[20:12:28 INF] Executing OkObjectResult, writing value of type 'TranzrMoves.Application.Contracts.QuoteJourneyResponse'.
+[20:12:28 INF] Executed action TranzrMoves.Api.Controllers.QuoteController.GetJourneyState (TranzrMoves.Api) in 35.3706ms
+[20:12:28 INF] Executed endpoint 'TranzrMoves.Api.Controllers.QuoteController.GetJourneyState (TranzrMoves.Api)'
+[20:12:28 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: GET
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/journey-state
+Accept: application/json
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Cookie: [Redacted]
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:12:28 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+ETag: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:12:28 INF] Request finished HTTP/1.1 GET http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/journey-state - 200 null application/json; charset=utf-8 39.0283ms
+[20:12:35 INF] Request starting HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/pricing - null null
+[20:12:35 INF] CORS policy execution successful.
+[20:12:35 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: OPTIONS
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/pricing
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Access-Control-Request-Headers: [Redacted]
+Access-Control-Request-Method: [Redacted]
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 204
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Headers: [Redacted]
+Access-Control-Allow-Methods: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Vary: [Redacted]
+[20:12:35 INF] Request finished HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/pricing - 204 null null 1.4092ms
+[20:12:35 INF] Request starting HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/pricing - application/json 206
+[20:12:35 INF] CORS policy execution successful.
+[20:12:35 INF] Executing endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchPricing (TranzrMoves.Api)'
+[20:12:35 INF] Route matched with {action = "PatchPricing", controller = "Quote"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] PatchPricing(System.Guid, TranzrMoves.Application.Contracts.PatchPricingStepRequest, System.String, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.QuoteController (TranzrMoves.Api).
+[20:12:35 INF] Executing action method TranzrMoves.Api.Controllers.QuoteController.PatchPricing (TranzrMoves.Api) - Validation state: Valid
+[20:12:35 INF] [START] PatchPricingStepCommand [6ebaa35b-5dba-4277-87dd-209b2ecaa45d]
+[20:12:35 INF] [PROPS] PatchPricingStepCommand [6ebaa35b-5dba-4277-87dd-209b2ecaa45d] PatchPricingStepCommand { QuoteId = 019df467-2293-7158-b1cf-022f2b12744a, ExpectedVersion = 9983, PricingId = 019df467-ba59-7432-b441-f0337ba6c2fb, NumberOfSelectedVans = 3, NumberOfItemsToDismantle = 0, NumberOfItemsToAssemble = 0 }
+[20:12:35 INF] Patching pricing step
+[20:12:35 INF] Executed DbCommand (5ms) [Parameters=[@quoteId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+SELECT s0."Id", s0."BaseToOriginDistanceInMiles", s0."CreatedAt", s0."CreatedBy", s0."CrewCount", s0."CustomerId", s0."EffectiveVanCapacityM3", s0."ExpiresAt", s0."LastCompletedStepKey", s0."LastResumeEmailSentAt", s0."ModifiedAt", s0."ModifiedBy", s0."NumberOfItemsToAssemble", s0."NumberOfItemsToDismantle", s0."OriginDestinationRoute", s0."OriginToDestinationDistanceInMiles", s0."PaymentStatus", s0."PriceCalculatedAt", s0."QuotePrice", s0."QuoteReference", s0."RecommendedVanCount", s0."SelectedVanCount", s0."ServiceTier", s0."SessionId", s0."StepsCompleted", s0."StepsDirty", s0."TotalCost", s0."TotalInventoryVolumeM3", s0."Type", s0."VanCapacityStatus", s0."VanCapacityWarning", s0."VanRecommendationCalculatedAt", s0."VanType", s0.xmin, s0."Id0", s0."Id1", q0."Id", q0."Accuracy", q0."AddressNumber", q0."City", q0."Country", q0."CountryCode", q0."County", q0."District", q0."Floor", q0."FreeParkingAccess", q0."FullAddress", q0."HasElevator", q0."Kind", q0."Latitude", q0."Line1", q0."Line2", q0."Longitude", q0."MapboxId", q0."Neighborhood", q0."PackingCost", q0."PlaceName", q0."PostCode", q0."QuoteId", q0."Region", q0."RegionCode", q0."Street", p."Id", p."AssemblyCost", p."BaseToOriginCost", p."BaseVanCost", p."CallOutCharge", p."CongestionChargeApplies", p."CongestionZoneSurcharge", p."CostPerHourAfterStandard", p."CreatedAt", p."CreatedBy", p."CrewCount", p."DestinationFloorSurcharge", p."DismantleCost", p."DistanceCost", p."InsuranceUplift", p."IsSelected", p."LabourCost", p."ModifiedAt", p."ModifiedBy", p."NumberOfItemsToAssemble", p."NumberOfItemsToDismantle", p."OriginFloorSurcharge", p."QuoteId", p."QuoteType", p."SelectedVanCount", p."ServiceLevel", p."SpecialHandlingCost", p."StandardBlockHours", p."SubtotalWithoutVat", p."TotalCostWithVat", p."UlezSurcharge", p."Vat", p."VatAmount", p."VatRate", s0."CollectionDate", s0."CreatedAt0", s0."CreatedBy0", s0."DeliveryDate", s0."FlexibleTime", s0."Hours", s0."ModifiedAt0", s0."ModifiedBy0", s0."QuoteId", s0."TimeSlot", p0."Id", p0."Amount", p0."CreatedAt", p0."CreatedBy", p0."CustomerSelectedOption", p0."DueDate", p0."ModifiedAt", p0."ModifiedBy", p0."PaymentIntentId", p0."PaymentMethodId", p0."PaymentType", p0."QuoteId", p0."ReceiptUrl", p0."RemainingAmount", p0."SetupIntentId", p0."Status", p0."StripeSessionId", i."Id", i."Depth", i."Description", i."Height", i."Name", i."Quantity", i."QuoteId", i."Width", s0."CreatedAt1", s0."CreatedBy1", s0."Email", s0."FirstName", s0."LastName", s0."ModifiedAt1", s0."ModifiedBy1", s0."PhoneNumber", a."Id", a."Accuracy", a."AddressNumber", a."City", a."Country", a."CountryCode", a."County", a."District", a."Floor", a."FullAddress", a."HasElevator", a."Latitude", a."Line1", a."Line2", a."Longitude", a."MapboxId", a."Neighborhood", a."PlaceName", a."PostCode", a."Region", a."RegionCode", a."Street", a."Type", a."UserId"
+FROM (
+    SELECT q."Id", q."BaseToOriginDistanceInMiles", q."CreatedAt", q."CreatedBy", q."CrewCount", q."CustomerId", q."EffectiveVanCapacityM3", q."ExpiresAt", q."LastCompletedStepKey", q."LastResumeEmailSentAt", q."ModifiedAt", q."ModifiedBy", q."NumberOfItemsToAssemble", q."NumberOfItemsToDismantle", q."OriginDestinationRoute", q."OriginToDestinationDistanceInMiles", q."PaymentStatus", q."PriceCalculatedAt", q."QuotePrice", q."QuoteReference", q."RecommendedVanCount", q."SelectedVanCount", q."ServiceTier", q."SessionId", q."StepsCompleted", q."StepsDirty", q."TotalCost", q."TotalInventoryVolumeM3", q."Type", q."VanCapacityStatus", q."VanCapacityWarning", q."VanRecommendationCalculatedAt", q."VanType", q.xmin, s."Id" AS "Id0", s."CollectionDate", s."CreatedAt" AS "CreatedAt0", s."CreatedBy" AS "CreatedBy0", s."DeliveryDate", s."FlexibleTime", s."Hours", s."ModifiedAt" AS "ModifiedAt0", s."ModifiedBy" AS "ModifiedBy0", s."QuoteId", s."TimeSlot", u."Id" AS "Id1", u."CreatedAt" AS "CreatedAt1", u."CreatedBy" AS "CreatedBy1", u."Email", u."FirstName", u."LastName", u."ModifiedAt" AS "ModifiedAt1", u."ModifiedBy" AS "ModifiedBy1", u."PhoneNumber"
+    FROM tranzrmoves."QuotesV2" AS q
+    LEFT JOIN tranzrmoves."Schedules" AS s ON q."Id" = s."QuoteId"
+    LEFT JOIN tranzrmoves."UsersV2" AS u ON q."CustomerId" = u."Id"
+    WHERE q."Id" = @quoteId
+    LIMIT 1
+) AS s0
+LEFT JOIN tranzrmoves."QuoteAddresses" AS q0 ON s0."Id" = q0."QuoteId"
+LEFT JOIN tranzrmoves."Pricings" AS p ON s0."Id" = p."QuoteId"
+LEFT JOIN tranzrmoves."Payments" AS p0 ON s0."Id" = p0."QuoteId"
+LEFT JOIN tranzrmoves."InventoryItemsV2" AS i ON s0."Id" = i."QuoteId"
+LEFT JOIN tranzrmoves."AddressesV2" AS a ON s0."Id1" = a."UserId"
+ORDER BY s0."Id", s0."Id0", s0."Id1", q0."Id", p."Id", p0."Id", i."Id"
+[20:12:35 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:35 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:35 INF] Executed DbCommand (1ms) [Parameters=[@p6='?' (DbType = Guid), @p0='?' (DbType = Boolean), @p1='?' (DbType = DateTime), @p2='?' (DbType = Int32), @p3='?' (DbType = Decimal), @p4='?' (DbType = Decimal), @p5='?' (DbType = Decimal), @p16='?' (DbType = Guid), @p7='?' (DbType = Int64), @p8='?', @p9='?' (DbType = DateTime), @p10='?' (DbType = DateTime), @p11='?' (DbType = Decimal), @p12='?' (DbType = Int32), @p13='?', @p14='?' (DbType = Int64), @p15='?' (DbType = Decimal), @p17='?' (DbType = Object)], CommandType='Text', CommandTimeout='30']
+UPDATE tranzrmoves."Pricings" SET "IsSelected" = @p0, "ModifiedAt" = @p1, "SelectedVanCount" = @p2, "SubtotalWithoutVat" = @p3, "TotalCostWithVat" = @p4, "VatAmount" = @p5
+WHERE "Id" = @p6;
+UPDATE tranzrmoves."QuotesV2" SET "CrewCount" = @p7, "LastCompletedStepKey" = @p8, "ModifiedAt" = @p9, "PriceCalculatedAt" = @p10, "QuotePrice" = @p11, "SelectedVanCount" = @p12, "ServiceTier" = @p13, "StepsCompleted" = @p14, "TotalCost" = @p15
+WHERE "Id" = @p16 AND xmin = @p17
+RETURNING xmin;
+[20:12:35 INF] Executed DbCommand (1ms) [Parameters=[@at='?' (DbType = DateTime), @at1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+SELECT s."Id", s."CreatedAt", s."CreatedBy", s."DisplayOrder", s."EffectiveFrom", s."EffectiveTo", s."IsActive", s."ModifiedAt", s."ModifiedBy", s."ServiceLevel", s."Text", s.xmin
+FROM tranzrmoves."ServiceFeatures" AS s
+WHERE s."IsActive" AND s."EffectiveFrom" <= @at AND (s."EffectiveTo" IS NULL OR s."EffectiveTo" > @at1)
+ORDER BY s."ServiceLevel", s."DisplayOrder"
+[20:12:35 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:35 INF] QuoteJourney.Resolve quoteId=019df467-2293-7158-b1cf-022f2b12744a type=Send resumeStep=customer-info resumeUrl=/origin-destination lastCompleted=pricing stepsCompleted=23 stepsDirty=0
+[20:12:35 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=collection-delivery-addresses route=/collection-delivery status=complete
+[20:12:35 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=inventory route=/inventory status=complete
+[20:12:35 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=move-date-time route=/van-and-date status=complete
+[20:12:35 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=pricing route=/pricing status=complete
+[20:12:35 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=customer-info route=/origin-destination status=current
+[20:12:35 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=quote-summary route=/summary status=locked
+[20:12:35 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=payment route=/pay status=locked
+[20:12:35 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=complete route=/confirmation status=locked
+[20:12:35 INF] [END] PatchPricingStepCommand [6ebaa35b-5dba-4277-87dd-209b2ecaa45d]; Execution time=44ms
+[20:12:35 INF] Executed action method TranzrMoves.Api.Controllers.QuoteController.PatchPricing (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 49.0913ms.
+[20:12:35 INF] Executing OkObjectResult, writing value of type 'TranzrMoves.Application.Contracts.QuoteJourneyResponse'.
+[20:12:35 INF] Executed action TranzrMoves.Api.Controllers.QuoteController.PatchPricing (TranzrMoves.Api) in 64.3866ms
+[20:12:35 INF] Executed endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchPricing (TranzrMoves.Api)'
+[20:12:35 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: PATCH
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/pricing
+Accept: application/json
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Content-Type: application/json
+Cookie: [Redacted]
+If-Match: [Redacted]
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Content-Length: 206
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:12:35 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+ETag: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:12:35 INF] Request finished HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/pricing - 200 null application/json; charset=utf-8 71.1828ms
+[20:12:45 INF] Request starting HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses - null null
+[20:12:45 INF] CORS policy execution successful.
+[20:12:45 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: OPTIONS
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Access-Control-Request-Headers: [Redacted]
+Access-Control-Request-Method: [Redacted]
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 204
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Headers: [Redacted]
+Access-Control-Allow-Methods: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Vary: [Redacted]
+[20:12:45 INF] Request finished HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses - 204 null null 1.1522ms
+[20:12:45 INF] Request starting HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses - application/json 613
+[20:12:45 INF] CORS policy execution successful.
+[20:12:45 INF] Executing endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api)'
+[20:12:45 INF] Route matched with {action = "PatchAddresses", controller = "Quote"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] PatchAddresses(System.Guid, TranzrMoves.Application.Contracts.PatchAddressesRequest, System.String, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.QuoteController (TranzrMoves.Api).
+[20:12:45 INF] Executing action method TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api) - Validation state: Valid
+[20:12:45 INF] [START] PatchAddressesCommand [000ea2df-3d5b-4fbd-9128-7fc62d406477]
+[20:12:45 INF] [PROPS] PatchAddressesCommand [000ea2df-3d5b-4fbd-9128-7fc62d406477] PatchAddressesCommand { QuoteId = 019df467-2293-7158-b1cf-022f2b12744a, ExpectedVersion = 9984, Addresses = System.Collections.Generic.List`1[TranzrMoves.Application.Contracts.QuoteAddressDto] }
+[20:12:45 INF] Patching collection and delivery addresses
+[20:12:45 INF] Executed DbCommand (7ms) [Parameters=[@quoteId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+SELECT s0."Id", s0."BaseToOriginDistanceInMiles", s0."CreatedAt", s0."CreatedBy", s0."CrewCount", s0."CustomerId", s0."EffectiveVanCapacityM3", s0."ExpiresAt", s0."LastCompletedStepKey", s0."LastResumeEmailSentAt", s0."ModifiedAt", s0."ModifiedBy", s0."NumberOfItemsToAssemble", s0."NumberOfItemsToDismantle", s0."OriginDestinationRoute", s0."OriginToDestinationDistanceInMiles", s0."PaymentStatus", s0."PriceCalculatedAt", s0."QuotePrice", s0."QuoteReference", s0."RecommendedVanCount", s0."SelectedVanCount", s0."ServiceTier", s0."SessionId", s0."StepsCompleted", s0."StepsDirty", s0."TotalCost", s0."TotalInventoryVolumeM3", s0."Type", s0."VanCapacityStatus", s0."VanCapacityWarning", s0."VanRecommendationCalculatedAt", s0."VanType", s0.xmin, s0."Id0", s0."Id1", q0."Id", q0."Accuracy", q0."AddressNumber", q0."City", q0."Country", q0."CountryCode", q0."County", q0."District", q0."Floor", q0."FreeParkingAccess", q0."FullAddress", q0."HasElevator", q0."Kind", q0."Latitude", q0."Line1", q0."Line2", q0."Longitude", q0."MapboxId", q0."Neighborhood", q0."PackingCost", q0."PlaceName", q0."PostCode", q0."QuoteId", q0."Region", q0."RegionCode", q0."Street", p."Id", p."AssemblyCost", p."BaseToOriginCost", p."BaseVanCost", p."CallOutCharge", p."CongestionChargeApplies", p."CongestionZoneSurcharge", p."CostPerHourAfterStandard", p."CreatedAt", p."CreatedBy", p."CrewCount", p."DestinationFloorSurcharge", p."DismantleCost", p."DistanceCost", p."InsuranceUplift", p."IsSelected", p."LabourCost", p."ModifiedAt", p."ModifiedBy", p."NumberOfItemsToAssemble", p."NumberOfItemsToDismantle", p."OriginFloorSurcharge", p."QuoteId", p."QuoteType", p."SelectedVanCount", p."ServiceLevel", p."SpecialHandlingCost", p."StandardBlockHours", p."SubtotalWithoutVat", p."TotalCostWithVat", p."UlezSurcharge", p."Vat", p."VatAmount", p."VatRate", s0."CollectionDate", s0."CreatedAt0", s0."CreatedBy0", s0."DeliveryDate", s0."FlexibleTime", s0."Hours", s0."ModifiedAt0", s0."ModifiedBy0", s0."QuoteId", s0."TimeSlot", p0."Id", p0."Amount", p0."CreatedAt", p0."CreatedBy", p0."CustomerSelectedOption", p0."DueDate", p0."ModifiedAt", p0."ModifiedBy", p0."PaymentIntentId", p0."PaymentMethodId", p0."PaymentType", p0."QuoteId", p0."ReceiptUrl", p0."RemainingAmount", p0."SetupIntentId", p0."Status", p0."StripeSessionId", i."Id", i."Depth", i."Description", i."Height", i."Name", i."Quantity", i."QuoteId", i."Width", s0."CreatedAt1", s0."CreatedBy1", s0."Email", s0."FirstName", s0."LastName", s0."ModifiedAt1", s0."ModifiedBy1", s0."PhoneNumber", a."Id", a."Accuracy", a."AddressNumber", a."City", a."Country", a."CountryCode", a."County", a."District", a."Floor", a."FullAddress", a."HasElevator", a."Latitude", a."Line1", a."Line2", a."Longitude", a."MapboxId", a."Neighborhood", a."PlaceName", a."PostCode", a."Region", a."RegionCode", a."Street", a."Type", a."UserId"
+FROM (
+    SELECT q."Id", q."BaseToOriginDistanceInMiles", q."CreatedAt", q."CreatedBy", q."CrewCount", q."CustomerId", q."EffectiveVanCapacityM3", q."ExpiresAt", q."LastCompletedStepKey", q."LastResumeEmailSentAt", q."ModifiedAt", q."ModifiedBy", q."NumberOfItemsToAssemble", q."NumberOfItemsToDismantle", q."OriginDestinationRoute", q."OriginToDestinationDistanceInMiles", q."PaymentStatus", q."PriceCalculatedAt", q."QuotePrice", q."QuoteReference", q."RecommendedVanCount", q."SelectedVanCount", q."ServiceTier", q."SessionId", q."StepsCompleted", q."StepsDirty", q."TotalCost", q."TotalInventoryVolumeM3", q."Type", q."VanCapacityStatus", q."VanCapacityWarning", q."VanRecommendationCalculatedAt", q."VanType", q.xmin, s."Id" AS "Id0", s."CollectionDate", s."CreatedAt" AS "CreatedAt0", s."CreatedBy" AS "CreatedBy0", s."DeliveryDate", s."FlexibleTime", s."Hours", s."ModifiedAt" AS "ModifiedAt0", s."ModifiedBy" AS "ModifiedBy0", s."QuoteId", s."TimeSlot", u."Id" AS "Id1", u."CreatedAt" AS "CreatedAt1", u."CreatedBy" AS "CreatedBy1", u."Email", u."FirstName", u."LastName", u."ModifiedAt" AS "ModifiedAt1", u."ModifiedBy" AS "ModifiedBy1", u."PhoneNumber"
+    FROM tranzrmoves."QuotesV2" AS q
+    LEFT JOIN tranzrmoves."Schedules" AS s ON q."Id" = s."QuoteId"
+    LEFT JOIN tranzrmoves."UsersV2" AS u ON q."CustomerId" = u."Id"
+    WHERE q."Id" = @quoteId
+    LIMIT 1
+) AS s0
+LEFT JOIN tranzrmoves."QuoteAddresses" AS q0 ON s0."Id" = q0."QuoteId"
+LEFT JOIN tranzrmoves."Pricings" AS p ON s0."Id" = p."QuoteId"
+LEFT JOIN tranzrmoves."Payments" AS p0 ON s0."Id" = p0."QuoteId"
+LEFT JOIN tranzrmoves."InventoryItemsV2" AS i ON s0."Id" = i."QuoteId"
+LEFT JOIN tranzrmoves."AddressesV2" AS a ON s0."Id1" = a."UserId"
+ORDER BY s0."Id", s0."Id0", s0."Id1", q0."Id", p."Id", p0."Id", i."Id"
+[20:12:45 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+Ewell%2c+Epsom%2c+KT19+9FZ%2c+United+Kingdom.json?*
+[20:12:45 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+Ewell%2c+Epsom%2c+KT19+9FZ%2c+United+Kingdom.json?*
+[20:12:45 INF] Received HTTP response headers after 16.6881ms - 200
+[20:12:45 INF] End processing HTTP request after 17.4906ms - 200
+[20:12:45 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/23+Luke+Close%2c+Norwich%2c+NR5+0QG%2c+United+Kingdom.json?*
+[20:12:45 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/23+Luke+Close%2c+Norwich%2c+NR5+0QG%2c+United+Kingdom.json?*
+[20:12:45 INF] Received HTTP response headers after 20.496ms - 200
+[20:12:45 INF] End processing HTTP request after 21.0414ms - 200
+[20:12:45 INF] Start processing HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/-0.2726,51.35994;1.21402,52.64853?*
+[20:12:45 INF] Sending HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/-0.2726,51.35994;1.21402,52.64853?*
+[20:12:45 INF] Received HTTP response headers after 15.3357ms - 200
+[20:12:45 INF] End processing HTTP request after 15.7191ms - 200
+[20:12:45 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/26+Sandyhill+lane%2c+Northampton+NN3+7AW%2c+United+Kingdom.json?*
+[20:12:45 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/26+Sandyhill+lane%2c+Northampton+NN3+7AW%2c+United+Kingdom.json?*
+[20:12:45 INF] Received HTTP response headers after 15.4351ms - 200
+[20:12:45 INF] End processing HTTP request after 16.1168ms - 200
+[20:12:45 INF] Start processing HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+Ewell%2c+Epsom%2c+KT19+9FZ%2c+United+Kingdom.json?*
+[20:12:45 INF] Sending HTTP request GET https://api.mapbox.com/geocoding/v5/mapbox.places/11+Dante+Way%2c+Ewell%2c+Epsom%2c+KT19+9FZ%2c+United+Kingdom.json?*
+[20:12:45 INF] Received HTTP response headers after 14.9603ms - 200
+[20:12:45 INF] End processing HTTP request after 15.6294ms - 200
+[20:12:45 INF] Start processing HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/1.166061,52.037889;-0.2726,51.35994?*
+[20:12:45 INF] Sending HTTP request GET https://api.mapbox.com/directions/v5/mapbox/driving/1.166061,52.037889;-0.2726,51.35994?*
+[20:12:45 INF] Received HTTP response headers after 19.614ms - 200
+[20:12:45 INF] End processing HTTP request after 20.2845ms - 200
+[20:12:45 INF] Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Guid), @p5='?' (DbType = Guid), @p1='?', @p2='?' (DbType = DateTime), @p3='?' (DbType = Int64), @p4='?' (DbType = Int32), @p6='?' (DbType = Object), @p7='?' (DbType = Guid), @p8='?' (DbType = Guid), @p9='?', @p10='?', @p11='?', @p12='?', @p13='?', @p14='?', @p15='?', @p16='?' (DbType = Int32), @p17='?' (DbType = Boolean), @p18='?', @p19='?' (DbType = Boolean), @p20='?', @p21='?' (DbType = Double), @p22='?', @p23='?', @p24='?' (DbType = Double), @p25='?', @p26='?', @p27='?' (DbType = Decimal), @p28='?', @p29='?', @p30='?' (DbType = Guid), @p31='?', @p32='?', @p33='?', @p34='?' (DbType = Guid), @p35='?', @p36='?', @p37='?', @p38='?', @p39='?', @p40='?', @p41='?', @p42='?' (DbType = Int32), @p43='?' (DbType = Boolean), @p44='?', @p45='?' (DbType = Boolean), @p46='?', @p47='?' (DbType = Double), @p48='?', @p49='?', @p50='?' (DbType = Double), @p51='?', @p52='?', @p53='?' (DbType = Decimal), @p54='?', @p55='?', @p56='?' (DbType = Guid), @p57='?', @p58='?', @p59='?'], CommandType='Text', CommandTimeout='30']
+DELETE FROM tranzrmoves."QuoteAddresses"
+WHERE "Id" = @p0;
+UPDATE tranzrmoves."QuotesV2" SET "LastCompletedStepKey" = @p1, "ModifiedAt" = @p2, "StepsCompleted" = @p3, "StepsDirty" = @p4
+WHERE "Id" = @p5 AND xmin = @p6
+RETURNING xmin;
+DELETE FROM tranzrmoves."QuoteAddresses"
+WHERE "Id" = @p7;
+INSERT INTO tranzrmoves."QuoteAddresses" ("Id", "Accuracy", "AddressNumber", "City", "Country", "CountryCode", "County", "District", "Floor", "FreeParkingAccess", "FullAddress", "HasElevator", "Kind", "Latitude", "Line1", "Line2", "Longitude", "MapboxId", "Neighborhood", "PackingCost", "PlaceName", "PostCode", "QuoteId", "Region", "RegionCode", "Street")
+VALUES (@p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23, @p24, @p25, @p26, @p27, @p28, @p29, @p30, @p31, @p32, @p33);
+INSERT INTO tranzrmoves."QuoteAddresses" ("Id", "Accuracy", "AddressNumber", "City", "Country", "CountryCode", "County", "District", "Floor", "FreeParkingAccess", "FullAddress", "HasElevator", "Kind", "Latitude", "Line1", "Line2", "Longitude", "MapboxId", "Neighborhood", "PackingCost", "PlaceName", "PostCode", "QuoteId", "Region", "RegionCode", "Street")
+VALUES (@p34, @p35, @p36, @p37, @p38, @p39, @p40, @p41, @p42, @p43, @p44, @p45, @p46, @p47, @p48, @p49, @p50, @p51, @p52, @p53, @p54, @p55, @p56, @p57, @p58, @p59);
+[20:12:45 INF] Executed DbCommand (1ms) [Parameters=[@at='?' (DbType = DateTime), @at1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+SELECT s."Id", s."CreatedAt", s."CreatedBy", s."DisplayOrder", s."EffectiveFrom", s."EffectiveTo", s."IsActive", s."ModifiedAt", s."ModifiedBy", s."ServiceLevel", s."Text", s.xmin
+FROM tranzrmoves."ServiceFeatures" AS s
+WHERE s."IsActive" AND s."EffectiveFrom" <= @at AND (s."EffectiveTo" IS NULL OR s."EffectiveTo" > @at1)
+ORDER BY s."ServiceLevel", s."DisplayOrder"
+[20:12:45 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:45 INF] QuoteJourney.Resolve quoteId=019df467-2293-7158-b1cf-022f2b12744a type=Send resumeStep=inventory resumeUrl=/inventory lastCompleted=collection-delivery-addresses stepsCompleted=1 stepsDirty=22
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=collection-delivery-addresses route=/collection-delivery status=complete
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=inventory route=/inventory status=current
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=move-date-time route=/van-and-date status=stale
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=pricing route=/pricing status=stale
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=customer-info route=/origin-destination status=locked
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=quote-summary route=/summary status=locked
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=payment route=/pay status=locked
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=complete route=/confirmation status=locked
+[20:12:45 INF] [END] PatchAddressesCommand [000ea2df-3d5b-4fbd-9128-7fc62d406477]; Execution time=224ms
+[20:12:45 INF] Executed action method TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 226.4675ms.
+[20:12:45 INF] Executing OkObjectResult, writing value of type 'TranzrMoves.Application.Contracts.QuoteJourneyResponse'.
+[20:12:45 INF] Executed action TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api) in 239.4978ms
+[20:12:45 INF] Executed endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchAddresses (TranzrMoves.Api)'
+[20:12:45 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: PATCH
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses
+Accept: application/json
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Content-Type: application/json
+Cookie: [Redacted]
+If-Match: [Redacted]
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Content-Length: 613
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:12:44 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+ETag: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:12:45 INF] Request finished HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/collection-delivery-addresses - 200 null application/json; charset=utf-8 241.6484ms
+[20:12:45 INF] Request starting HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-info - null null
+[20:12:45 INF] CORS policy execution successful.
+[20:12:45 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: OPTIONS
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-info
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Access-Control-Request-Headers: [Redacted]
+Access-Control-Request-Method: [Redacted]
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 204
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Headers: [Redacted]
+Access-Control-Allow-Methods: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Vary: [Redacted]
+[20:12:45 INF] Request finished HTTP/1.1 OPTIONS http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-info - 204 null null 0.987ms
+[20:12:45 INF] Request starting HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-info - application/json 415
+[20:12:45 INF] CORS policy execution successful.
+[20:12:45 INF] Executing endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchCustomerInfo (TranzrMoves.Api)'
+[20:12:45 INF] Route matched with {action = "PatchCustomerInfo", controller = "Quote"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] PatchCustomerInfo(System.Guid, TranzrMoves.Application.Contracts.PatchCustomerInfoStepRequest, System.String, System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.QuoteController (TranzrMoves.Api).
+[20:12:45 INF] Executing action method TranzrMoves.Api.Controllers.QuoteController.PatchCustomerInfo (TranzrMoves.Api) - Validation state: Valid
+[20:12:45 INF] [START] PatchCustomerInfoStepCommand [cd9561e1-cdcb-4870-beb8-8300a724a599]
+[20:12:45 INF] [PROPS] PatchCustomerInfoStepCommand [cd9561e1-cdcb-4870-beb8-8300a724a599] PatchCustomerInfoStepCommand { QuoteId = 019df467-2293-7158-b1cf-022f2b12744a, ExpectedVersion = 9985, FirstName = Mike, LastName = Shells, IsBillingAddressSameAsOrigin = True, Address = TranzrMoves.Application.Contracts.QuoteAddressDto }
+[20:12:45 INF] Patching move date and time
+[20:12:45 INF] Executed DbCommand (5ms) [Parameters=[@quoteId='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+SELECT s0."Id", s0."BaseToOriginDistanceInMiles", s0."CreatedAt", s0."CreatedBy", s0."CrewCount", s0."CustomerId", s0."EffectiveVanCapacityM3", s0."ExpiresAt", s0."LastCompletedStepKey", s0."LastResumeEmailSentAt", s0."ModifiedAt", s0."ModifiedBy", s0."NumberOfItemsToAssemble", s0."NumberOfItemsToDismantle", s0."OriginDestinationRoute", s0."OriginToDestinationDistanceInMiles", s0."PaymentStatus", s0."PriceCalculatedAt", s0."QuotePrice", s0."QuoteReference", s0."RecommendedVanCount", s0."SelectedVanCount", s0."ServiceTier", s0."SessionId", s0."StepsCompleted", s0."StepsDirty", s0."TotalCost", s0."TotalInventoryVolumeM3", s0."Type", s0."VanCapacityStatus", s0."VanCapacityWarning", s0."VanRecommendationCalculatedAt", s0."VanType", s0.xmin, s0."Id0", s0."Id1", q0."Id", q0."Accuracy", q0."AddressNumber", q0."City", q0."Country", q0."CountryCode", q0."County", q0."District", q0."Floor", q0."FreeParkingAccess", q0."FullAddress", q0."HasElevator", q0."Kind", q0."Latitude", q0."Line1", q0."Line2", q0."Longitude", q0."MapboxId", q0."Neighborhood", q0."PackingCost", q0."PlaceName", q0."PostCode", q0."QuoteId", q0."Region", q0."RegionCode", q0."Street", p."Id", p."AssemblyCost", p."BaseToOriginCost", p."BaseVanCost", p."CallOutCharge", p."CongestionChargeApplies", p."CongestionZoneSurcharge", p."CostPerHourAfterStandard", p."CreatedAt", p."CreatedBy", p."CrewCount", p."DestinationFloorSurcharge", p."DismantleCost", p."DistanceCost", p."InsuranceUplift", p."IsSelected", p."LabourCost", p."ModifiedAt", p."ModifiedBy", p."NumberOfItemsToAssemble", p."NumberOfItemsToDismantle", p."OriginFloorSurcharge", p."QuoteId", p."QuoteType", p."SelectedVanCount", p."ServiceLevel", p."SpecialHandlingCost", p."StandardBlockHours", p."SubtotalWithoutVat", p."TotalCostWithVat", p."UlezSurcharge", p."Vat", p."VatAmount", p."VatRate", s0."CollectionDate", s0."CreatedAt0", s0."CreatedBy0", s0."DeliveryDate", s0."FlexibleTime", s0."Hours", s0."ModifiedAt0", s0."ModifiedBy0", s0."QuoteId", s0."TimeSlot", p0."Id", p0."Amount", p0."CreatedAt", p0."CreatedBy", p0."CustomerSelectedOption", p0."DueDate", p0."ModifiedAt", p0."ModifiedBy", p0."PaymentIntentId", p0."PaymentMethodId", p0."PaymentType", p0."QuoteId", p0."ReceiptUrl", p0."RemainingAmount", p0."SetupIntentId", p0."Status", p0."StripeSessionId", i."Id", i."Depth", i."Description", i."Height", i."Name", i."Quantity", i."QuoteId", i."Width", s0."CreatedAt1", s0."CreatedBy1", s0."Email", s0."FirstName", s0."LastName", s0."ModifiedAt1", s0."ModifiedBy1", s0."PhoneNumber", a."Id", a."Accuracy", a."AddressNumber", a."City", a."Country", a."CountryCode", a."County", a."District", a."Floor", a."FullAddress", a."HasElevator", a."Latitude", a."Line1", a."Line2", a."Longitude", a."MapboxId", a."Neighborhood", a."PlaceName", a."PostCode", a."Region", a."RegionCode", a."Street", a."Type", a."UserId"
+FROM (
+    SELECT q."Id", q."BaseToOriginDistanceInMiles", q."CreatedAt", q."CreatedBy", q."CrewCount", q."CustomerId", q."EffectiveVanCapacityM3", q."ExpiresAt", q."LastCompletedStepKey", q."LastResumeEmailSentAt", q."ModifiedAt", q."ModifiedBy", q."NumberOfItemsToAssemble", q."NumberOfItemsToDismantle", q."OriginDestinationRoute", q."OriginToDestinationDistanceInMiles", q."PaymentStatus", q."PriceCalculatedAt", q."QuotePrice", q."QuoteReference", q."RecommendedVanCount", q."SelectedVanCount", q."ServiceTier", q."SessionId", q."StepsCompleted", q."StepsDirty", q."TotalCost", q."TotalInventoryVolumeM3", q."Type", q."VanCapacityStatus", q."VanCapacityWarning", q."VanRecommendationCalculatedAt", q."VanType", q.xmin, s."Id" AS "Id0", s."CollectionDate", s."CreatedAt" AS "CreatedAt0", s."CreatedBy" AS "CreatedBy0", s."DeliveryDate", s."FlexibleTime", s."Hours", s."ModifiedAt" AS "ModifiedAt0", s."ModifiedBy" AS "ModifiedBy0", s."QuoteId", s."TimeSlot", u."Id" AS "Id1", u."CreatedAt" AS "CreatedAt1", u."CreatedBy" AS "CreatedBy1", u."Email", u."FirstName", u."LastName", u."ModifiedAt" AS "ModifiedAt1", u."ModifiedBy" AS "ModifiedBy1", u."PhoneNumber"
+    FROM tranzrmoves."QuotesV2" AS q
+    LEFT JOIN tranzrmoves."Schedules" AS s ON q."Id" = s."QuoteId"
+    LEFT JOIN tranzrmoves."UsersV2" AS u ON q."CustomerId" = u."Id"
+    WHERE q."Id" = @quoteId
+    LIMIT 1
+) AS s0
+LEFT JOIN tranzrmoves."QuoteAddresses" AS q0 ON s0."Id" = q0."QuoteId"
+LEFT JOIN tranzrmoves."Pricings" AS p ON s0."Id" = p."QuoteId"
+LEFT JOIN tranzrmoves."Payments" AS p0 ON s0."Id" = p0."QuoteId"
+LEFT JOIN tranzrmoves."InventoryItemsV2" AS i ON s0."Id" = i."QuoteId"
+LEFT JOIN tranzrmoves."AddressesV2" AS a ON s0."Id1" = a."UserId"
+ORDER BY s0."Id", s0."Id0", s0."Id1", q0."Id", p."Id", p0."Id", i."Id"
+[20:12:45 INF] PatchCustomerInfoStepCommandHandler state after recalc quoteId=019df467-2293-7158-b1cf-022f2b12744a stepsCompleted=1 stepsDirty=22 lastCompleted=collection-delivery-addresses
+[20:12:45 INF] Executed DbCommand (2ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?', @p2='?', @p3='?', @p4='?', @p5='?', @p6='?', @p7='?', @p8='?' (DbType = Int32), @p9='?', @p10='?' (DbType = Boolean), @p11='?' (DbType = Double), @p12='?', @p13='?', @p14='?' (DbType = Double), @p15='?', @p16='?', @p17='?', @p18='?', @p19='?', @p20='?', @p21='?', @p22='?', @p23='?' (DbType = Guid), @p27='?' (DbType = Guid), @p24='?', @p25='?', @p26='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+INSERT INTO tranzrmoves."AddressesV2" ("Id", "Accuracy", "AddressNumber", "City", "Country", "CountryCode", "County", "District", "Floor", "FullAddress", "HasElevator", "Latitude", "Line1", "Line2", "Longitude", "MapboxId", "Neighborhood", "PlaceName", "PostCode", "Region", "RegionCode", "Street", "Type", "UserId")
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23);
+UPDATE tranzrmoves."UsersV2" SET "FirstName" = @p24, "LastName" = @p25, "ModifiedAt" = @p26
+WHERE "Id" = @p27;
+[20:12:45 INF] Executed DbCommand (1ms) [Parameters=[@at='?' (DbType = DateTime), @at1='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+SELECT s."Id", s."CreatedAt", s."CreatedBy", s."DisplayOrder", s."EffectiveFrom", s."EffectiveTo", s."IsActive", s."ModifiedAt", s."ModifiedBy", s."ServiceLevel", s."Text", s.xmin
+FROM tranzrmoves."ServiceFeatures" AS s
+WHERE s."IsActive" AND s."EffectiveFrom" <= @at AND (s."EffectiveTo" IS NULL OR s."EffectiveTo" > @at1)
+ORDER BY s."ServiceLevel", s."DisplayOrder"
+[20:12:45 INF] Executed DbCommand (1ms) [Parameters=[@isActive_Value='?' (DbType = Boolean)], CommandType='Text', CommandTimeout='30']
+SELECT a."Id", a."CreatedAt", a."CreatedBy", a."CurrencyCode", a."Description", a."EffectiveFrom", a."EffectiveTo", a."IsActive", a."ModifiedAt", a."ModifiedBy", a."Price", a."Type", a.xmin
+FROM tranzrmoves."AdditionalPrices" AS a
+WHERE a."IsActive" = @isActive_Value
+ORDER BY a."Type", a."EffectiveFrom"
+[20:12:45 INF] QuoteJourney.Resolve quoteId=019df467-2293-7158-b1cf-022f2b12744a type=Send resumeStep=inventory resumeUrl=/inventory lastCompleted=collection-delivery-addresses stepsCompleted=1 stepsDirty=22
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=collection-delivery-addresses route=/collection-delivery status=complete
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=inventory route=/inventory status=current
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=move-date-time route=/van-and-date status=stale
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=pricing route=/pricing status=stale
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=customer-info route=/origin-destination status=complete
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=quote-summary route=/summary status=complete
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=payment route=/pay status=locked
+[20:12:45 INF] QuoteJourney.ResolveStep quoteId=019df467-2293-7158-b1cf-022f2b12744a key=complete route=/confirmation status=locked
+[20:12:45 INF] [END] PatchCustomerInfoStepCommand [cd9561e1-cdcb-4870-beb8-8300a724a599]; Execution time=117ms
+[20:12:45 INF] Executed action method TranzrMoves.Api.Controllers.QuoteController.PatchCustomerInfo (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 121.2581ms.
+[20:12:45 INF] Executing OkObjectResult, writing value of type 'TranzrMoves.Application.Contracts.QuoteJourneyResponse'.
+[20:12:45 INF] Request starting HTTP/1.1 GET http://localhost:5247/api/v1/inventory/categories - null null
+[20:12:45 INF] CORS policy execution successful.
+[20:12:45 INF] Executing endpoint 'TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api)'
+[20:12:45 INF] Route matched with {action = "GetCategories", controller = "Inventory"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetCategories(System.Threading.CancellationToken) on controller TranzrMoves.Api.Controllers.InventoryController (TranzrMoves.Api).
+[20:12:45 INF] Executing action method TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api) - Validation state: Valid
+[20:12:45 INF] [START] CategoriesQuery [2cec82f8-98d1-4706-b81d-0af864c0da68]
+[20:12:45 INF] [PROPS] CategoriesQuery [2cec82f8-98d1-4706-b81d-0af864c0da68] CategoriesQuery { }
+[20:12:45 INF] Executed action TranzrMoves.Api.Controllers.QuoteController.PatchCustomerInfo (TranzrMoves.Api) in 152.1857ms
+[20:12:45 INF] Executed endpoint 'TranzrMoves.Api.Controllers.QuoteController.PatchCustomerInfo (TranzrMoves.Api)'
+[20:12:45 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: PATCH
+Scheme: http
+PathBase: 
+Path: /api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-info
+Accept: application/json
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Content-Type: application/json
+Cookie: [Redacted]
+If-Match: [Redacted]
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+Content-Length: 415
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:12:45 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+ETag: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:12:45 INF] Request finished HTTP/1.1 PATCH http://localhost:5247/api/v2/Quote/019df467-2293-7158-b1cf-022f2b12744a/customer-info - 200 null application/json; charset=utf-8 157.3559ms
+[20:12:45 INF] Executed DbCommand (4ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT i."Id", i."Icon", i."Name"
+FROM tranzrmoves."InventoryCategories" AS i
+ORDER BY i."Name"
+[20:12:45 INF] [END] CategoriesQuery [2cec82f8-98d1-4706-b81d-0af864c0da68]; Execution time=5ms
+[20:12:45 INF] Executed action method TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api), returned result Microsoft.AspNetCore.Mvc.OkObjectResult in 6.8566ms.
+[20:12:45 INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[TranzrMoves.Application.Contracts.InventoryCategoryImportDto, TranzrMoves.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+[20:12:45 INF] Executed action TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api) in 8.1932ms
+[20:12:45 INF] Executed endpoint 'TranzrMoves.Api.Controllers.InventoryController.GetCategories (TranzrMoves.Api)'
+[20:12:45 INF] Request and Response:
+Protocol: HTTP/1.1
+Method: GET
+Scheme: http
+PathBase: 
+Path: /api/v1/inventory/categories
+Accept: */*
+Connection: keep-alive
+Host: localhost:5247
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br, zstd
+Accept-Language: en-GB,en;q=0.9
+Cache-Control: no-cache
+Origin: [Redacted]
+Pragma: [Redacted]
+Referer: [Redacted]
+sec-ch-ua-platform: [Redacted]
+sec-ch-ua: [Redacted]
+sec-ch-ua-mobile: [Redacted]
+Sec-Fetch-Site: [Redacted]
+Sec-Fetch-Mode: [Redacted]
+Sec-Fetch-Dest: [Redacted]
+StatusCode: 200
+Content-Type: application/json; charset=utf-8
+Date: Mon, 04 May 2026 19:12:45 GMT
+Server: Kestrel
+Access-Control-Allow-Credentials: [Redacted]
+Access-Control-Allow-Origin: [Redacted]
+Transfer-Encoding: chunked
+Vary: [Redacted]
+api-supported-versions: [Redacted]
+[20:12:45 INF] Request finished HTTP/1.1 GET http://localhost:5247/api/v1/inventory/categories - 200 null application/json; charset=utf-8 10.2728ms

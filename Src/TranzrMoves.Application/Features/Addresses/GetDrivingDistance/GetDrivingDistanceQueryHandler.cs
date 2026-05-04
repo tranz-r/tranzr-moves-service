@@ -1,6 +1,6 @@
 ﻿using Mediator;
 using Microsoft.Extensions.Logging;
-using TranzrMoves.Domain.Interfaces;
+using TranzrMoves.Application.Services;
 
 namespace TranzrMoves.Application.Features.Addresses.GetDrivingDistance;
 

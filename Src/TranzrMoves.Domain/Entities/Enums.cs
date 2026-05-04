@@ -20,12 +20,58 @@ public enum PaymentStatus
     Cancelled
 }
 
+[Flags]
+public enum QuoteSteps
+{
+    None = 0,
+    CollectionDeliveryAddresses = 1,
+    Inventory = 2,
+    MoveDateAndTimeSlot = 4,
+    CustomerEmailAndPhoneNumber = 8,
+    Pricing = 16,
+    RemovalPricing = 32,
+    CustomerInfo = 64,
+    QuoteSummary = 128,
+    Payment = 256,
+    Complete = 512
+}
+
+
+public enum StripePaymentStatus
+{
+    Pending = 0,
+    Paid = 1,
+    Failed = 2,
+    Cancelled = 3
+}
+
 public enum PricingTier
 {
     eco = 1,
     ecoPlus,
     standard,
     premium
+}
+
+public enum ServiceTier
+{
+    Standard,
+    Premium
+}
+
+public enum VanCapacityStatus
+{
+    Recommended = 1,
+    Warning = 2,
+    Blocked = 3
+}
+
+
+public enum AddressType
+{
+    Residential = 0,
+    Commercial = 1,
+    Billing
 }
 
 public enum VanType

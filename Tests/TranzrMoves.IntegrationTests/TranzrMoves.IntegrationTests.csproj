@@ -31,6 +31,8 @@
         <PackageReference Include="Testcontainers.PostgreSql" />
         <PackageReference Include="WireMock.Net" />
         <PackageReference Include="NodaTime.Serialization.SystemTextJson" />
+        <PackageReference Include="OpenTelemetry.Api" />
+        <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
     </ItemGroup>
 
     <ItemGroup>

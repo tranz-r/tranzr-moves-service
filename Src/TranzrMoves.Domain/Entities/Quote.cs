@@ -11,6 +11,13 @@ public enum QuoteType
     Removals
 }
 
+public enum QuoteAddressKind
+{
+    Origin = 1,
+    Destination,
+    Base
+}
+
 public class Quote : IAuditable
 {
     public Guid Id { get; set; }

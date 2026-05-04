@@ -1,5 +1,7 @@
-﻿using Riok.Mapperly.Abstractions;
+﻿using System.Text.Json;
+using Riok.Mapperly.Abstractions;
 using TranzrMoves.Application.Contracts;
+using TranzrMoves.Application.Services;
 using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Application.Mapper;
@@ -29,6 +31,15 @@ public partial class QuoteMapper
     public partial QuoteDto ToDto(Quote? src);
 
     public partial List<QuoteDto> ToDtoList(List<Quote> src);
+
+
+    [MapProperty(
+        nameof(QuoteV2.OriginDestinationRoute),
+        nameof(QuoteSnapshotDto.OriginDestinationRoute),
+        Use = nameof(ParseOriginDestinationRouteJson))]
+    [MapProperty(nameof(QuoteV2.Pricings), nameof(QuoteSnapshotDto.Pricings))]
+    [MapProperty(nameof(QuoteV2.ServiceTier), nameof(QuoteSnapshotDto.PricingTier), Use = nameof(MapToPricingTier))]
+    public partial QuoteSnapshotDto ToQuoteSnapshotDto(QuoteV2? src);
 
     // ========== DTO ➜ ENTITY (create new) ==========
     // Only specify the asymmetric pieces; everything else maps by name.
@@ -93,10 +104,22 @@ public partial class QuoteMapper
 
     public partial InventoryItemDto ToInventoryItemDto(InventoryItem src);
     public partial InventoryItem ToInventoryItem(InventoryItemDto src);
+    public partial InventoryItemDto ToInventoryItemDto(QuoteInventoryItem src);
+    public partial QuoteInventoryItem ToQuoteInventoryItem(InventoryItemDto src);
 
     public partial QuoteAdditionalPaymentDto ToQuoteAdditionalPaymentDto(QuoteAdditionalPayment src);
     public partial QuoteAdditionalPayment ToQuoteAdditionalPayment(QuoteAdditionalPaymentDto src);
 
+    public partial QuoteAddressDto ToQuoteAddressDto(QuoteAddress src);
+    public partial QuoteAddress ToQuoteAddress(QuoteAddressDto src);
+    public partial PricingOptionDto ToPricingOptionDto(Pricing src);
+    public partial QuoteCustomerDto ToQuoteCustomerDto(UserV2 src);
+    public partial AddressV2Dto ToAddressV2Dto(AddressV2 src);
+
+    public partial ScheduleV2Dto? ToScheduleV2Dto(Schedule? src);
+
+    [MapperIgnoreTarget(nameof(Schedule.Quote))]
+    public partial Schedule? ToSchedule(ScheduleV2Dto? src);
 
     // ========== Small converters for nullability/asymmetry ==========
     // Entity has PaymentStatus?; DTO has non-null Status.
@@ -108,4 +131,29 @@ public partial class QuoteMapper
     // (Optional) if you want the reverse conversions explicit:
     private PaymentStatus? MapPaymentStatusNullable(PaymentStatus s) => s;
     private VanType? MapVanTypeNullable(VanType v) => v;
+
+    private static PricingTier? MapToPricingTier(ServiceLevel? serviceLevel) =>
+        serviceLevel switch
+        {
+            ServiceLevel.Standard => PricingTier.standard,
+            ServiceLevel.Premium => PricingTier.premium,
+            _ => null
+        };
+
+    private static MapRouteV2Dto? ParseOriginDestinationRouteJson(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<MapRouteV2Dto>(json);
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
 }

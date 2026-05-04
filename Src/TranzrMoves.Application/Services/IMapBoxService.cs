@@ -1,4 +1,4 @@
-﻿namespace TranzrMoves.Domain.Interfaces;
+﻿namespace TranzrMoves.Application.Services;
 
 public interface IMapBoxService
 {
@@ -11,12 +11,26 @@ public interface IMapBoxService
         string originAddress,
         string destinationAddress,
         CancellationToken cancellationToken = default);
+
+    Task<MapRouteV2Dto> GetRouteDataV2Async(
+        string originAddress,
+        string destinationAddress,
+        CancellationToken cancellationToken = default);
 }
 
 public class MapRouteDto
 {
     public List<CoordinateDto> Coordinates { get; set; } = new();
     public double DistanceMiles { get; set; }
+    public double DurationMinutes { get; set; }
+    public OriginDestinationDto Origin { get; set; } = new();
+    public OriginDestinationDto Destination { get; set; } = new();
+}
+
+public class MapRouteV2Dto
+{
+    public List<CoordinateDto> Coordinates { get; set; } = new();
+    public long DistanceMiles { get; set; }
     public double DurationMinutes { get; set; }
     public OriginDestinationDto Origin { get; set; } = new();
     public OriginDestinationDto Destination { get; set; } = new();
