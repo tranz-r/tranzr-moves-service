@@ -30,10 +30,11 @@ public enum QuoteSteps
     CustomerEmailAndPhoneNumber = 8,
     Pricing = 16,
     RemovalPricing = 32,
-    CustomerInfo = 64,
-    QuoteSummary = 128,
-    Payment = 256,
-    Complete = 512
+    Extras = 64,
+    CustomerInfo = 128,
+    QuoteSummary = 256,
+    Payment = 512,
+    Complete = 1024,
 }
 
 

@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Riok.Mapperly.Abstractions;
+﻿using Riok.Mapperly.Abstractions;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Services;
 using TranzrMoves.Domain.Entities;
@@ -33,10 +32,6 @@ public partial class QuoteMapper
     public partial List<QuoteDto> ToDtoList(List<Quote> src);
 
 
-    [MapProperty(
-        nameof(QuoteV2.OriginDestinationRoute),
-        nameof(QuoteSnapshotDto.OriginDestinationRoute),
-        Use = nameof(ParseOriginDestinationRouteJson))]
     [MapProperty(nameof(QuoteV2.Pricings), nameof(QuoteSnapshotDto.Pricings))]
     [MapProperty(nameof(QuoteV2.ServiceTier), nameof(QuoteSnapshotDto.PricingTier), Use = nameof(MapToPricingTier))]
     public partial QuoteSnapshotDto ToQuoteSnapshotDto(QuoteV2? src);
@@ -140,20 +135,5 @@ public partial class QuoteMapper
             _ => null
         };
 
-    private static MapRouteV2Dto? ParseOriginDestinationRouteJson(string? json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return null;
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<MapRouteV2Dto>(json);
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
+    public partial MapRouteV2Dto? ToMapRouteV2Dto(MapRouteV2? src);
 }

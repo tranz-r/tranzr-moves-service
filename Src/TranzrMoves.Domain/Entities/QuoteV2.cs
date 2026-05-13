@@ -13,7 +13,7 @@ public class QuoteV2 : IAuditable
 
     public long? OriginToDestinationDistanceInMiles { get; set; }
     public long? BaseToOriginDistanceInMiles { get; set; }
-    public string? OriginDestinationRoute { get; set; }
+    public MapRouteV2? OriginDestinationRoute { get; set; }
 
     public int NumberOfItemsToDismantle { get; set; } = 0;
     public int NumberOfItemsToAssemble { get; set; } = 0;
@@ -53,6 +53,7 @@ public class QuoteV2 : IAuditable
 
     public Instant? LastResumeEmailSentAt { get; set; }
     public Instant? ExpiresAt { get; set; }
+    public bool? OptionalExtas { get; set; }
 
     public UserV2? Customer { get; set; }
     public Collection<Payment>? Payments { get; set; } = [];
@@ -67,6 +68,28 @@ public class QuoteV2 : IAuditable
     public string CreatedBy { get; set; } = "System";
     public Instant ModifiedAt { get; set; }
     public string ModifiedBy { get; set; } = "System";
+}
+
+public class MapRouteV2
+{
+    public List<Coordinate> Coordinates { get; set; } = new();
+    public long DistanceMiles { get; set; }
+    public double DurationMinutes { get; set; }
+    public OriginDestination Origin { get; set; } = new();
+    public OriginDestination Destination { get; set; } = new();
+}
+
+public class OriginDestination
+{
+    public double Longitude { get; set; }
+    public double Latitude { get; set; }
+    public string Address { get; set; } = string.Empty;
+}
+
+public class Coordinate
+{
+    public double Longitude { get; set; }
+    public double Latitude { get; set; }
 }
 
 public sealed class Pricing : IAuditable

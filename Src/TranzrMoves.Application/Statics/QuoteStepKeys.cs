@@ -13,6 +13,7 @@ public static class QuoteStepKeys
     public const string CustomerInfo = "customer-info";
     public const string Pricing = "pricing";
     public const string RemovalPricing = "pricing";
+    public const string Extras = "additional-extras";
     public const string QuoteSummary = "quote-summary";
     public const string Payment = "payment";
     public const string Complete = "complete";

@@ -46,7 +46,14 @@ public class QuoteV2Configuration : IEntityTypeConfiguration<QuoteV2>
             .HasConversion<long>();
 
         builder.Property(x => x.QuoteReference).IsRequired();
-        builder.Property(x => x.OriginDestinationRoute).HasColumnType("text");
+
+        builder.OwnsOne(x => x.OriginDestinationRoute, routeBuilder =>
+        {
+            routeBuilder.ToJson();
+            routeBuilder.OwnsMany(r => r.Coordinates);
+            routeBuilder.OwnsOne(r => r.Origin);
+            routeBuilder.OwnsOne(r => r.Destination);
+        });
 
         builder.HasOne(x => x.Customer)
             .WithMany(x => x.Quotes)

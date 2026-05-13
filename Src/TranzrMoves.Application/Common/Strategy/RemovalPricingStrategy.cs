@@ -22,10 +22,16 @@ public sealed class RemovalPricingStrategy(
         await RecalculatePrices(quote, baseToOriginCost, cancellationToken);
     }
 
-    public async Task SelectPricingOption(QuoteV2 quote, Guid pricingId, int numberOfItemsToDismantle, int numberOfItemsToAssemble, int numberOfSelectedVans,
-        CancellationToken cancellationToken)
+    public void SelectPricingOption(QuoteV2 quote, Guid pricingId)
     {
-        await PricingHelper.ProcessSelectedOptions(clock, additionalPriceRepository, quote, pricingId, numberOfItemsToDismantle, numberOfItemsToAssemble, numberOfSelectedVans, cancellationToken);
+        PricingHelper.ProcessSelectedOptions(clock, quote, pricingId);
+    }
+
+    public async Task ExtraOption(QuoteV2 quote, int numberOfItemsToDismantle, int numberOfItemsToAssemble,
+        int numberOfSelectedVans, CancellationToken cancellationToken)
+    {
+        await PricingHelper.ProcessExtraOptions(additionalPriceRepository, quote,
+            numberOfItemsToDismantle, numberOfItemsToAssemble, numberOfSelectedVans, cancellationToken);
     }
 
     private async Task RecalculatePrices(QuoteV2 quote, decimal baseToOriginCost, CancellationToken cancellationToken)

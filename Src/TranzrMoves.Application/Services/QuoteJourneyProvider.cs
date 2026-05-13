@@ -55,6 +55,13 @@ public sealed class QuoteJourneyProvider : IQuoteJourneyProvider
                     QuoteCompletionRules.HasCompletedPricing),
 
                 new(
+                    QuoteStepKeys.Extras,
+                    "/extras",
+                    QuoteSteps.Extras,
+                    true,
+                    QuoteCompletionRules.HasCompletedAddOns),
+
+                new(
                     QuoteStepKeys.CustomerInfo,
                     "/origin-destination",
                     QuoteSteps.CustomerInfo,
@@ -117,6 +124,13 @@ public sealed class QuoteJourneyProvider : IQuoteJourneyProvider
                     QuoteSteps.RemovalPricing,
                     true,
                     QuoteCompletionRules.HasCompletedPricing),
+
+                new(
+                    QuoteStepKeys.Extras,
+                    "/extras",
+                    QuoteSteps.Extras,
+                    true,
+                    QuoteCompletionRules.HasCompletedAddOns),
 
                 new(
                     QuoteStepKeys.CustomerInfo,

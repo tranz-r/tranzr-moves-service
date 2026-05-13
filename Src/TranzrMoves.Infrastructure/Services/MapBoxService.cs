@@ -3,6 +3,7 @@ using System.Web;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TranzrMoves.Application.Services;
+using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.Infrastructure.Services;
 
@@ -131,7 +132,7 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
         };
     }
 
-    public async Task<MapRouteV2Dto> GetRouteDataV2Async(
+    public async Task<MapRouteV2> GetRouteDataV2Async(
         string originAddress,
         string destinationAddress,
         CancellationToken cancellationToken = default)
@@ -176,29 +177,29 @@ public class MapBoxService(HttpClient client, ILogger<MapBoxService> logger, ICo
 
         // Parse GeoJSON LineString coordinates
         var coordinates = geometry.GetProperty("coordinates");
-        var routeCoordinates = new List<CoordinateDto>();
+        var routeCoordinates = new List<Coordinate>();
 
         foreach (var coord in coordinates.EnumerateArray())
         {
-            routeCoordinates.Add(new CoordinateDto
+            routeCoordinates.Add(new Coordinate
             {
                 Longitude = coord[0].GetDouble(),
                 Latitude = coord[1].GetDouble()
             });
         }
 
-        return new MapRouteV2Dto
+        return new MapRouteV2
         {
             Coordinates = routeCoordinates,
             DistanceMiles = (long)Math.Round(distanceMeters / 1609.344),
             DurationMinutes = durationSeconds / 60.0,
-            Origin = new OriginDestinationDto
+            Origin = new OriginDestination
             {
                 Longitude = originLon,
                 Latitude = originLat,
                 Address = originFormattedAddress
             },
-            Destination = new OriginDestinationDto
+            Destination = new OriginDestination
             {
                 Longitude = destLon,
                 Latitude = destLat,
