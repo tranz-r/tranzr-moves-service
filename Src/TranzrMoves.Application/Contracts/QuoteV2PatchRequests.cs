@@ -60,6 +60,19 @@ public sealed class PatchPricingStepRequest
 }
 
 /// <summary>
+/// JSON body for <c>PATCH /api/v2/Quote/{quoteId}/extras</c>.
+/// Concurrency: <c>If-Match</c> header.
+/// </summary>
+public sealed class PatchExtrasStepRequest
+{
+    public int NumberOfSelectedVans { get; set; }
+
+    public int NumberOfItemsToDismantle { get; set; }
+
+    public int NumberOfItemsToAssemble { get; set; }
+}
+
+/// <summary>
 /// JSON body for <c>PATCH /api/v2/Quote/{quoteId}/quote-summary</c> (typically <c>{}</c>).
 /// Concurrency: <c>If-Match</c> header.
 /// </summary>

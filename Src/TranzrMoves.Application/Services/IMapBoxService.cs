@@ -1,4 +1,6 @@
-﻿namespace TranzrMoves.Application.Services;
+﻿using TranzrMoves.Domain.Entities;
+
+namespace TranzrMoves.Application.Services;
 
 public interface IMapBoxService
 {
@@ -12,7 +14,7 @@ public interface IMapBoxService
         string destinationAddress,
         CancellationToken cancellationToken = default);
 
-    Task<MapRouteV2Dto> GetRouteDataV2Async(
+    Task<MapRouteV2> GetRouteDataV2Async(
         string originAddress,
         string destinationAddress,
         CancellationToken cancellationToken = default);

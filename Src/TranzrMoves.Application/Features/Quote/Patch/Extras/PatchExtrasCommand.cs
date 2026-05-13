@@ -5,16 +5,13 @@
 using Mediator;
 using TranzrMoves.Application.Contracts;
 
-namespace TranzrMoves.Application.Features.Quote.Patch.Pricing;
+namespace TranzrMoves.Application.Features.Quote.Patch.Extras;
 
-public record PatchPricingStepCommand : ICommand<ErrorOr<QuoteJourneyResponse>>
+public record PatchExtrasCommand : ICommand<ErrorOr<QuoteJourneyResponse>>
 {
     public Guid QuoteId { get; set; }
-
     public uint ExpectedVersion { get; set; }
-
-    public Guid PricingId { get; set; }
-    // public int NumberOfSelectedVans { get; set; }
-    // public int NumberOfItemsToDismantle { get; set; }
-    // public int NumberOfItemsToAssemble { get; set; }
+    public int NumberOfSelectedVans { get; set; }
+    public int NumberOfItemsToDismantle { get; set; }
+    public int NumberOfItemsToAssemble { get; set; }
 }

@@ -10,5 +10,6 @@ public interface IPricingStrategy
 {
     bool CanHandle(QuoteType quoteType);
     Task Generate(QuoteV2 quote, decimal baseToOriginCost, CancellationToken cancellationToken);
-    Task SelectPricingOption(QuoteV2 quote, Guid pricingId, int numberOfItemsToDismantle, int numberOfItemsToAssemble, int numberOfSelectedVans, CancellationToken cancellationToken);
+    void SelectPricingOption(QuoteV2 quote, Guid pricingId);
+    Task ExtraOption(QuoteV2 quote, int numberOfItemsToDismantle, int numberOfItemsToAssemble, int numberOfSelectedVans, CancellationToken cancellationToken);
 }

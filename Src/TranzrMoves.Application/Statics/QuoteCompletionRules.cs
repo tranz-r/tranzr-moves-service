@@ -98,6 +98,7 @@ public static class QuoteCompletionRules
         && HasCompletedSchedule(quote)
         && HasCompletedCustomerEmailAndPhoneNumber(quote)
         && HasCompletedPricing(quote)
+        && HasCompletedAddOns(quote)
         && HasCompletedCustomerInfo(quote);
 
     /// <summary>Preflight complete and the customer has called <c>PATCH .../quote-summary</c> at least once.</summary>
@@ -130,4 +131,7 @@ public static class QuoteCompletionRules
         && quote.Payments != null
         && quote.PaymentStatus is not null
         && quote.Payments.Any(x => x.CustomerSelectedOption);
+
+    public static bool HasCompletedAddOns(QuoteV2 quote) =>
+        HasCompletedPricing(quote) && quote.OptionalExtas is not null;
 }

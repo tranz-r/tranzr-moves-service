@@ -17,6 +17,7 @@ using TranzrMoves.Application.Features.Quote.Journey.State;
 using TranzrMoves.Application.Features.Quote.Patch.Addresses;
 using TranzrMoves.Application.Features.Quote.Patch.CustomerInfo;
 using TranzrMoves.Application.Features.Quote.Patch.EmailAndPhoneNumber;
+using TranzrMoves.Application.Features.Quote.Patch.Extras;
 using TranzrMoves.Application.Features.Quote.Patch.Inventory;
 using TranzrMoves.Application.Features.Quote.Patch.MoveDateTime;
 using TranzrMoves.Application.Features.Quote.Patch.Pricing;
@@ -710,7 +711,44 @@ public class QuoteController(
         {
             QuoteId = quoteId,
             ExpectedVersion = expectedVersion,
-            PricingId = request.PricingId,
+            PricingId = request.PricingId
+        };
+        var response = await mediator.Send(command, ct);
+        return response.Match(OkWithQuoteJourneyEtag, Problem);
+    }
+
+    [MapToApiVersion(2)]
+    [HttpPatch("{quoteId:guid}/extras")]
+    [SwaggerOperation(
+        OperationId = "QuoteV2_PatchExtras",
+        Summary = "Update van count and dismantle / assembly extras",
+        Description =
+            "Request JSON is `PatchExtrasStepRequest` (`numberOfSelectedVans`, `numberOfItemsToDismantle`, `numberOfItemsToAssemble`). " +
+            "Recalculates pricing for the selected extras without changing the pricing tier. " +
+            "Preconditions (inventory, distance) are enforced server-side. " +
+            "**If-Match** (required): current `quote.version`. **412** on concurrency conflict.",
+        Tags = new[] { "Quote (v2)" })]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(QuoteJourneyResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PatchExtras(
+        Guid quoteId,
+        [FromBody] PatchExtrasStepRequest request,
+        [FromHeader(Name = "If-Match")] string? ifMatch,
+        CancellationToken ct)
+    {
+        if (!TryParseQuoteVersion(ifMatch, out var expectedVersion))
+        {
+            return IfMatchRequiredBadRequest();
+        }
+
+        var command = new PatchExtrasCommand
+        {
+            QuoteId = quoteId,
+            ExpectedVersion = expectedVersion,
             NumberOfSelectedVans = request.NumberOfSelectedVans,
             NumberOfItemsToDismantle = request.NumberOfItemsToDismantle,
             NumberOfItemsToAssemble = request.NumberOfItemsToAssemble

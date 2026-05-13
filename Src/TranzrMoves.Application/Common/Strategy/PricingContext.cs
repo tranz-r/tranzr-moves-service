@@ -15,9 +15,16 @@ public class PricingContext(IPricingStrategyResolver strategyResolver)
         await strategy.Generate(quote, baseToOriginCost, cancellationToken);
     }
 
-    public async Task SelectPricingOption(QuoteV2 quote, Guid pricingId, int numberOfItemsToDismantle, int numberOfItemsToAssemble, int numberOfSelectedVans, CancellationToken cancellationToken)
+    public void SelectPricingOption(QuoteV2 quote, Guid pricingId)
     {
         var strategy = strategyResolver.Resolve(quote.Type);
-        await strategy.SelectPricingOption(quote, pricingId, numberOfItemsToDismantle, numberOfItemsToAssemble, numberOfSelectedVans, cancellationToken);
+        strategy.SelectPricingOption(quote, pricingId);
+    }
+
+    public async Task ExtraOption(QuoteV2 quote, int numberOfItemsToDismantle, int numberOfItemsToAssemble,
+        int numberOfSelectedVans, CancellationToken cancellationToken)
+    {
+        var strategy = strategyResolver.Resolve(quote.Type);
+        await strategy.ExtraOption(quote, numberOfItemsToDismantle, numberOfItemsToAssemble, numberOfSelectedVans, cancellationToken);
     }
 }

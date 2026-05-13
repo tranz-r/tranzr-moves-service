@@ -121,9 +121,7 @@ public static class PricingHelper
         return floorSurcharge * floor;
     }
 
-    public static async Task ProcessSelectedOptions(IClock clock, IAdditionalPriceRepository additionalPriceRepository,
-        QuoteV2 quote, Guid pricingId, int numberOfItemsToDismantle, int numberOfItemsToAssemble, int numberOfSelectedVans,
-        CancellationToken cancellationToken)
+    public static void ProcessSelectedOptions(IClock clock, QuoteV2 quote, Guid pricingId)
     {
         var selected = quote.Pricings.SingleOrDefault(x => x.Id == pricingId);
 
@@ -136,17 +134,8 @@ public static class PricingHelper
         }
 
         selected.IsSelected = true;
-        selected.NumberOfItemsToDismantle = numberOfItemsToDismantle;
-        selected.NumberOfItemsToAssemble = numberOfItemsToAssemble;
-        selected.SelectedVanCount = numberOfSelectedVans;
 
-        var unitDismantlePrice = await GetDismantleRate(AdditionalPriceType.Dismantle, additionalPriceRepository, cancellationToken);
-        var unitAssemblePrice = await GetDismantleRate(AdditionalPriceType.Assembly, additionalPriceRepository, cancellationToken);
-
-        var dismantleCost = quote.NumberOfItemsToDismantle * unitDismantlePrice;
-        var assemblyCost = quote.NumberOfItemsToAssemble * unitAssemblePrice;
-
-        var subtotalWithoutVat = (selected.SubtotalWithoutVat + assemblyCost + dismantleCost) * numberOfSelectedVans;
+        var subtotalWithoutVat = selected.SubtotalWithoutVat;
 
         var vatAmount = subtotalWithoutVat * selected.VatRate;
         var totalWithVat = subtotalWithoutVat + vatAmount;
@@ -160,7 +149,6 @@ public static class PricingHelper
         quote.ServiceTier = selected.ServiceLevel;
         quote.QuotePrice = selected.TotalCostWithVat;
         quote.TotalCost = selected.TotalCostWithVat;
-        quote.SelectedVanCount = numberOfSelectedVans;
         quote.PriceCalculatedAt = clock.GetCurrentInstant();
     }
 
@@ -249,4 +237,27 @@ public static class PricingHelper
     }
 
     private static decimal CalculateUnitVolumeInCubicMeters(int height, int width, int depth) => (height * width * depth) / 1_000_000m;
+
+    public static async Task ProcessExtraOptions(IAdditionalPriceRepository additionalPriceRepository,
+        QuoteV2 quote, int numberOfItemsToDismantle, int numberOfItemsToAssemble, int numberOfSelectedVans,
+        CancellationToken cancellationToken)
+    {
+        var unitDismantlePrice = await GetDismantleRate(AdditionalPriceType.Dismantle, additionalPriceRepository, cancellationToken);
+        var unitAssemblePrice = await GetDismantleRate(AdditionalPriceType.Assembly, additionalPriceRepository, cancellationToken);
+
+        quote.OptionalExtas = true;
+        quote.NumberOfItemsToDismantle = numberOfItemsToDismantle;
+        quote.NumberOfItemsToAssemble = numberOfItemsToAssemble;
+        quote.SelectedVanCount = numberOfSelectedVans;
+
+        var dismantleCost = numberOfItemsToDismantle * unitDismantlePrice;
+        var assemblyCost = numberOfItemsToAssemble * unitAssemblePrice;
+        var totalCost = dismantleCost + assemblyCost;
+
+        var selectedPricing = quote.Pricings.First(p => p.IsSelected);
+        selectedPricing.AssemblyCost = assemblyCost;
+        selectedPricing.DismantleCost = dismantleCost;
+        selectedPricing.SubtotalWithoutVat += totalCost;
+        selectedPricing.TotalCostWithVat = selectedPricing.SubtotalWithoutVat + selectedPricing.SubtotalWithoutVat * VatRate;
+    }
 }

@@ -48,8 +48,8 @@ public class PatchAddressesCommandHandler(
         var mapper = new QuoteMapper();
         UpsertQuoteAddresses(quote, command.Addresses, mapper);
 
-        MapRouteV2Dto quoteOriginToDestinationRoute;
-        MapRouteV2Dto baseToOriginRoute;
+        MapRouteV2 quoteOriginToDestinationRoute;
+        MapRouteV2 baseToOriginRoute;
 
         try
         {
@@ -85,7 +85,6 @@ public class PatchAddressesCommandHandler(
         }
 
         var quoteSnapShot = mapper.ToQuoteSnapshotDto(quote);
-        quoteSnapShot.OriginDestinationRoute = quoteOriginToDestinationRoute;
 
         var (standardTexts, premiumTexts, additionalServices)
             = await PricingHelper.GetAdditionalServicesAndServiceTextsAsync(clock,
@@ -104,11 +103,12 @@ public class PatchAddressesCommandHandler(
         };
     }
 
-    private void UpdateQuoteDistance(QuoteV2 quote, MapRouteV2Dto quoteOriginToDestinationRoute, MapRouteV2Dto baseToQuoteOriginRoute)
+    private void UpdateQuoteDistance(QuoteV2 quote, MapRouteV2 quoteOriginToDestinationRoute, MapRouteV2 baseToQuoteOriginRoute)
     {
         var quoteOriginToDestinationDistanceInMiles = quoteOriginToDestinationRoute.DistanceMiles;
         var baseToQuoteOriginDistanceInMiles = baseToQuoteOriginRoute.DistanceMiles;
 
+        quote.OriginDestinationRoute = quoteOriginToDestinationRoute;
         quote.OriginToDestinationDistanceInMiles = quoteOriginToDestinationDistanceInMiles;
         quote.BaseToOriginDistanceInMiles = baseToQuoteOriginDistanceInMiles;
     }

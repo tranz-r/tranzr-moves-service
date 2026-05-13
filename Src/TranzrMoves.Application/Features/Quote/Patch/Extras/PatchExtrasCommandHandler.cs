@@ -9,9 +9,9 @@ using TranzrMoves.Application.Statics;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
-namespace TranzrMoves.Application.Features.Quote.Patch.Pricing;
+namespace TranzrMoves.Application.Features.Quote.Patch.Extras;
 
-public class PatchPricingStepCommandHandler(
+public class PatchExtrasCommandHandler(
     IQuoteRepository quoteRepository,
     IQuoteResumeResolver resumeResolver,
     IQuoteProgressCalculator progressCalculator,
@@ -21,11 +21,11 @@ public class PatchPricingStepCommandHandler(
     IQuoteStepInvalidationService quoteStepInvalidationService,
     IQuoteJourneyProvider quoteJourneyProvider,
     IClock clock,
-    ILogger<PatchPricingStepCommandHandler> logger)
-    : ICommandHandler<PatchPricingStepCommand, ErrorOr<QuoteJourneyResponse>>
+    ILogger<PatchExtrasCommandHandler> logger)
+    : ICommandHandler<PatchExtrasCommand, ErrorOr<QuoteJourneyResponse>>
 {
     public async ValueTask<ErrorOr<QuoteJourneyResponse>> Handle(
-        PatchPricingStepCommand command,
+        PatchExtrasCommand command,
         CancellationToken cancellationToken)
     {
         logger.LogInformation("Patching pricing step");
@@ -51,18 +51,14 @@ public class PatchPricingStepCommandHandler(
 
         try
         {
-            CalculatePrice(quote, command.PricingId);
+            await CalculatePrice(quote, command.NumberOfItemsToAssemble, command.NumberOfItemsToDismantle, command.NumberOfSelectedVans, cancellationToken);
         }
         catch (Exception e)
         {
             return Error.Failure(e.Message);
         }
 
-        var (stepFlag, stepKey) = quote.Type == QuoteType.Removals
-            ? (QuoteSteps.RemovalPricing, QuoteStepKeys.RemovalPricing)
-            : (QuoteSteps.Pricing, QuoteStepKeys.Pricing);
-
-        PricingHelper.RecalculateStepState(quote!, stepFlag, stepKey,
+        PricingHelper.RecalculateStepState(quote!, QuoteSteps.Extras, QuoteStepKeys.Extras,
             quoteStepInvalidationService, progressCalculator,
             quoteJourneyProvider);
 
@@ -91,8 +87,9 @@ public class PatchPricingStepCommandHandler(
         };
     }
 
-    private void CalculatePrice(QuoteV2 quote, Guid pricingId)
+    private async Task CalculatePrice(QuoteV2 quote, int numberOfItemsToDismantle, int numberOfItemsToAssemble,
+        int numberOfSelectedVans, CancellationToken cancellationToken)
     {
-        pricingContext.SelectPricingOption(quote!, pricingId);
+        await pricingContext.ExtraOption(quote!, numberOfItemsToDismantle, numberOfItemsToAssemble, numberOfSelectedVans, cancellationToken);
     }
 }
