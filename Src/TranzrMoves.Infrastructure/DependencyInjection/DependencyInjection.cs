@@ -24,6 +24,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IEmailService, AzureEmailService>();
         services.AddSingleton<ITemplateService, TemplateService>();
+        services.AddHostedService<EmailTemplatesFileWatcherHostedService>();
         services.AddSingleton<ITurnstileService, TurnstileService>();
 
         services.AddScoped<IQuoteV2HostedCheckoutSessionService, QuoteV2HostedCheckoutSessionService>();

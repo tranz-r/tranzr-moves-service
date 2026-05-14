@@ -1,0 +1,282 @@
+        /* Reset styles */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+
+        /* Base styles */
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background-color: #f4f4f4;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 16px;
+            line-height: 1.4;
+            color: #333333;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        .header {
+            background-color: #9568b0;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .email-header-logo-wrap {
+            margin: 0 0 18px 0;
+        }
+
+        .email-header-logo {
+            display: block;
+            border: 0;
+            max-width: 220px;
+            width: 220px;
+            height: auto;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .content {
+            padding: 30px 20px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            color: #9568b0;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .main-text {
+            font-size: 16px;
+            color: #333333;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .payment-details {
+            background-color: #f8f8f8;
+            border: 1px solid #dddddd;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .payment-row {
+            margin-bottom: 10px;
+        }
+
+        .payment-label {
+            font-weight: bold;
+            color: #666666;
+        }
+
+        .payment-value {
+            color: #333333;
+        }
+
+        .amount {
+            font-size: 20px;
+            font-weight: bold;
+            color: #9568b0;
+        }
+
+        .button {
+            display: inline-block;
+            background-color: #9568b0;
+            color: #ffffff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .security-notice,
+        .complete-notice,
+        .balance-notice,
+        .setup-notice {
+            background-color: #f0f9fa;
+            border: 1px solid #b8e3e9;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .contact-details {
+            background-color: #f8f8f8;
+            border: 1px solid #dddddd;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .contact-row {
+            margin-bottom: 10px;
+        }
+
+        .contact-label {
+            font-weight: bold;
+            color: #666666;
+            display: inline-block;
+            width: 120px;
+        }
+
+        .contact-value {
+            color: #333333;
+        }
+
+        .message-section {
+            background-color: #f0f9fa;
+            border: 1px solid #b8e3e9;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .message-text {
+            font-style: italic;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .transactional-note {
+            font-size: 11px;
+            color: #999999;
+            margin-top: 15px;
+        }
+
+        .email-footer-wrap {
+            width: 100%;
+            background-color: #9568b0;
+        }
+
+        .email-footer-inner {
+            width: 100%;
+        }
+
+        .email-footer-col-left {
+            width: 50%;
+            vertical-align: top;
+            padding: 0 8px 0 0;
+        }
+
+        .email-footer-col-right {
+            width: 50%;
+            vertical-align: top;
+            text-align: right;
+            padding: 0 0 0 8px;
+        }
+
+        .email-footer-logo {
+            display: block;
+            border: 0;
+            max-width: 240px;
+            width: 240px;
+            height: auto;
+        }
+
+        .email-footer-social {
+            margin: 0 auto;
+        }
+
+        .email-footer-right-stack {
+            width: 100%;
+        }
+
+        .email-footer-social-row {
+            text-align: center !important;
+        }
+
+        .email-footer-legal-row {
+            text-align: right !important;
+        }
+
+        .email-footer-social img {
+            display: block;
+            border: 0;
+            outline: none;
+            text-decoration: none;
+        }
+
+        .email-footer-social a {
+            text-decoration: none;
+        }
+
+        .email-footer-legal a {
+            color: #e8dcf2 !important;
+            text-decoration: underline;
+            font-size: 12px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            .content {
+                padding: 20px 15px !important;
+            }
+            .header {
+                padding: 20px 15px !important;
+            }
+            .email-header-logo {
+                max-width: 200px !important;
+                width: 200px !important;
+                height: auto !important;
+            }
+            .email-footer-logo {
+                max-width: 220px !important;
+                width: 220px !important;
+                height: auto !important;
+            }
+            .email-footer-col-left,
+            .email-footer-col-right {
+                display: block !important;
+                width: 100% !important;
+                text-align: center !important;
+                padding: 0 0 16px 0 !important;
+            }
+            .email-footer-col-right {
+                padding-bottom: 0 !important;
+            }
+            .email-footer-logo {
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            .email-footer-social {
+                margin-left: auto !important;
+                margin-right: auto !important;
+            }
+            .email-footer-right-stack td {
+                text-align: center !important;
+            }
+            .email-footer-legal {
+                text-align: center !important;
+            }
+            .contact-label {
+                width: auto;
+                display: block;
+                margin-bottom: 4px;
+            }
+        }
