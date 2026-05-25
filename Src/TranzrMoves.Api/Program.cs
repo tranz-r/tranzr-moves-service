@@ -83,10 +83,6 @@ try
     builder.Services.AddMemoryCache();
     builder.Services.AddSingleton(new StripeClient(builder.Configuration["STRIPE_API_KEY"]));
 
-    builder.Services.AddSingleton(s => new GetAddress.ApiKeys(builder.Configuration["ADDRESS_API_KEY"],
-        builder.Configuration["ADDRESS_ADMINISTRATION_KEY"]));
-    builder.Services.AddHttpClient<GetAddress.Api>();
-
     // Email service is handled by IAwsEmailService in Infrastructure layer
 
     //Find a way to move this registration to the application layer.

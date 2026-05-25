@@ -20,8 +20,6 @@ public sealed class InitQuoteJourneyCommandHandler(
             return Error.Validation("Quote.GuestId.Required", "Guest ID is required.");
         }
 
-        await quoteRepository.CreateIfMissingAsync(command.GuestId, cancellationToken);
-
         var quote = await quoteRepository.GetOrCreateQuoteV2Async(command.GuestId, command.QuoteType, cancellationToken);
         if (quote is null)
         {

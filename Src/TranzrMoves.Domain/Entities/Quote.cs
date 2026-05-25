@@ -4,20 +4,6 @@ using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Domain.Entities;
 
-public enum QuoteType
-{
-    Send,
-    Receive,
-    Removals
-}
-
-public enum QuoteAddressKind
-{
-    Origin = 1,
-    Destination,
-    Base
-}
-
 public class Quote : IAuditable
 {
     public Guid Id { get; set; }
@@ -27,8 +13,8 @@ public class Quote : IAuditable
     public QuoteType Type { get; set; } // send, receive, removals
 
     //Origin and Destination addresses
-    public Address? Origin { get; set; }
-    public Address? Destination { get; set; }
+    // public Address? Origin { get; set; }
+    // public Address? Destination { get; set; }
 
     public decimal? DistanceMiles { get; set; }
     public int NumberOfItemsToDismantle { get; set; }
@@ -67,8 +53,8 @@ public class Quote : IAuditable
     // Note: Customer information is stored in User entity, not directly in Quote
 
     // Relationships
-    public Collection<CustomerQuote>? CustomerQuotes { get; set; } = [];
-    public Collection<DriverQuote>? DriverQuotes { get; set; } = [];
+    // public Collection<CustomerQuote>? CustomerQuotes { get; set; } = [];
+    // public Collection<DriverQuote>? DriverQuotes { get; set; } = [];
     public Collection<QuoteAdditionalPayment>? QuoteAdditionalPayments { get; set; } = [];
 
     // Audit

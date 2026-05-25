@@ -57,6 +57,7 @@
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AValueTask_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003F_002E_002E_003Fhome_003Fvavy_003F_002Econfig_003FJetBrains_003FRider2026_002E1_003Fresharper_002Dhost_003FSourcesCache_003Fc6af16cde689ee7920c565b9c5df245662d24471bf8eef27a08b99542f4188f3_003FValueTask_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;
   &lt;Assembly Path="/home/vavy/.nuget/packages/erroror/2.0.1/lib/net6.0/ErrorOr.dll" /&gt;
+  &lt;Assembly Path="/home/vavy/.nuget/packages/getaddress.sdk/3.5.1/lib/netstandard2.0/GetAddress.Sdk.dll" /&gt;
 &lt;/AssemblyExplorer&gt;</s:String>
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=87cf0928_002D46a4_002D4f19_002D99f9_002D34eef2a7b782/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from &amp;lt;Tests&amp;gt;\&amp;lt;TranzrMoves.IntegrationTests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;Project Location="/media/vavy/DATA/Repos/Tranzr/tranzr-moves-services/Tests/TranzrMoves.IntegrationTests" Presentation="&amp;lt;Tests&amp;gt;\&amp;lt;TranzrMoves.IntegrationTests&amp;gt;" /&gt;

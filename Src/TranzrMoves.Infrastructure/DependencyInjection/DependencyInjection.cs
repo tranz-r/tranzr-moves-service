@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Stripe;
 using TranzrMoves.Application.Common.Time;
-using TranzrMoves.Application.Features.Admin.Dashboard;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.Respositories;
 using TranzrMoves.Infrastructure.Services;
@@ -42,10 +41,7 @@ public static class DependencyInjection
             sp.GetRequiredService<ITimeService>(),
             sp.GetRequiredService<ILogger<CheckoutStripeWebhookV2Service>>()));
 
-        services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<IUserV2Repository, UserV2Repository>();
-        services.AddTransient<IUserQuoteRepository, UserQuoteRepository>();
-        services.AddTransient<IDriverQuoteRepository, DriverQuoteRepository>();
         services.AddTransient<IQuoteRepository, QuoteRepository>();
 
         services.AddTransient<IRemovalPricingRepository, RemovalPricingRepository>();
@@ -56,9 +52,6 @@ public static class DependencyInjection
 
         // Azure Blob Storage Service
         services.AddTransient<IAzureBlobService, AzureBlobService>();
-
-        // Admin Services
-        services.AddTransient<IAdminMetricsService, AdminMetricsService>();
 
         services.AddTransient<IInventoryItemRepository, InventoryItemRepository>();
 

@@ -41,23 +41,4 @@ public class MapController(IMapBoxService mapBoxService,
             return BadRequest(new { error = "Failed to calculate route. Please check your addresses." });
         }
     }
-
-    // [MapToApiVersion("2")]
-    // [HttpGet("route")]
-    // public async Task<IActionResult> GetRouteAsyncV2(
-    //     [FromQuery] Guid quoteId,
-    //     [FromQuery] string originAddress,
-    //     [FromQuery] string destinationAddress,
-    //     CancellationToken cancellationToken)
-    // {
-    //     var response = await mediator.Send(
-    //             new PatchAddressesCommand
-    //             {
-    //                 QuoteId = quoteId,
-    //                 DestinationAddress = destinationAddress,
-    //                 OriginAddress = originAddress
-    //             }, cancellationToken);
-    //
-    //     return response.Match(Ok, Problem);
-    // }
 }

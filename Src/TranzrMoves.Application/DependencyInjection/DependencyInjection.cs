@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TranzrMoves.Application.Common.Behaviors;
 using TranzrMoves.Application.Common.Strategy;
 using TranzrMoves.Application.Common.Time;
-using TranzrMoves.Application.Features.Quote.SelectQuoteType;
+using TranzrMoves.Application.Features.Quote.Journey.Init;
 using TranzrMoves.Application.Services;
 using TranzrMoves.Domain.Interfaces;
 
@@ -22,7 +22,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         services.AddMediator(options =>
             {
-                options.Assemblies = [typeof(SelectQuoteTypeCommand).Assembly];
+                options.Assemblies = [typeof(InitQuoteJourneyCommand).Assembly];
                 options.ServiceLifetime = ServiceLifetime.Scoped;
             }
         );

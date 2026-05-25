@@ -60,43 +60,6 @@ public partial class QuoteMapper
 
     public partial List<Quote> ToEntityList(List<QuoteDto> src);
 
-    // ========== DTO ➜ ENTITY (update existing) ==========
-    // Use this for PATCH/PUT so EF keys/audit/navigation stay intact.
-    [MapperIgnoreTarget(nameof(Quote.Version))] // Version is a concurrency token, managed by EF
-    [MapperIgnoreTarget(nameof(Quote.Id))]      // Id should not be changed
-    [MapperIgnoreTarget(nameof(Quote.CreatedAt))] // CreatedAt should not be changed
-    [MapperIgnoreTarget(nameof(Quote.ModifiedAt))] // ModifiedAt is managed by EF
-    [MapperIgnoreTarget(nameof(Quote.CustomerQuotes))] // Navigation properties not handled here
-    [MapperIgnoreTarget(nameof(Quote.DriverQuotes))]   // Navigation properties not handled here
-    // Only specify the asymmetric pieces; everything else maps by name.
-    [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.DateISO), nameof(Quote.CollectionDate))]
-    [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.DeliveryDateISO), nameof(Quote.DeliveryDate))]
-    [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.Hours), nameof(Quote.Hours))]
-    [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.FlexibleTime), nameof(Quote.FlexibleTime))]
-    [MapProperty(nameof(QuoteDto.Schedule) + "." + nameof(ScheduleDto.TimeSlot), nameof(Quote.TimeSlot))]
-    [MapProperty(nameof(QuoteDto.Pricing) + "." + nameof(PricingDto.PricingTier), nameof(Quote.PricingTier))]
-    [MapProperty(nameof(QuoteDto.Pricing) + "." + nameof(PricingDto.TotalCost), nameof(Quote.TotalCost))]
-    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.Status), nameof(Quote.PaymentStatus))]
-    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentType), nameof(Quote.PaymentType))]
-    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.DepositAmount), nameof(Quote.DepositAmount))]
-    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentMethodId), nameof(Quote.PaymentMethodId))]
-    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.PaymentIntentId), nameof(Quote.PaymentIntentId))]
-    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.ReceiptUrl), nameof(Quote.ReceiptUrl))]
-    [MapProperty(nameof(QuoteDto.Payment) + "." + nameof(PaymentDto.DueDate), nameof(Quote.DueDate))]
-    [MapProperty(nameof(QuoteDto.QuoteAdditionalPayments), nameof(Quote.QuoteAdditionalPayments))]
-    [MapProperty(nameof(QuoteDto.Items), nameof(Quote.InventoryItems))]
-    [MapProperty(nameof(QuoteDto.Origin), nameof(Quote.Origin))]
-    [MapProperty(nameof(QuoteDto.Destination), nameof(Quote.Destination))]
-    [MapProperty(nameof(QuoteDto.DistanceMiles), nameof(Quote.DistanceMiles))]
-    [MapProperty(nameof(QuoteDto.NumberOfItemsToDismantle), nameof(Quote.NumberOfItemsToDismantle))]
-    [MapProperty(nameof(QuoteDto.NumberOfItemsToAssemble), nameof(Quote.NumberOfItemsToAssemble))]
-    public partial void UpdateEntity(QuoteDto src, Quote target);
-
-    // ========== Nested types ==========
-    // Mapperly will use these for the collections and nested objects.
-    public partial AddressDto ToAddressDto(Address src);
-    public partial Address ToAddress(AddressDto src);
-
     public partial InventoryItemDto ToInventoryItemDto(InventoryItem src);
     public partial InventoryItem ToInventoryItem(InventoryItemDto src);
     public partial InventoryItemDto ToInventoryItemDto(QuoteInventoryItem src);

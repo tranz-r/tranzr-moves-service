@@ -135,3 +135,17 @@ public enum LegalDocumentType
     TermsAndConditions = 1,
     PrivacyPolicy = 2
 }
+
+public enum QuoteType
+{
+    Send,
+    Receive,
+    Removals
+}
+
+public enum QuoteAddressKind
+{
+    Origin = 1,
+    Destination,
+    Base
+}
