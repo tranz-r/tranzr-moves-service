@@ -1,4 +1,4 @@
-using TranzrMoves.Application.Services;
+﻿using TranzrMoves.Application.Services;
 using TranzrMoves.Domain.Entities;
 
 namespace TranzrMoves.IntegrationTests.TestDoubles;

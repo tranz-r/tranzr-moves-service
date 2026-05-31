@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.IntegrationTests.TestDoubles;

@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Messaging;
 using TranzrMoves.Domain.Entities;

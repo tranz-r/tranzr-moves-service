@@ -1,4 +1,4 @@
-namespace TranzrMoves.Worker;
+﻿namespace TranzrMoves.Worker;
 
 public enum WorkerRole
 {

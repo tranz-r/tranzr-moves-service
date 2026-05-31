@@ -1,4 +1,4 @@
-namespace TranzrMoves.Domain.Constants;
+﻿namespace TranzrMoves.Domain.Constants;
 
 public static class PayLaterChargeKeys
 {

@@ -1,4 +1,4 @@
-using TranzrMoves.Application.Messaging;
+﻿using TranzrMoves.Application.Messaging;
 using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.IntegrationTests.TestDoubles;

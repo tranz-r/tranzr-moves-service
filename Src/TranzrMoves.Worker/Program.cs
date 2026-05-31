@@ -1,4 +1,4 @@
-using Serilog;
+﻿using Serilog;
 using TranzrMoves.Worker;
 
 Log.Logger = new LoggerConfiguration()

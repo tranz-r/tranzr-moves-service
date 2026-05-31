@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using ErrorOr;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

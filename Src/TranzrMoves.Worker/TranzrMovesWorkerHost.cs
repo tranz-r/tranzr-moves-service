@@ -1,4 +1,4 @@
-using Stripe;
+﻿using Stripe;
 using TranzrMoves.Infrastructure.DependencyInjection;
 
 namespace TranzrMoves.Worker;

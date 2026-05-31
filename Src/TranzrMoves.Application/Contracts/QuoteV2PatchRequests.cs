@@ -1,4 +1,4 @@
-namespace TranzrMoves.Application.Contracts;
+﻿namespace TranzrMoves.Application.Contracts;
 
 /// <summary>
 /// JSON body for <c>PATCH /api/v2/Quote/{quoteId}/collection-delivery-addresses</c>.

@@ -1,4 +1,4 @@
-using Mediator;
+﻿using Mediator;
 using TranzrMoves.Domain.Models;
 
 namespace TranzrMoves.Application.Features.Checkout.ReadIntent;

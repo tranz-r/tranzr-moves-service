@@ -1,4 +1,4 @@
-namespace TranzrMoves.Application.Messaging;
+﻿namespace TranzrMoves.Application.Messaging;
 
 public interface ICollectQuoteV2BalanceChargePublisher
 {

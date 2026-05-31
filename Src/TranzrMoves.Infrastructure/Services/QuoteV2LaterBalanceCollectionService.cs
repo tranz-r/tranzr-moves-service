@@ -1,4 +1,4 @@
-using ErrorOr;
+﻿using ErrorOr;
 using Microsoft.Extensions.Logging;
 using NodaTime.Text;
 using Stripe;
