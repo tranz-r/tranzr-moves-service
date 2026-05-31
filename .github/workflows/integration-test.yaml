@@ -92,4 +92,4 @@ jobs:
         if: always()
         with:
           # NOTE: using trx_files instead of files due to https://github.com/EnricoMi/publish-unit-test-result-action/issues/424
-          trx_files: "${{ github.workspace }}/**/*.trx"
+          files: "${{ github.workspace }}/**/*.trx"
