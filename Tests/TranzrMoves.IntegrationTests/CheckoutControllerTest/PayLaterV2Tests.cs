@@ -1,41 +1,50 @@
-using System.Net;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 using Stripe;
-using Microsoft.Extensions.DependencyInjection;
+using TranzrMoves.Application.Messaging;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Infrastructure;
+using TranzrMoves.IntegrationTests.Fixtures;
+using TranzrMoves.IntegrationTests.Helpers;
 
 namespace TranzrMoves.IntegrationTests.CheckoutControllerTest;
 
 public class PayLaterV2Tests(TestServerFixture fixture) : IClassFixture<TestServerFixture>, IAsyncLifetime
 {
     private readonly Func<Task> _resetDatabase = fixture.ResetDatabaseStateAsync;
-    private HttpClient Client => fixture.CreateClient();
 
     [Fact]
     public async Task V2_Send_Checkout_Session_When_PayLater_PaymentIntent_Fails_3DS()
     {
         TranzrMovesDbContext? dbContext = fixture.DbContext;
-        await CreatePayLaterQuoteV2(dbContext!, "pm_card_authenticationRequired");
+        var (quoteId, dueDate) = await CreatePayLaterQuoteV2(dbContext!, "pm_card_authenticationRequired");
 
-        var response = await Client.PostAsync("/api/v2/checkout/pay-later-collection", null,
-            TestContext.Current.CancellationToken);
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await TriggerPayLaterCollectionAsync(quoteId, dueDate, TestContext.Current.CancellationToken);
     }
 
     [Fact]
     public async Task V2_Send_Checkout_Session_When_Card_Has_Insufficient_Fund()
     {
         TranzrMovesDbContext? dbContext = fixture.DbContext;
-        await CreatePayLaterQuoteV2(dbContext!, "pm_card_visa_chargeDeclinedInsufficientFunds");
+        var (quoteId, dueDate) = await CreatePayLaterQuoteV2(
+            dbContext!,
+            PayLaterStripeTestHelper.InsufficientFundsPaymentMethodId);
 
-        var response = await Client.PostAsync("/api/v2/checkout/pay-later-collection", null,
-            TestContext.Current.CancellationToken);
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        await TriggerPayLaterCollectionAsync(quoteId, dueDate, TestContext.Current.CancellationToken);
     }
 
-    private async Task CreatePayLaterQuoteV2(TranzrMovesDbContext dbContext, string paymentMethodId)
+    private async Task TriggerPayLaterCollectionAsync(Guid quoteId, LocalDate dueDate, CancellationToken cancellationToken)
+    {
+        await using var scope = fixture.Services.CreateAsyncScope();
+        var publisher = scope.ServiceProvider.GetRequiredService<ICollectQuoteV2BalanceChargePublisher>();
+        var act = () => publisher.PublishAsync(new CollectQuoteV2BalanceCharge(quoteId, dueDate), cancellationToken);
+        await act.Should().NotThrowAsync();
+    }
+
+    private async Task<(Guid QuoteId, LocalDate DueDate)> CreatePayLaterQuoteV2(
+        TranzrMovesDbContext dbContext,
+        string paymentMethodId)
     {
         dbContext.ChangeTracker.Clear();
 
@@ -46,7 +55,7 @@ public class PayLaterV2Tests(TestServerFixture fixture) : IClassFixture<TestServ
         var user = new UserV2
         {
             Id = userId,
-            Email = "int-test@tranzrmoves.com",
+            Email = PayLaterStripeTestHelper.IntegrationTestCustomerEmail,
             FirstName = "Int",
             LastName = "Test",
             CreatedAt = now,
@@ -90,12 +99,28 @@ public class PayLaterV2Tests(TestServerFixture fixture) : IClassFixture<TestServ
 
         dbContext.Set<Schedule>().Add(schedule);
 
+        var stripeClient = fixture.Services.GetRequiredService<StripeClient>();
+        var stripeCustomer = await PayLaterStripeTestHelper.EnsureGbCustomerAsync(
+            stripeClient,
+            PayLaterStripeTestHelper.IntegrationTestCustomerEmail,
+            "Tranzr Integration Test",
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        // Decline tokens fail if attached; charge-time failure is exercised on balance collection.
+        var storedPaymentMethodId = paymentMethodId == PayLaterStripeTestHelper.InsufficientFundsPaymentMethodId
+            ? paymentMethodId
+            : await PayLaterStripeTestHelper.AttachTestPaymentMethodAsync(
+                stripeClient,
+                stripeCustomer.Id,
+                paymentMethodId,
+                TestContext.Current.CancellationToken);
+
         var payment = new Payment
         {
             Id = Guid.NewGuid(),
             QuoteId = quoteId,
             PaymentType = PaymentType.Later,
-            PaymentMethodId = paymentMethodId,
+            PaymentMethodId = storedPaymentMethodId,
             DueDate = today,
             Status = StripePaymentStatus.Paid,
             CustomerSelectedOption = true,
@@ -109,40 +134,7 @@ public class PayLaterV2Tests(TestServerFixture fixture) : IClassFixture<TestServ
         dbContext.Set<Payment>().Add(payment);
         await dbContext.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        await CreateIntegrationTestCustomerOnStripe(TestContext.Current.CancellationToken);
-    }
-
-    private async Task CreateIntegrationTestCustomerOnStripe(CancellationToken cancellationToken)
-    {
-        var stripeClient = fixture.Services.GetRequiredService<StripeClient>();
-
-        var customerEmail = "int-test@tranzrmoves.com";
-
-        var customerSearchResult = await stripeClient.V1.Customers.SearchAsync(new CustomerSearchOptions
-        {
-            Query = $"email:'{customerEmail}'",
-        }, cancellationToken: cancellationToken);
-
-        if (customerSearchResult.Data.FirstOrDefault() is not null)
-        {
-            return;
-        }
-
-        var customerOptions = new CustomerCreateOptions
-        {
-            Email = customerEmail,
-            Name = "Tranzr Integration Test",
-            Address = new AddressOptions
-            {
-                Line1 = "5 Holmecross Road",
-                City = "Northampton",
-                PostalCode = "NN3 8AW",
-                Country = "GB"
-            }
-        };
-
-        _ = await stripeClient.V1.Customers.CreateAsync(customerOptions, cancellationToken: cancellationToken);
-        await Task.Delay(3000, cancellationToken);
+        return (quoteId, today);
     }
 
     public ValueTask InitializeAsync() => new(Task.CompletedTask);

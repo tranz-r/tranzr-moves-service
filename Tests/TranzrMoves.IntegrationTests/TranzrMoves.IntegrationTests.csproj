@@ -24,11 +24,13 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Testcontainers.RabbitMq" />
         <PackageReference Include="xunit.v3" />
         <PackageReference Include="xunit.runner.visualstudio" />
         <PackageReference Include="Respawn" />
         <PackageReference Include="Testcontainers" />
         <PackageReference Include="Testcontainers.PostgreSql" />
+        <PackageReference Include="Testcontainers.Redis" />
         <PackageReference Include="WireMock.Net" />
         <PackageReference Include="NodaTime.Serialization.SystemTextJson" />
         <PackageReference Include="OpenTelemetry.Api" />
@@ -36,12 +38,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="Xunit"/>
+        <Using Include="Xunit" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\Src\TranzrMoves.Api\TranzrMoves.Api.csproj" />
         <ProjectReference Include="..\..\Src\TranzrMoves.Application\TranzrMoves.Application.csproj" />
+        <ProjectReference Include="..\..\Src\TranzrMoves.Infrastructure\TranzrMoves.Infrastructure.csproj" />
+        <ProjectReference Include="..\..\Src\TranzrMoves.Worker\TranzrMoves.Worker.csproj" />
     </ItemGroup>
 
 </Project>

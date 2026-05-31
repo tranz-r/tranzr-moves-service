@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using FluentValidation;
-using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 
 using TranzrMoves.Application.Common.Behaviors;
@@ -24,12 +23,13 @@ public static class DependencyInjection
             {
                 options.Assemblies = [typeof(InitQuoteJourneyCommand).Assembly];
                 options.ServiceLifetime = ServiceLifetime.Scoped;
+                options.PipelineBehaviors =
+                [
+                    typeof(LoggingBehavior<,>),
+                    typeof(ValidationBehavior<,>)
+                ];
             }
         );
-
-        services
-            .AddSingleton(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>))
-            .AddSingleton(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
         services.AddScoped<IQuoteJourneyProvider, QuoteJourneyProvider>();
         services.AddScoped<IQuoteProgressCalculator, QuoteProgressCalculator>();

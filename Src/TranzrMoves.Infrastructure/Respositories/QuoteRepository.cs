@@ -13,6 +13,8 @@ namespace TranzrMoves.Infrastructure.Respositories;
 
 public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, ILogger<QuoteRepository> logger) : IQuoteRepository
 {
+    public void AddPayment(Payment payment) => db.Set<Payment>().Add(payment);
+
     public async Task<ErrorOr<bool>> SaveChangesAsync(CancellationToken ct)
     {
         try
@@ -132,6 +134,16 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
 
     public Task<List<QuoteV2>> GetPayLaterQuoteV2sForTodayAsync(LocalDate today, CancellationToken ct = default)
     {
+        return QueryPayLaterQuoteV2sDueAsync(today, ct);
+    }
+
+    public Task<List<QuoteV2>> GetPayLaterQuoteV2sDueForCollectionAsync(LocalDate today, CancellationToken ct = default)
+    {
+        return QueryPayLaterQuoteV2sDueAsync(today, ct);
+    }
+
+    private Task<List<QuoteV2>> QueryPayLaterQuoteV2sDueAsync(LocalDate today, CancellationToken ct)
+    {
         return db.Set<QuoteV2>()
             .AsTracking()
             .Include(x => x.Schedule)
@@ -145,7 +157,10 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
                     p.PaymentType == PaymentType.Later &&
                     p.PaymentMethodId != null &&
                     p.DueDate != null &&
-                    today >= p.DueDate!.Value))
+                    today >= p.DueDate!.Value) &&
+                !q.Payments.Any(p =>
+                    p.PaymentType == PaymentType.Balance &&
+                    p.Status == StripePaymentStatus.Paid))
             .ToListAsync(ct);
     }
 }

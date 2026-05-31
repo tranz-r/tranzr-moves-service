@@ -1,25 +1,26 @@
 ﻿using System.Data.Common;
-
 using AutoBogus;
-
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-
 using Npgsql;
-
 using Respawn;
-
+using StackExchange.Redis;
+using Stripe;
 using Testcontainers.PostgreSql;
+using TranzrMoves.Application.Messaging;
+using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure;
 using TranzrMoves.Infrastructure.Interceptors;
-
+using TranzrMoves.IntegrationTests.Helpers;
+using TranzrMoves.IntegrationTests.TestDoubles;
 using WireMock.Server;
 
-namespace TranzrMoves.IntegrationTests;
+namespace TranzrMoves.IntegrationTests.Fixtures;
 
 public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
@@ -39,7 +40,6 @@ public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
 
     public TranzrMovesDbContext? DbContext { get; set; }
 
-
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         WireMockServer = WireMockServer.StartWithAdminInterface();
@@ -54,21 +54,45 @@ public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
             }
         };
 
-        builder.ConfigureAppConfiguration(configBuilder =>
+        builder.UseEnvironment("Testing");
+
+        builder.ConfigureAppConfiguration((_, configBuilder) =>
         {
+            configBuilder.AddUserSecrets(typeof(TestServerFixture).Assembly, optional: true);
+            configBuilder.AddEnvironmentVariables();
+            configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:redis"] = "127.0.0.1:6379,abortConnect=false,connectTimeout=100",
+                ["COMMUNICATION_SERVICES_CONNECTION_STRING"] =
+                    "endpoint=https://test.communication.azure.com/;accesskey=dGVzdA==",
+                ["TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET_V2"] = "whsec_test"
+            });
         });
 
-        builder.ConfigureServices(services =>
+        builder.ConfigureServices((context, services) =>
         {
+            var stripeApiKey = PayLaterStripeTestHelper.RequireApiKey(context.Configuration);
+            services.RemoveAll<StripeClient>();
+            services.AddSingleton(_ => new StripeClient(stripeApiKey));
+
             services.RemoveAll<DbContextOptions<TranzrMovesDbContext>>();
             services.RemoveAll<DbConnection>();
             services.RemoveAll<IEmailService>();
+            services.RemoveAll<IConnectionMultiplexer>();
+            services.RemoveAll<IPayLaterChargeScheduler>();
+            services.RemoveAll<ICollectQuoteV2BalanceChargePublisher>();
 
             services.AddScoped<AuditableInterceptor>();
             services.AddScoped<IEmailService, LocalEmailService>();
+            services.AddSingleton<IPayLaterChargeScheduler, NoOpPayLaterChargeScheduler>();
+            services.AddScoped<ICollectQuoteV2BalanceChargePublisher, DirectCollectQuoteV2BalanceChargePublisher>();
 
             services.AddDbContext<TranzrMovesDbContext>((sp, options) =>
-                options.UseNpgsql(_postgres.GetConnectionString())
+                options.UseNpgsql(_postgres.GetConnectionString(), npgsql =>
+                    {
+                        npgsql.MigrationsHistoryTable("__MigrationHistory", Db.SCHEMA);
+                        npgsql.UseNodaTime();
+                    })
                     .AddInterceptors(sp.GetRequiredService<AuditableInterceptor>()));
         });
     }
@@ -106,7 +130,7 @@ public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
         _scope = Services.CreateScope();
         DbContext = _scope.ServiceProvider.GetRequiredService<TranzrMovesDbContext>();
 
-        await DbContext.Database.EnsureDeletedAsync(); //Have a clean state
+        await DbContext.Database.EnsureDeletedAsync();
         await DbContext.Database.MigrateAsync();
 
         await ConfigureAutoFakerAsync();

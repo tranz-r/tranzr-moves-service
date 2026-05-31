@@ -30,6 +30,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Src\TranzrMoves.Api\TranzrMoves.Api.csproj" />
+        <ProjectReference Include="..\..\Src\TranzrMoves.Worker\TranzrMoves.Worker.csproj" />
     </ItemGroup>
 
 </Project>

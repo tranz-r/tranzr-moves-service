@@ -39,17 +39,26 @@
     <PackageVersion Include="Respawn" Version="7.0.0" />
     <PackageVersion Include="Riok.Mapperly" Version="4.2.1" />
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageVersion Include="Stripe.net" Version="51.0.0" />
     <PackageVersion Include="Supabase" Version="1.1.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.1.7" />
     <PackageVersion Include="Swashbuckle.AspNetCore.Annotations" Version="10.1.7" />
     <PackageVersion Include="Testcontainers" Version="4.11.0" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.11.0" />
+    <PackageVersion Include="Testcontainers.RabbitMq" Version="4.11.0" />
+    <PackageVersion Include="Testcontainers.Redis" Version="4.11.0" />
     <PackageVersion Include="WireMock.Net" Version="2.2.0" />
+    <PackageVersion Include="WolverineFx.EntityFrameworkCore" Version="5.16.0" />
     <PackageVersion Include="xunit" Version="2.9.2" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageVersion Include="xunit.v3" Version="3.2.2" />
     <PackageVersion Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="10.0.7" />
     <PackageVersion Include="Microsoft.AspNetCore.WebUtilities" Version="10.0.7" />
+    <PackageVersion Include="StackExchange.Redis" Version="2.8.58" />
+    <PackageVersion Include="WolverineFx" Version="5.16.0" />
+    <PackageVersion Include="WolverineFx.Postgresql" Version="5.16.0" />
+    <PackageVersion Include="WolverineFx.RabbitMQ" Version="5.16.0" />
   </ItemGroup>
 </Project>

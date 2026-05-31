@@ -1,4 +1,4 @@
-namespace TranzrMoves.Domain.Models;
+﻿namespace TranzrMoves.Domain.Models;
 
 public sealed record QuoteV2HostedCheckoutSessionResult(
     string SessionId,

@@ -96,7 +96,6 @@ try
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
 
-
     builder.Services.AddSingleton(_ =>
     {
         var url = builder.Configuration["SUPABASE_URL"];

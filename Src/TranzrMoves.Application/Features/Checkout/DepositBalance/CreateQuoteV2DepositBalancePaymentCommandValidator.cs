@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace TranzrMoves.Application.Features.Checkout.DepositBalance;
 

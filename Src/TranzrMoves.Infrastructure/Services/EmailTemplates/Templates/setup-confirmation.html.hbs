@@ -46,6 +46,16 @@
                     <span class="payment-value amount">£{{totalAmount}}</span>
                 </div>
                 <div class="payment-row">
+                    <span class="payment-label">Amount Charged Today:</span>
+                    <span class="payment-value">£{{amountChargedToday}}</span>
+                </div>
+                {{#if paymentDueDate}}
+                <div class="payment-row">
+                    <span class="payment-label">Payment Due Date:</span>
+                    <span class="payment-value">{{paymentDueDate}}</span>
+                </div>
+                {{/if}}
+                <div class="payment-row">
                     <span class="payment-label">Payment Status:</span>
                     <span class="payment-value" style="color: #5aa5b3; font-weight: bold;">Payment Setup</span>
                 </div>

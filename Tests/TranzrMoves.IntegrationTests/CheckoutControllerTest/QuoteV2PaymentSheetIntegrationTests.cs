@@ -1,10 +1,11 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using NodaTime;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Entities;
+using TranzrMoves.IntegrationTests.Fixtures;
 
 namespace TranzrMoves.IntegrationTests.CheckoutControllerTest;
 
