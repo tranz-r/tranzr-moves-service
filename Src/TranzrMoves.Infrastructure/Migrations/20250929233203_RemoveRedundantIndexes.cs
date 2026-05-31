@@ -24,7 +24,6 @@ namespace TranzrMoves.Infrastructure.Migrations
 
             migrationBuilder.DropIndex(
                 name: "IX_QuoteAdditionalPayments_QuoteId_Amount",
-                schema: "tranzrmoves",
                 table: "QuoteAdditionalPayments");
         }
 
@@ -48,7 +47,6 @@ namespace TranzrMoves.Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_QuoteAdditionalPayments_QuoteId_Amount",
-                schema: "tranzrmoves",
                 table: "QuoteAdditionalPayments",
                 columns: new[] { "QuoteId", "Amount" });
         }

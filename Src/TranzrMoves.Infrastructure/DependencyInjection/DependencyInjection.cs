@@ -39,7 +39,10 @@ public static class DependencyInjection
             sp.GetRequiredService<IEmailService>(),
             sp.GetRequiredService<ITemplateService>(),
             sp.GetRequiredService<ITimeService>(),
+            sp.GetRequiredService<IPayLaterChargeScheduler>(),
             sp.GetRequiredService<ILogger<CheckoutStripeWebhookV2Service>>()));
+
+        services.AddPayLaterInfrastructure(configuration);
 
         services.AddTransient<IUserV2Repository, UserV2Repository>();
         services.AddTransient<IQuoteRepository, QuoteRepository>();

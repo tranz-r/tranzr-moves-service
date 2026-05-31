@@ -5,5 +5,7 @@ namespace TranzrMoves.Domain.Interfaces;
 
 public interface IQuoteV2LaterBalanceCollectionService
 {
+    Task<ErrorOr<Success>> TryCollectAsync(Guid quoteId, CancellationToken cancellationToken);
+
     Task<ErrorOr<Success>> CollectAsync(QuoteV2 quote, CancellationToken cancellationToken);
 }

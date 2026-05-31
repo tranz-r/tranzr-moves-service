@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TranzrMoves.Api.Dtos;
 using TranzrMoves.Application.Contracts;
-using TranzrMoves.Application.Features.Checkout.CollectPayLater;
 using TranzrMoves.Application.Features.Checkout.CreateQuoteV2CheckoutSession;
 using TranzrMoves.Application.Features.Checkout.DepositBalance;
 using TranzrMoves.Application.Features.Checkout.PaymentSheet;
@@ -200,19 +199,6 @@ public class CheckoutController(IMediator mediator) : ApiControllerBase
         }
 
         return Ok(result.Value);
-    }
-
-    [MapToApiVersion(2)]
-    [HttpPost("pay-later-collection")]
-    [SwaggerOperation(
-        OperationId = "Checkout_CollectQuoteV2PayLater",
-        Summary = "Collect QuoteV2 pay-later balances due today",
-        Tags = new[] { "Checkout (v2)" })]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> CollectPayLaterQuoteV2(CancellationToken ct)
-    {
-        _ = await mediator.Send(new CollectQuoteV2PayLaterPaymentsCommand(), ct);
-        return NoContent();
     }
 
     [MapToApiVersion(2)]

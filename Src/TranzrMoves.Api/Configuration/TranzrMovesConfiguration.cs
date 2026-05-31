@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.DataProtection;
-using Microsoft.EntityFrameworkCore;
-using TranzrMoves.Domain.Constants;
-using TranzrMoves.Infrastructure;
-using TranzrMoves.Infrastructure.Interceptors;
+﻿using TranzrMoves.Infrastructure.DependencyInjection;
 
 namespace TranzrMoves.Api.Configuration
 {
@@ -11,26 +7,7 @@ namespace TranzrMoves.Api.Configuration
         internal static void ConfigureTranzrMovesServices(this IServiceCollection serviceCollection,
             IConfiguration configuration)
         {
-            serviceCollection.ConfigureDatabase(configuration);
-        }
-
-        private static void ConfigureDatabase(this IServiceCollection services, IConfiguration configuration)
-        {
-            services.AddScoped<AuditableInterceptor>();
-
-            string? dbConnectionString = configuration.GetConnectionString(Db.CONNECTION_STRING_NAME);
-            services.AddDbContext<TranzrMovesDbContext>((sp, options) =>
-                options.UseNpgsql(dbConnectionString, x =>
-                    {
-                        x.MigrationsHistoryTable("__MigrationHistory", Db.SCHEMA);
-                        x.UseNodaTime();
-                    })
-                    .AddInterceptors(sp.GetRequiredService<AuditableInterceptor>()));
-
-            // using Microsoft.AspNetCore.DataProtection;
-            services.AddDataProtection()
-                .SetApplicationName("TranzrMoves")
-                .PersistKeysToDbContext<TranzrMovesDbContext>();
+            serviceCollection.AddTranzrMovesDatabase(configuration);
         }
     }
 }

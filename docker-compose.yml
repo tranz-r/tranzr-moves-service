@@ -1,0 +1,55 @@
+# Local infrastructure for TranzrMoves API and Worker.
+# Connection strings match appsettings defaults (API: postgres + redis; Worker: also rabbitmq).
+#
+# Usage:
+#   docker compose up -d
+#   dotnet ef database update --project Src/TranzrMoves.Infrastructure --startup-project Src/TranzrMoves.Api
+#   ASPNETCORE_ENVIRONMENT=Development dotnet run --project Src/TranzrMoves.Worker
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: tranzr-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: tranzr
+      POSTGRES_PASSWORD: tranzr
+      POSTGRES_DB: tranzr
+    volumes:
+      - tranzr-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tranzr -d tranzr"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: tranzr-redis
+    ports:
+      - "6379:6379"
+    # Required for PayLaterChargeExpiryListener (Redis key expiry events).
+    command: redis-server --notify-keyspace-events Ex
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: tranzr-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  tranzr-postgres-data:

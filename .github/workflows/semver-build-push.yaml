@@ -1,12 +1,25 @@
 name: Release and Push to GHCR
 
+# Runs only after "Integration Test" completes successfully on main (see workflow_run below).
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Integration Test"]
+    types: [completed]
+    branches: [main]
 
 jobs:
+  fail-if-integration-tests-failed:
+    if: github.event.workflow_run.conclusion != 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Integration tests did not pass
+        run: |
+          echo "Integration Test workflow concluded with: ${{ github.event.workflow_run.conclusion }}"
+          echo "Skipping release and docker push."
+          exit 1
+
   release:
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     outputs:
       next_version: ${{ steps.semantic-release.outputs.version }}
@@ -14,6 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - name: Run semantic release
@@ -25,8 +39,9 @@ jobs:
 
       - name: Output the new version
         run: echo "New version is ${{ steps.semantic-release.outputs.version }}"
-  
+
   docker:
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     needs: release
     permissions:
@@ -35,6 +50,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -46,14 +63,21 @@ jobs:
       - name: Build and Push Images to GHCR
         run: |
           VERSION=${{ needs.release.outputs.next_version }}
-          
+
           # Build and push API service image
           API_IMAGE=ghcr.io/${{ github.repository_owner }}/tranzr-moves-services
           docker build -f Src/TranzrMoves.Api/Dockerfile -t $API_IMAGE:$VERSION .
           docker tag $API_IMAGE:$VERSION $API_IMAGE:latest
           docker push $API_IMAGE:$VERSION
           docker push $API_IMAGE:latest
-          
+
+          # Build and push Worker image (Scheduler and Processor use same image, different Worker__Role)
+          WORKER_IMAGE=ghcr.io/${{ github.repository_owner }}/tranzr-moves-worker
+          docker build -f Src/TranzrMoves.Worker/Dockerfile -t $WORKER_IMAGE:$VERSION .
+          docker tag $WORKER_IMAGE:$VERSION $WORKER_IMAGE:latest
+          docker push $WORKER_IMAGE:$VERSION
+          docker push $WORKER_IMAGE:latest
+
           # Build and push database migrator image
           MIGRATOR_IMAGE=ghcr.io/${{ github.repository_owner }}/tranzr-moves-db-migrator
           docker build -f Src/DbMigrator.Dockerfile -t $MIGRATOR_IMAGE:$VERSION .

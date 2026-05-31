@@ -1,23 +1,19 @@
-﻿using MailKit.Net.Smtp;
+using MailKit.Net.Smtp;
 using MailKit.Security;
-
 using Microsoft.Extensions.Logging;
-
 using MimeKit;
 using MimeKit.Text;
-
 using TranzrMoves.Domain.Interfaces;
 
-namespace TranzrMoves.IntegrationTests;
+namespace TranzrMoves.IntegrationTests.TestDoubles;
 
-public class LocalEmailService(ILogger<LocalEmailService> logger) : IEmailService
+public sealed class LocalEmailService(ILogger<LocalEmailService> logger) : IEmailService
 {
     public async Task SendBookingConfirmationEmailAsync(string fromEmail, string subject, string toEmail,
         string htmlEmail, string textEmail, List<string>? bccRecipients = null)
     {
         try
         {
-            // create message
             var email = new MimeMessage();
             email.From.Add(MailboxAddress.Parse(fromEmail));
             email.To.Add(MailboxAddress.Parse(toEmail));
@@ -35,9 +31,7 @@ public class LocalEmailService(ILogger<LocalEmailService> logger) : IEmailServic
                 }
             }
 
-            // send email
             using var smtp = new SmtpClient();
-            // Disable SSL/TLS and certificate validation for local testing
             smtp.ServerCertificateValidationCallback = (s, c, h, e) => true;
 
             await smtp.ConnectAsync("localhost", 2525, SecureSocketOptions.None);

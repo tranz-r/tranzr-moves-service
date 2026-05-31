@@ -9,9 +9,6 @@ namespace TranzrMoves.Infrastructure;
 public class TranzrMovesDbContext(DbContextOptions<TranzrMovesDbContext> dbContextOptions)
     : DbContext(dbContextOptions), IDataProtectionKeyContext
 {
-    public TranzrMovesDbContext() : this(new DbContextOptionsBuilder<TranzrMovesDbContext>().Options)
-    { }
-
     // DbSets
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;

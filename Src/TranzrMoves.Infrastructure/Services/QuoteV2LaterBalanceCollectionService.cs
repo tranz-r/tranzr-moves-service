@@ -19,7 +19,75 @@ public sealed class QuoteV2LaterBalanceCollectionService(
 {
     private static readonly LocalDatePattern IsoDatePattern = LocalDatePattern.Iso;
 
-    public async Task<ErrorOr<Success>> CollectAsync(QuoteV2 quote, CancellationToken cancellationToken)
+    private static readonly HashSet<string> TerminalPaymentIntentStatuses =
+    [
+        "succeeded",
+        "processing",
+        "requires_capture"
+    ];
+
+    public async Task<ErrorOr<Success>> TryCollectAsync(Guid quoteId, CancellationToken cancellationToken)
+    {
+        var quote = await quoteRepository.GetQuoteByIdAsync(quoteId, cancellationToken, asTracking: true);
+        if (quote is null)
+        {
+            logger.LogWarning("QuoteV2 {QuoteId} not found for pay-later balance collection", quoteId);
+            return Result.Success;
+        }
+
+        if (quote.PaymentStatus != PaymentStatus.PaymentSetup)
+        {
+            logger.LogInformation(
+                "Skipping pay-later balance collection for {QuoteRef}; status is {Status}",
+                quote.QuoteReference,
+                quote.PaymentStatus);
+            return Result.Success;
+        }
+
+        var balancePayment = quote.Payments?
+            .Where(p => p.PaymentType == PaymentType.Balance)
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefault();
+
+        if (balancePayment?.Status == StripePaymentStatus.Paid)
+        {
+            logger.LogInformation("Skipping pay-later balance collection for {QuoteRef}; balance already paid",
+                quote.QuoteReference);
+            return Result.Success;
+        }
+
+        if (!string.IsNullOrEmpty(balancePayment?.PaymentIntentId))
+        {
+            try
+            {
+                var existingIntent = await stripeClient.V1.PaymentIntents.GetAsync(balancePayment.PaymentIntentId,
+                    cancellationToken: cancellationToken);
+                if (TerminalPaymentIntentStatuses.Contains(existingIntent.Status))
+                {
+                    logger.LogInformation(
+                        "Skipping pay-later balance collection for {QuoteRef}; PI {PaymentIntentId} is {Status}",
+                        quote.QuoteReference,
+                        existingIntent.Id,
+                        existingIntent.Status);
+                    return Result.Success;
+                }
+            }
+            catch (StripeException ex)
+            {
+                logger.LogWarning(ex,
+                    "Could not load existing PI {PaymentIntentId} for quote {QuoteRef}; proceeding with collection",
+                    balancePayment.PaymentIntentId,
+                    quote.QuoteReference);
+            }
+        }
+
+        return await CollectAsync(quote, cancellationToken);
+    }
+
+    public Task<ErrorOr<Success>> CollectAsync(QuoteV2 quote, CancellationToken cancellationToken) =>
+        CollectInternalAsync(quote, cancellationToken);
+
+    private async Task<ErrorOr<Success>> CollectInternalAsync(QuoteV2 quote, CancellationToken cancellationToken)
     {
         var laterPayment = quote.Payments?
             .Where(p => p.PaymentType == PaymentType.Later)
@@ -100,39 +168,45 @@ public sealed class QuoteV2LaterBalanceCollectionService(
             }
         };
 
+        var requestOptions = new RequestOptions
+        {
+            IdempotencyKey = $"quote-v2-balance-{quote.Id:N}"
+        };
+
         try
         {
             var paymentIntent = await stripeClient.V1.PaymentIntents.CreateAsync(paymentIntentOptions,
-                cancellationToken: cancellationToken);
+                requestOptions,
+                cancellationToken);
 
             quote.Payments ??= [];
             var now = timeService.Now();
-            var balancePayment = quote.Payments.FirstOrDefault(p => p.PaymentType == PaymentType.Balance)
-                                 ?? new Payment
-                                 {
-                                     Id = Guid.NewGuid(),
-                                     QuoteId = quote.Id,
-                                     PaymentType = PaymentType.Balance,
-                                     Status = StripePaymentStatus.Pending,
-                                     CreatedAt = now,
-                                     CreatedBy = nameof(QuoteV2LaterBalanceCollectionService),
-                                     ModifiedAt = now,
-                                     ModifiedBy = nameof(QuoteV2LaterBalanceCollectionService)
-                                 };
+            var balancePayment = quote.Payments.FirstOrDefault(p => p.PaymentType == PaymentType.Balance);
+            if (balancePayment is null)
+            {
+                balancePayment = new Payment
+                {
+                    QuoteId = quote.Id,
+                    PaymentType = PaymentType.Balance,
+                    Status = StripePaymentStatus.Pending,
+                    CreatedAt = now,
+                    CreatedBy = nameof(QuoteV2LaterBalanceCollectionService),
+                    ModifiedAt = now,
+                    ModifiedBy = nameof(QuoteV2LaterBalanceCollectionService)
+                };
+                quote.Payments.Add(balancePayment);
+                quoteRepository.AddPayment(balancePayment);
+            }
 
             balancePayment.PaymentIntentId = paymentIntent.Id;
             balancePayment.ModifiedAt = now;
             balancePayment.ModifiedBy = nameof(QuoteV2LaterBalanceCollectionService);
 
-            if (!quote.Payments.Any(p => p.Id == balancePayment.Id))
-            {
-                quote.Payments.Add(balancePayment);
-            }
-
             var save = await quoteRepository.SaveChangesAsync(cancellationToken);
             if (save.IsError)
             {
                 logger.LogWarning("Failed to persist pay-later PI for {QuoteRef}", quote.QuoteReference);
+                return save.Errors;
             }
 
             logger.LogInformation("QuoteV2 pay-later intent created for {QuoteRef}", quote.QuoteReference);

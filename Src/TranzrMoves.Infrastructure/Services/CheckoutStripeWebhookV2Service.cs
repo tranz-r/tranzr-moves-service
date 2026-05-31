@@ -20,6 +20,7 @@ public sealed class CheckoutStripeWebhookV2Service(
     IEmailService emailService,
     ITemplateService templateService,
     ITimeService timeService,
+    IPayLaterChargeScheduler payLaterChargeScheduler,
     ILogger<CheckoutStripeWebhookV2Service> logger) : ICheckoutStripeWebhookV2Service
 {
     private static readonly LocalDatePattern EmailDatePattern =
@@ -138,6 +139,10 @@ public sealed class CheckoutStripeWebhookV2Service(
         {
             customerName,
             totalAmount = totalCost.ToString("N2", CultureInfo.InvariantCulture),
+            amountChargedToday = "0.00",
+            paymentDueDate = payment.DueDate is { } dueDateForEmail
+                ? EmailDatePattern.Format(dueDateForEmail)
+                : null,
             quoteReference = quote.QuoteReference,
             setupDate = EmailDatePattern.Format(setupInstant.InUtc().Date),
             setupTime = EmailTimePattern.Format(setupInstant.InUtc().TimeOfDay) + " GMT",
@@ -150,6 +155,11 @@ public sealed class CheckoutStripeWebhookV2Service(
 
         await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, quote.Customer.Email,
             htmlEmail, textEmail);
+
+        if (payment.DueDate is { } dueDate)
+        {
+            await payLaterChargeScheduler.ScheduleAsync(quote.Id, dueDate, quote.QuoteReference, ct);
+        }
     }
 
     private async Task HandlePaymentIntentSucceededV2Async(PaymentIntent paymentIntent, CancellationToken ct)
@@ -173,7 +183,7 @@ public sealed class CheckoutStripeWebhookV2Service(
 
         var paymentRow = quote.Payments?.FirstOrDefault(p =>
                              p.PaymentIntentId == paymentIntent.Id
-                             && p.CustomerSelectedOption
+                             && (p.CustomerSelectedOption || p.PaymentType == PaymentType.Balance)
                              );
 
         if (paymentRow is null)
