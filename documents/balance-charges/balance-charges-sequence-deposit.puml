@@ -1,0 +1,44 @@
+@startuml balance-charges-sequence-deposit
+title Deposit remaining balance charge sequence
+
+actor Customer
+participant "Stripe" as Stripe
+participant "Api\nCheckoutStripeWebhookV2Service" as Api
+participant "BalanceChargeScheduler" as Scheduler
+database "Redis" as Redis
+participant "Worker\nBalanceChargeExpiryListener" as Expiry
+participant "BalanceChargeRecoveryWorker" as Recovery
+participant "CollectQuoteV2BalanceChargePublisher" as Publisher
+queue "RabbitMQ" as RMQ
+participant "CollectQuoteV2BalanceChargeHandler" as Handler
+participant "QuoteV2DepositBalanceCollectionService" as DepositSvc
+database "PostgreSQL" as PG
+
+Customer -> Stripe : Pay deposit
+Stripe -> Api : payment_intent.succeeded (Deposit)
+Api -> PG : Update quote (PartiallyPaid)
+Api -> Scheduler : ScheduleDepositBalanceAsync(quoteId, collectionDate)
+Scheduler -> Redis : SET deposit:charge:{quoteId}\nTTL until 00:05 Europe/London\non collection date
+
+note over Redis
+  Charge time uses BalanceChargeScheduling
+  (default timezone Europe/London).
+end note
+
+Redis -> Expiry : __keyevent@*__:expired
+Expiry -> Publisher : PublishAsync(CollectQuoteV2BalanceCharge)
+
+opt Redis key missed or not yet due via expiry
+  Recovery -> PG : GetDepositQuoteV2sDueForBalanceCollectionAsync
+  Recovery -> Recovery : IsDepositChargeDue(collectionDate, now)
+  Recovery -> Publisher : PublishAsync(...)
+end
+
+Publisher -> RMQ : quote-v2-balance-charge
+RMQ -> Handler : Handle(message)
+Handler -> PG : GetQuoteByIdAsync
+Handler -> DepositSvc : TryCollectAsync(quoteId)\n[PaymentStatus = PartiallyPaid]
+DepositSvc -> Stripe : Create / confirm balance PaymentIntent
+DepositSvc -> PG : Persist balance Payment row
+
+@enduml

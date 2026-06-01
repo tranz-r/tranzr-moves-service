@@ -1,4 +1,5 @@
-﻿using ErrorOr;
+using System.Globalization;
+using ErrorOr;
 using Microsoft.Extensions.Logging;
 using Stripe;
 using Stripe.Tax;
@@ -9,12 +10,12 @@ using TranzrMoves.Domain.Interfaces;
 
 namespace TranzrMoves.Infrastructure.Services;
 
-public sealed class QuoteV2LaterBalanceCollectionService(
+public sealed class QuoteV2DepositBalanceCollectionService(
     StripeClient stripeClient,
     IQuoteRepository quoteRepository,
     IQuoteV2HostedCheckoutSessionService hostedCheckoutSessionService,
     ITimeService timeService,
-    ILogger<QuoteV2LaterBalanceCollectionService> logger) : IQuoteV2LaterBalanceCollectionService
+    ILogger<QuoteV2DepositBalanceCollectionService> logger) : IQuoteV2DepositBalanceCollectionService
 {
     private static readonly HashSet<string> TerminalPaymentIntentStatuses =
     [
@@ -28,14 +29,14 @@ public sealed class QuoteV2LaterBalanceCollectionService(
         var quote = await quoteRepository.GetQuoteByIdAsync(quoteId, cancellationToken, asTracking: true);
         if (quote is null)
         {
-            logger.LogWarning("QuoteV2 {QuoteId} not found for pay-later balance collection", quoteId);
+            logger.LogWarning("QuoteV2 {QuoteId} not found for deposit balance collection", quoteId);
             return Result.Success;
         }
 
-        if (quote.PaymentStatus != PaymentStatus.PaymentSetup)
+        if (quote.PaymentStatus != PaymentStatus.PartiallyPaid)
         {
             logger.LogInformation(
-                "Skipping pay-later balance collection for {QuoteRef}; status is {Status}",
+                "Skipping deposit balance collection for {QuoteRef}; status is {Status}",
                 quote.QuoteReference,
                 quote.PaymentStatus);
             return Result.Success;
@@ -48,7 +49,7 @@ public sealed class QuoteV2LaterBalanceCollectionService(
 
         if (balancePayment?.Status == StripePaymentStatus.Paid)
         {
-            logger.LogInformation("Skipping pay-later balance collection for {QuoteRef}; balance already paid",
+            logger.LogInformation("Skipping deposit balance collection for {QuoteRef}; balance already paid",
                 quote.QuoteReference);
             return Result.Success;
         }
@@ -62,7 +63,7 @@ public sealed class QuoteV2LaterBalanceCollectionService(
                 if (TerminalPaymentIntentStatuses.Contains(existingIntent.Status))
                 {
                     logger.LogInformation(
-                        "Skipping pay-later balance collection for {QuoteRef}; PI {PaymentIntentId} is {Status}",
+                        "Skipping deposit balance collection for {QuoteRef}; PI {PaymentIntentId} is {Status}",
                         quote.QuoteReference,
                         existingIntent.Id,
                         existingIntent.Status);
@@ -78,34 +79,57 @@ public sealed class QuoteV2LaterBalanceCollectionService(
             }
         }
 
-        return await CollectAsync(quote, cancellationToken);
+        return await CollectAsync(quote, cancellationToken: cancellationToken);
     }
 
-    public Task<ErrorOr<Success>> CollectAsync(QuoteV2 quote, CancellationToken cancellationToken) =>
-        CollectInternalAsync(quote, cancellationToken);
+    public Task<ErrorOr<Success>> CollectAsync(
+        QuoteV2 quote,
+        decimal? extraCharges = null,
+        string? extraChargesDescription = null,
+        CancellationToken cancellationToken = default) =>
+        CollectInternalAsync(quote, extraCharges, extraChargesDescription, cancellationToken);
 
-    private async Task<ErrorOr<Success>> CollectInternalAsync(QuoteV2 quote, CancellationToken cancellationToken)
+    private async Task<ErrorOr<Success>> CollectInternalAsync(
+        QuoteV2 quote,
+        decimal? extraCharges,
+        string? extraChargesDescription,
+        CancellationToken cancellationToken)
     {
-        var laterPayment = quote.Payments?
-            .Where(p => p.PaymentType == PaymentType.Later)
+        var depositPayment = quote.Payments?
+            .Where(p => p.PaymentType == PaymentType.Deposit && p.Status == StripePaymentStatus.Paid)
             .OrderByDescending(p => p.CreatedAt)
             .FirstOrDefault();
 
-        if (laterPayment?.PaymentMethodId is null)
+        if (depositPayment?.PaymentMethodId is null)
         {
-            logger.LogWarning("No Later payment with PaymentMethodId for quote {QuoteRef}", quote.QuoteReference);
-            return Error.Failure("PayLater.NoPaymentMethod", "Saved payment method not found.");
+            logger.LogWarning("No paid Deposit payment with PaymentMethodId for quote {QuoteRef}", quote.QuoteReference);
+            return Error.Failure("DepositBalance.NoPaymentMethod", "Saved payment method from deposit was not found.");
         }
 
         if (quote.Customer?.Email is null)
         {
-            return Error.Failure("PayLater.NoEmail", "Customer email is required.");
+            return Error.Failure("DepositBalance.NoEmail", "Customer email is required.");
         }
 
         if (quote.TotalCost is null or <= 0)
         {
-            return Error.Failure("PayLater.NoTotal", "Quote total is required.");
+            return Error.Failure("DepositBalance.NoTotal", "Quote total is required.");
         }
+
+        var depositAmount = depositPayment.Amount ?? 0m;
+        if (depositAmount <= 0)
+        {
+            return Error.Failure("DepositBalance.NoDepositAmount", "Deposit amount is missing on the quote payment record.");
+        }
+
+        var extra = extraCharges ?? 0m;
+        var remainingAmount = quote.TotalCost.Value - depositAmount;
+        if (remainingAmount <= 0)
+        {
+            return Error.Failure("DepositBalance.NoBalance", "No remaining balance to charge.");
+        }
+
+        var chargeableAmount = remainingAmount + extra * 1.2m;
 
         var customerSearchResult = await stripeClient.V1.Customers.SearchAsync(new CustomerSearchOptions
         {
@@ -116,11 +140,11 @@ public sealed class QuoteV2LaterBalanceCollectionService(
         if (customer is null)
         {
             logger.LogWarning("Stripe customer not found for quote {QuoteRef}", quote.QuoteReference);
-            return Error.Failure("PayLater.NoStripeCustomer", "Stripe customer not found.");
+            return Error.Failure("DepositBalance.NoStripeCustomer", "Stripe customer not found.");
         }
 
         var amountInCurrencyUnit =
-            (long)Math.Round(quote.TotalCost.Value * 100, 0, MidpointRounding.AwayFromZero);
+            (long)Math.Round(chargeableAmount * 100, 0, MidpointRounding.AwayFromZero);
 
         var calculationOptions = new CalculationCreateOptions
         {
@@ -147,7 +171,7 @@ public sealed class QuoteV2LaterBalanceCollectionService(
             Amount = calculation.AmountTotal,
             Currency = CheckoutStripeConstants.Currency,
             Customer = customer.Id,
-            PaymentMethod = laterPayment.PaymentMethodId,
+            PaymentMethod = depositPayment.PaymentMethodId,
             Description = "Tranzr Moves - Remaining balance payment",
             ReceiptEmail = customer.Email,
             Confirm = true,
@@ -165,9 +189,17 @@ public sealed class QuoteV2LaterBalanceCollectionService(
             }
         };
 
+        if (extraCharges != null)
+        {
+            paymentIntentOptions.Metadata.Add(nameof(PaymentMetadata.ExtraCharges),
+                extra.ToString("N", CultureInfo.InvariantCulture));
+            paymentIntentOptions.Metadata.Add(nameof(PaymentMetadata.ExtraChargesDescription),
+                extraChargesDescription ?? string.Empty);
+        }
+
         var requestOptions = new RequestOptions
         {
-            IdempotencyKey = $"quote-v2-balance-{quote.Id:N}"
+            IdempotencyKey = $"quote-v2-deposit-balance-{quote.Id:N}"
         };
 
         try
@@ -187,9 +219,9 @@ public sealed class QuoteV2LaterBalanceCollectionService(
                     PaymentType = PaymentType.Balance,
                     Status = StripePaymentStatus.Pending,
                     CreatedAt = now,
-                    CreatedBy = nameof(QuoteV2LaterBalanceCollectionService),
+                    CreatedBy = nameof(QuoteV2DepositBalanceCollectionService),
                     ModifiedAt = now,
-                    ModifiedBy = nameof(QuoteV2LaterBalanceCollectionService)
+                    ModifiedBy = nameof(QuoteV2DepositBalanceCollectionService)
                 };
                 quote.Payments.Add(balancePayment);
                 quoteRepository.AddPayment(balancePayment);
@@ -197,24 +229,24 @@ public sealed class QuoteV2LaterBalanceCollectionService(
 
             balancePayment.PaymentIntentId = paymentIntent.Id;
             balancePayment.ModifiedAt = now;
-            balancePayment.ModifiedBy = nameof(QuoteV2LaterBalanceCollectionService);
+            balancePayment.ModifiedBy = nameof(QuoteV2DepositBalanceCollectionService);
 
             var save = await quoteRepository.SaveChangesAsync(cancellationToken);
             if (save.IsError)
             {
-                logger.LogWarning("Failed to persist pay-later PI for {QuoteRef}", quote.QuoteReference);
+                logger.LogWarning("Failed to persist deposit balance PI for {QuoteRef}", quote.QuoteReference);
                 return save.Errors;
             }
 
-            logger.LogInformation("QuoteV2 pay-later intent created for {QuoteRef}", quote.QuoteReference);
+            logger.LogInformation("QuoteV2 deposit balance intent created for {QuoteRef}", quote.QuoteReference);
             return Result.Success;
         }
         catch (StripeException ex)
         {
             if (ex.StripeError.Type == "card_error")
             {
-                var recovery = await TrySendRecoveryCheckoutAsync(quote, laterPayment.PaymentMethodId, ex,
-                    cancellationToken);
+                var recovery = await TrySendRecoveryCheckoutAsync(quote, depositPayment.PaymentMethodId,
+                    chargeableAmount, ex, cancellationToken);
                 if (recovery.IsError)
                 {
                     return recovery.Errors;
@@ -223,19 +255,20 @@ public sealed class QuoteV2LaterBalanceCollectionService(
                 return Result.Success;
             }
 
-            logger.LogError(ex, "Stripe error collecting pay-later for {QuoteRef}", quote.QuoteReference);
-            return Error.Failure("PayLater.Stripe", ex.StripeError.Message ?? ex.Message);
+            logger.LogError(ex, "Stripe error collecting deposit balance for {QuoteRef}", quote.QuoteReference);
+            return Error.Failure("DepositBalance.Stripe", ex.StripeError.Message ?? ex.Message);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed pay-later collection for {QuoteRef}", quote.QuoteReference);
-            return Error.Failure("PayLater.Unknown", ex.Message);
+            logger.LogError(ex, "Failed deposit balance collection for {QuoteRef}", quote.QuoteReference);
+            return Error.Failure("DepositBalance.Unknown", ex.Message);
         }
     }
 
     private async Task<ErrorOr<Success>> TrySendRecoveryCheckoutAsync(
         QuoteV2 quote,
         string paymentMethodId,
+        decimal checkoutAmount,
         StripeException ex,
         CancellationToken cancellationToken)
     {
@@ -251,8 +284,8 @@ public sealed class QuoteV2LaterBalanceCollectionService(
 
             var checkout = await hostedCheckoutSessionService.CreateAsync(
                 quote,
-                quote.TotalCost!.Value,
-                $"Full payment for quote #{quote.QuoteReference}",
+                checkoutAmount,
+                $"Remaining balance for quote #{quote.QuoteReference}",
                 "checkout-session-payment-error",
                 PaymentType.Full,
                 cardErrorDescription,
@@ -269,7 +302,7 @@ public sealed class QuoteV2LaterBalanceCollectionService(
         catch (Exception inner)
         {
             logger.LogError(inner, "Recovery checkout failed for {QuoteRef}", quote.QuoteReference);
-            return Error.Failure("PayLater.Recovery", inner.Message);
+            return Error.Failure("DepositBalance.Recovery", inner.Message);
         }
     }
 }

@@ -11,7 +11,8 @@ public static class PayLaterDependencyInjection
         IConfiguration configuration)
     {
         services.AddPayLaterRedis(configuration);
-        services.AddSingleton<IPayLaterChargeScheduler, PayLaterChargeScheduler>();
+        services.Configure<PayLaterOptions>(configuration.GetSection(PayLaterOptions.SectionName));
+        services.AddSingleton<IBalanceChargeScheduler, BalanceChargeScheduler>();
 
         return services;
     }

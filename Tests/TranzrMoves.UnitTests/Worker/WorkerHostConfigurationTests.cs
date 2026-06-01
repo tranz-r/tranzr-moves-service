@@ -78,7 +78,7 @@ public sealed class WorkerHostConfigurationTests
 
         services.Should().Contain(d =>
             d.ServiceType == typeof(IHostedService) &&
-            d.ImplementationType == typeof(PayLaterChargeExpiryListener));
+            d.ImplementationType == typeof(BalanceChargeExpiryListener));
         services.Should().Contain(d =>
             d.ServiceType == typeof(IHostedService) &&
             d.ImplementationType == typeof(BalanceChargeRecoveryWorker));
@@ -91,7 +91,7 @@ public sealed class WorkerHostConfigurationTests
 
         WorkerHostConfiguration.RegisterPayLaterHostedServices(services, WorkerRole.Processor);
 
-        services.Should().NotContain(d => d.ImplementationType == typeof(PayLaterChargeExpiryListener));
+        services.Should().NotContain(d => d.ImplementationType == typeof(BalanceChargeExpiryListener));
         services.Should().NotContain(d => d.ImplementationType == typeof(BalanceChargeRecoveryWorker));
     }
 

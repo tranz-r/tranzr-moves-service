@@ -79,12 +79,12 @@ public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
             services.RemoveAll<DbConnection>();
             services.RemoveAll<IEmailService>();
             services.RemoveAll<IConnectionMultiplexer>();
-            services.RemoveAll<IPayLaterChargeScheduler>();
+            services.RemoveAll<IBalanceChargeScheduler>();
             services.RemoveAll<ICollectQuoteV2BalanceChargePublisher>();
 
             services.AddScoped<AuditableInterceptor>();
             services.AddScoped<IEmailService, LocalEmailService>();
-            services.AddSingleton<IPayLaterChargeScheduler, NoOpPayLaterChargeScheduler>();
+            services.AddSingleton<IBalanceChargeScheduler, NoOpBalanceChargeScheduler>();
             services.AddScoped<ICollectQuoteV2BalanceChargePublisher, DirectCollectQuoteV2BalanceChargePublisher>();
 
             services.AddDbContext<TranzrMovesDbContext>((sp, options) =>

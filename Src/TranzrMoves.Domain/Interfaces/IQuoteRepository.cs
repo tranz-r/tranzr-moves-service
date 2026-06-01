@@ -31,6 +31,13 @@ public interface IQuoteRepository
     /// Pay-later candidates due for collection, excluding quotes with a paid Balance payment row.
     /// </summary>
     Task<List<QuoteV2>> GetPayLaterQuoteV2sDueForCollectionAsync(LocalDate today, CancellationToken ct = default);
+
+    /// <summary>
+    /// Deposit balance candidates: partially paid with paid deposit and collection due date on or before the given London calendar day.
+    /// Caller must filter same-day quotes where current time is before 00:05 London.
+    /// </summary>
+    Task<List<QuoteV2>> GetDepositQuoteV2sDueForBalanceCollectionAsync(LocalDate todayInLondon,
+        CancellationToken ct = default);
 }
 
 

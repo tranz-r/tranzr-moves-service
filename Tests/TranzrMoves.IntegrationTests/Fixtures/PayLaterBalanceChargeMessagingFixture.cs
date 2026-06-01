@@ -8,6 +8,7 @@ using Testcontainers.PostgreSql;
 using Testcontainers.RabbitMq;
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Messaging;
+using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.DependencyInjection;
 using Wolverine;
@@ -31,6 +32,10 @@ public sealed class PayLaterBalanceChargeMessagingFixture : IAsyncLifetime
 
     public IQuoteV2LaterBalanceCollectionService CollectionService { get; private set; } = null!;
 
+    public IQuoteV2DepositBalanceCollectionService DepositCollectionService { get; private set; } = null!;
+
+    public IQuoteRepository QuoteRepository { get; private set; } = null!;
+
     public async Task PublishAsync(CollectQuoteV2BalanceCharge message, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(_host);
@@ -49,11 +54,25 @@ public sealed class PayLaterBalanceChargeMessagingFixture : IAsyncLifetime
         CollectionService.TryCollectAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(_ => Task.FromResult<ErrorOr<Success>>(Result.Success));
 
+        DepositCollectionService = Substitute.For<IQuoteV2DepositBalanceCollectionService>();
+        DepositCollectionService.TryCollectAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromResult<ErrorOr<Success>>(Result.Success));
+
+        QuoteRepository = Substitute.For<IQuoteRepository>();
+        QuoteRepository.GetQuoteByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => new QuoteV2
+            {
+                Id = callInfo.Arg<Guid>(),
+                PaymentStatus = PaymentStatus.PaymentSetup,
+                QuoteReference = "messaging-test"
+            });
+
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:TranzrMovesDatabaseConnection"] = _postgres.GetConnectionString(),
-                ["ConnectionStrings:rabbitmq"] = _rabbit.GetConnectionString()
+                ["ConnectionStrings:rabbitmq"] = _rabbit.GetConnectionString(),
+                ["PayLater:UseDurableMessaging"] = "false"
             })
             .Build();
 
@@ -63,6 +82,8 @@ public sealed class PayLaterBalanceChargeMessagingFixture : IAsyncLifetime
         builder.Services.AddSingleton<ITimeService, TimeService>();
         builder.Services.AddTranzrMovesDatabase(configuration);
         builder.Services.AddScoped(_ => CollectionService);
+        builder.Services.AddScoped(_ => DepositCollectionService);
+        builder.Services.AddScoped(_ => QuoteRepository);
 
         builder.UseWolverine(opts =>
             opts.ConfigurePayLaterMessaging(configuration, includeConsumer: true));

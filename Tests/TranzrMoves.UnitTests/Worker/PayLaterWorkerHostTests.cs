@@ -39,6 +39,7 @@ public sealed class PayLaterWorkerHostTests
         services.AddPayLaterWorkerServices(configuration, includeRedis: false, includeBalanceCollection: true);
 
         services.Should().Contain(d => d.ServiceType == typeof(IQuoteV2LaterBalanceCollectionService));
+        services.Should().Contain(d => d.ServiceType == typeof(IQuoteV2DepositBalanceCollectionService));
         services.Should().Contain(d => d.ServiceType == typeof(IQuoteV2HostedCheckoutSessionService));
         services.Should().Contain(d => d.ServiceType == typeof(IEmailService));
         services.Should().NotContain(d => d.ServiceType == typeof(IConnectionMultiplexer));
@@ -55,7 +56,7 @@ public sealed class PayLaterWorkerHostTests
         TranzrMovesWorkerHost.Configure(builder, WorkerRole.Scheduler);
 
         builder.Services.Should().Contain(d =>
-            d.ImplementationType == typeof(PayLaterChargeExpiryListener));
+            d.ImplementationType == typeof(BalanceChargeExpiryListener));
         builder.Services.Should().NotContain(d => d.ServiceType == typeof(StripeClient));
         builder.Services.Should().NotContain(d =>
             d.ServiceType == typeof(IQuoteV2LaterBalanceCollectionService));
@@ -75,7 +76,7 @@ public sealed class PayLaterWorkerHostTests
         builder.Services.Should().Contain(d =>
             d.ServiceType == typeof(IQuoteV2LaterBalanceCollectionService));
         builder.Services.Should().NotContain(d =>
-            d.ImplementationType == typeof(PayLaterChargeExpiryListener));
+            d.ImplementationType == typeof(BalanceChargeExpiryListener));
         builder.Services.Should().NotContain(d => d.ServiceType == typeof(IConnectionMultiplexer));
     }
 

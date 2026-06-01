@@ -78,6 +78,14 @@ public sealed class PayLaterEndToEndFixture : IAsyncLifetime
         await db.StringSetAsync(key, payload, TimeSpan.FromSeconds(2));
     }
 
+    public async Task ExpireDepositBalanceKeyAsync(Guid quoteId)
+    {
+        var db = Redis.GetDatabase();
+        var key = DepositBalanceChargeKeys.ForQuote(quoteId);
+        var payload = $"{{\"quoteId\":\"{quoteId:N}\"}}";
+        await db.StringSetAsync(key, payload, TimeSpan.FromSeconds(2));
+    }
+
     public async ValueTask InitializeAsync()
     {
         await Task.WhenAll(

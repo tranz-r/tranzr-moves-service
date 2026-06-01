@@ -28,6 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<IQuoteV2HostedCheckoutSessionService, QuoteV2HostedCheckoutSessionService>();
         services.AddScoped<IQuoteV2LaterBalanceCollectionService, QuoteV2LaterBalanceCollectionService>();
+        services.AddScoped<IQuoteV2DepositBalanceCollectionService, QuoteV2DepositBalanceCollectionService>();
         services.AddScoped<IQuoteV2PaymentSheetService, QuoteV2PaymentSheetService>();
         services.AddScoped<ICheckoutStripeReadService, CheckoutStripeReadService>();
         services.AddScoped<IQuoteV2DepositBalancePaymentService, QuoteV2DepositBalancePaymentService>();
@@ -39,7 +40,7 @@ public static class DependencyInjection
             sp.GetRequiredService<IEmailService>(),
             sp.GetRequiredService<ITemplateService>(),
             sp.GetRequiredService<ITimeService>(),
-            sp.GetRequiredService<IPayLaterChargeScheduler>(),
+            sp.GetRequiredService<IBalanceChargeScheduler>(),
             sp.GetRequiredService<ILogger<CheckoutStripeWebhookV2Service>>()));
 
         services.AddPayLaterInfrastructure(configuration);

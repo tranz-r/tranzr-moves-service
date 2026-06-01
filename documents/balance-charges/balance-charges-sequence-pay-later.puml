@@ -1,0 +1,37 @@
+@startuml balance-charges-sequence-pay-later
+title Pay-later balance charge sequence
+
+actor Customer
+participant "Stripe" as Stripe
+participant "Api\nCheckoutStripeWebhookV2Service" as Api
+participant "BalanceChargeScheduler" as Scheduler
+database "Redis" as Redis
+participant "Worker\nBalanceChargeExpiryListener" as Expiry
+participant "CollectQuoteV2BalanceChargePublisher" as Publisher
+queue "RabbitMQ" as RMQ
+participant "CollectQuoteV2BalanceChargeHandler" as Handler
+participant "QuoteV2LaterBalanceCollectionService" as LaterSvc
+database "PostgreSQL" as PG
+
+Customer -> Stripe : Pay setup fee (pay-later checkout)
+Stripe -> Api : payment_intent.succeeded (Later)
+Api -> PG : Update quote (PaymentSetup)
+Api -> Scheduler : SchedulePayLaterAsync(quoteId, dueDate)
+Scheduler -> Redis : SET paylater:charge:{quoteId}\nTTL until UTC start of due date
+
+note over Redis
+  At due date the Redis key expires.
+  Recovery worker also publishes if Redis was missed.
+end note
+
+Redis -> Expiry : __keyevent@*__:expired
+Expiry -> PG : Load quote / due date
+Expiry -> Publisher : PublishAsync(CollectQuoteV2BalanceCharge)
+Publisher -> RMQ : quote-v2-balance-charge
+RMQ -> Handler : Handle(message)
+Handler -> PG : GetQuoteByIdAsync
+Handler -> LaterSvc : TryCollectAsync(quoteId)\n[PaymentStatus = PaymentSetup]
+LaterSvc -> Stripe : Create / confirm balance PaymentIntent
+LaterSvc -> PG : Persist balance Payment row
+
+@enduml

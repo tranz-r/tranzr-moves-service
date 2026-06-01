@@ -1,0 +1,46 @@
+@startuml balance-charges-component
+title Balance charges - component diagram
+
+skinparam componentStyle rectangle
+
+package "TranzrMoves.Api" {
+  [CheckoutStripeWebhookV2Service] as Webhook
+  [BalanceChargeScheduler] as Scheduler
+}
+
+database "Redis" as Redis {
+  [paylater:charge:{quoteId}]
+  [deposit:charge:{quoteId}]
+}
+
+package "Worker (Scheduler role)" {
+  [BalanceChargeExpiryListener] as Expiry
+  [BalanceChargeRecoveryWorker] as Recovery
+  [CollectQuoteV2BalanceChargePublisher] as Publisher
+}
+
+queue "RabbitMQ\nquote-v2-balance-charge" as RMQ
+
+package "Worker (Processor role)" {
+  [CollectQuoteV2BalanceChargeHandler] as Handler
+  [QuoteV2LaterBalanceCollectionService] as LaterSvc
+  [QuoteV2DepositBalanceCollectionService] as DepositSvc
+}
+
+database "PostgreSQL" as PG
+cloud "Stripe" as Stripe
+
+Webhook --> Scheduler : schedule on payment success
+Scheduler --> Redis : SET key with TTL
+Redis --> Expiry : key expired event
+Expiry --> Publisher : CollectQuoteV2BalanceCharge
+Recovery --> Publisher : missed Redis / due quotes
+Publisher --> RMQ
+RMQ --> Handler
+Handler --> LaterSvc : PaymentStatus.PaymentSetup
+Handler --> DepositSvc : PaymentStatus.PartiallyPaid
+Handler --> PG : load quote / payments
+LaterSvc --> Stripe : PaymentIntent (balance)
+DepositSvc --> Stripe : PaymentIntent (balance)
+
+@enduml

@@ -68,6 +68,7 @@ public static class PayLaterWorkerDependencyInjection
         services.AddSingleton<ITemplateService, TemplateService>();
         services.AddHostedService<EmailTemplatesFileWatcherHostedService>();
         services.AddScoped<IQuoteV2LaterBalanceCollectionService, QuoteV2LaterBalanceCollectionService>();
+        services.AddScoped<IQuoteV2DepositBalanceCollectionService, QuoteV2DepositBalanceCollectionService>();
         services.AddScoped<IQuoteV2HostedCheckoutSessionService, QuoteV2HostedCheckoutSessionService>();
 
         return services;

@@ -39,7 +39,7 @@ public static class WorkerHostConfiguration
     {
         if (role is WorkerRole.Scheduler or WorkerRole.All)
         {
-            services.AddHostedService<PayLaterChargeExpiryListener>();
+            services.AddHostedService<BalanceChargeExpiryListener>();
             services.AddHostedService<BalanceChargeRecoveryWorker>();
         }
     }

@@ -19,6 +19,20 @@ To test locally you need **four things running**:
 Stripe webhook → API schedules Redis key → key expires → Worker → RabbitMQ → handler → Stripe charge
 ```
 
+Deposit remaining balance uses the same pipeline with a different Redis key and charge time — see [Balance charges](documents/balance-charges/balance-charges.md).
+
+---
+
+## Documentation
+
+| Guide | Description |
+|-------|-------------|
+| [documents/](documents/README.md) | Feature architecture (markdown + diagrams) |
+| [Balance charges](documents/balance-charges/balance-charges.md) | Pay-later and deposit remaining balance collection |
+| [docs/](docs/pay-later-worker-kubernetes-deployment.md) | Kubernetes deployment (Scheduler / Processor) |
+
+Diagram PNGs are generated from PlantUML sources in CI and via `./scripts/render-plantuml.sh`.
+
 ---
 
 ## Prerequisites

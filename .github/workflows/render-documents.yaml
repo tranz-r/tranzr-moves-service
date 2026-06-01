@@ -1,0 +1,64 @@
+name: Render documentation diagrams
+
+on:
+  push:
+    paths:
+      - "documents/**"
+      - "scripts/render-plantuml.sh"
+      - ".github/workflows/render-documents.yaml"
+  pull_request:
+    paths:
+      - "documents/**"
+      - "scripts/render-plantuml.sh"
+      - ".github/workflows/render-documents.yaml"
+  workflow_dispatch:
+
+jobs:
+  render-plantuml:
+    name: Render PlantUML diagrams
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Start PlantUML server
+        run: |
+          docker rm -f plantuml 2>/dev/null || true
+          docker run -d --name plantuml -p 8080:8080 plantuml/plantuml-server:jetty
+          printf '@startuml\na -> b\n@enduml\n' > /tmp/plantuml-probe.puml
+          for i in $(seq 1 90); do
+            sleep 2
+            if curl -sf http://localhost:8080/png -o /dev/null -X POST \
+              -H "Content-Type: text/plain" \
+              --data-binary @/tmp/plantuml-probe.puml; then
+              echo "PlantUML server is ready."
+              exit 0
+            fi
+          done
+          echo "PlantUML server failed to start."
+          docker logs plantuml
+          exit 1
+
+      - name: Render diagrams
+        env:
+          PLANTUML_SERVER_URL: http://localhost:8080
+          PLANTUML_CONTAINER: plantuml
+        run: |
+          chmod +x scripts/render-plantuml.sh
+          # Server already running; script will detect it and skip starting a second container.
+          ./scripts/render-plantuml.sh
+
+      - name: Verify committed PNGs are up to date
+        run: |
+          if ! git diff --exit-code -- documents/**/images/*.png; then
+            echo "::error::Rendered PNGs differ from committed files."
+            echo "Run ./scripts/render-plantuml.sh locally and commit the updated images."
+            git diff -- documents/**/images/*.png || true
+            exit 1
+          fi
+          echo "All diagram PNGs are up to date."
+
+      - name: Stop PlantUML server
+        if: always()
+        run: docker rm -f plantuml || true

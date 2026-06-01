@@ -142,6 +142,30 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
         return QueryPayLaterQuoteV2sDueAsync(today, ct);
     }
 
+    public Task<List<QuoteV2>> GetDepositQuoteV2sDueForBalanceCollectionAsync(LocalDate todayInLondon,
+        CancellationToken ct = default)
+    {
+        return db.Set<QuoteV2>()
+            .AsTracking()
+            .Include(x => x.Schedule)
+            .Include(x => x.Payments)
+            .Include(x => x.Customer)
+            .ThenInclude(c => c!.Addresses)
+            .Where(q =>
+                q.PaymentStatus == PaymentStatus.PartiallyPaid &&
+                q.Payments != null &&
+                q.Payments.Any(p =>
+                    p.PaymentType == PaymentType.Deposit &&
+                    p.Status == StripePaymentStatus.Paid &&
+                    p.PaymentMethodId != null &&
+                    p.DueDate != null &&
+                    todayInLondon >= p.DueDate!.Value) &&
+                !q.Payments.Any(p =>
+                    p.PaymentType == PaymentType.Balance &&
+                    p.Status == StripePaymentStatus.Paid))
+            .ToListAsync(ct);
+    }
+
     private Task<List<QuoteV2>> QueryPayLaterQuoteV2sDueAsync(LocalDate today, CancellationToken ct)
     {
         return db.Set<QuoteV2>()

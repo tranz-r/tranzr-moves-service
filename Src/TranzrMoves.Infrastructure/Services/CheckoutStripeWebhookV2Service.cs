@@ -20,7 +20,7 @@ public sealed class CheckoutStripeWebhookV2Service(
     IEmailService emailService,
     ITemplateService templateService,
     ITimeService timeService,
-    IPayLaterChargeScheduler payLaterChargeScheduler,
+    IBalanceChargeScheduler balanceChargeScheduler,
     ILogger<CheckoutStripeWebhookV2Service> logger) : ICheckoutStripeWebhookV2Service
 {
     private static readonly LocalDatePattern EmailDatePattern =
@@ -158,7 +158,7 @@ public sealed class CheckoutStripeWebhookV2Service(
 
         if (payment.DueDate is { } dueDate)
         {
-            await payLaterChargeScheduler.ScheduleAsync(quote.Id, dueDate, quote.QuoteReference, ct);
+            await balanceChargeScheduler.SchedulePayLaterAsync(quote.Id, dueDate, quote.QuoteReference, ct);
         }
     }
 
@@ -285,6 +285,19 @@ public sealed class CheckoutStripeWebhookV2Service(
             await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, quote.Customer.Email,
                 templateService.GenerateEmail("deposit-confirmation.html", templateData),
                 templateService.GenerateEmail("deposit-confirmation.txt", templateData));
+
+            var collectionDate = quote.Schedule?.CollectionDate?.InUtc().Date
+                                 ?? paymentRow.DueDate;
+            if (collectionDate is { } moveDate)
+            {
+                await balanceChargeScheduler.ScheduleDepositBalanceAsync(quote.Id, moveDate, quote.QuoteReference, ct);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Deposit paid for quote {QuoteId} but no collection date; deposit balance charge not scheduled",
+                    quoteId);
+            }
         }
         else
         {
