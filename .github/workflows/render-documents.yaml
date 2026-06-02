@@ -1,17 +1,21 @@
+# On changes under documents/ (not images/ alone): render all .puml, overwrite PNGs, chore commit.
 name: Render documentation diagrams
 
 on:
   push:
     paths:
       - "documents/**"
-      - "scripts/render-plantuml.sh"
-      - ".github/workflows/render-documents.yaml"
+    paths-ignore:
+      - "documents/**/images/**"
   pull_request:
     paths:
       - "documents/**"
-      - "scripts/render-plantuml.sh"
-      - ".github/workflows/render-documents.yaml"
+    paths-ignore:
+      - "documents/**/images/**"
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   render-plantuml:
@@ -21,6 +25,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Start PlantUML server
         run: |
@@ -46,18 +54,24 @@ jobs:
           PLANTUML_CONTAINER: plantuml
         run: |
           chmod +x scripts/render-plantuml.sh
-          # Server already running; script will detect it and skip starting a second container.
           ./scripts/render-plantuml.sh
 
-      - name: Verify committed PNGs are up to date
+      - name: Commit and push diagram PNGs
+        if: |
+          github.event_name == 'workflow_dispatch' ||
+          github.event_name == 'push' ||
+          (github.event_name == 'pull_request' &&
+            github.event.pull_request.head.repo.full_name == github.repository)
         run: |
-          if ! git diff --exit-code -- documents/**/images/*.png; then
-            echo "::error::Rendered PNGs differ from committed files."
-            echo "Run ./scripts/render-plantuml.sh locally and commit the updated images."
-            git diff -- documents/**/images/*.png || true
-            exit 1
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          find documents -type f -path '*/images/*.png' -print0 | xargs -0 git add -f
+          git commit -m "chore: update rendered PlantUML diagram PNGs" --allow-empty
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git push origin "HEAD:${{ github.head_ref }}"
+          else
+            git push
           fi
-          echo "All diagram PNGs are up to date."
 
       - name: Stop PlantUML server
         if: always()

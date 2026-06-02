@@ -22,11 +22,10 @@ documents/my-feature/
     *.png          # generated; commit after editing .puml files
 ```
 
-1. Edit `.puml` sources and markdown.
-2. Run `./scripts/render-plantuml.sh` from the repository root.
-3. Commit `.puml`, `.md`, and updated `images/*.png`.
+1. Edit `.puml` sources and markdown; commit (PNG files optional locally).
+2. CI runs when `documents/` changes (except `images/` only). It renders all `.puml`, replaces PNGs, and pushes `chore: update rendered PlantUML diagram PNGs`.
 
-CI re-renders diagrams and fails if committed PNGs are out of date.
+Preview locally: `./scripts/render-plantuml.sh` from the repository root.
 
 ## Operational guides
 
