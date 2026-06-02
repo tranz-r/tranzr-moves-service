@@ -6,9 +6,11 @@ WORKDIR /src
 
 COPY Directory.Packages.props .
 
-# Copy required project files
+# Copy required project files (Infrastructure references Notifications.*)
 COPY Src/TranzrMoves.Domain Src/TranzrMoves.Domain
 COPY Src/TranzrMoves.Application Src/TranzrMoves.Application
+COPY Src/TranzrMoves.Notifications.Contracts Src/TranzrMoves.Notifications.Contracts
+COPY Src/TranzrMoves.Notifications.Infrastructure Src/TranzrMoves.Notifications.Infrastructure
 COPY Src/TranzrMoves.Infrastructure Src/TranzrMoves.Infrastructure
 
 
