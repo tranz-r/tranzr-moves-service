@@ -1,5 +1,4 @@
-﻿using Azure.Communication.Email;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NodaTime;
 using StackExchange.Redis;
@@ -8,15 +7,11 @@ using TranzrMoves.Application.Messaging;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.Respositories;
 using TranzrMoves.Infrastructure.Services;
-using TranzrMoves.Infrastructure.Services.EmailTemplates;
 
 namespace TranzrMoves.Infrastructure.DependencyInjection;
 
 public static class PayLaterWorkerDependencyInjection
 {
-    /// <summary>
-    /// Registers services required by the pay-later Worker host (not the full API infrastructure stack).
-    /// </summary>
     public static IServiceCollection AddPayLaterWorkerServices(
         this IServiceCollection services,
         IConfiguration configuration,
@@ -36,7 +31,7 @@ public static class PayLaterWorkerDependencyInjection
 
         if (includeBalanceCollection)
         {
-            services.AddPayLaterBalanceCollection(configuration);
+            services.AddPayLaterBalanceCollection();
         }
 
         return services;
@@ -54,22 +49,13 @@ public static class PayLaterWorkerDependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddPayLaterBalanceCollection(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    public static IServiceCollection AddPayLaterBalanceCollection(this IServiceCollection services)
     {
-        services.AddSingleton(_ =>
-        {
-            var connectionString = configuration["COMMUNICATION_SERVICES_CONNECTION_STRING"];
-            return new EmailClient(connectionString);
-        });
-
-        services.AddSingleton<IEmailService, AzureEmailService>();
-        services.AddSingleton<ITemplateService, TemplateService>();
-        services.AddHostedService<EmailTemplatesFileWatcherHostedService>();
+        services.AddSingleton<ITimeService, TimeService>();
+        services.AddScoped<INotificationPublisher, WolverineNotificationPublisher>();
+        services.AddScoped<IQuoteV2HostedCheckoutSessionService, QuoteV2HostedCheckoutSessionService>();
         services.AddScoped<IQuoteV2LaterBalanceCollectionService, QuoteV2LaterBalanceCollectionService>();
         services.AddScoped<IQuoteV2DepositBalanceCollectionService, QuoteV2DepositBalanceCollectionService>();
-        services.AddScoped<IQuoteV2HostedCheckoutSessionService, QuoteV2HostedCheckoutSessionService>();
 
         return services;
     }

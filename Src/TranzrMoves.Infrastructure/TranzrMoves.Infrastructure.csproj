@@ -8,11 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Azure.Communication.Email" />
       <PackageReference Include="Azure.Storage.Blobs" />
       <PackageReference Include="EntityFrameworkCore.Exceptions.PostgreSQL" />
       <PackageReference Include="ErrorOr" />
-      <PackageReference Include="Handlebars.Net" />
       <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
@@ -38,19 +36,9 @@
     <ItemGroup>
       <ProjectReference Include="..\TranzrMoves.Application\TranzrMoves.Application.csproj" />
       <ProjectReference Include="..\TranzrMoves.Domain\TranzrMoves.Domain.csproj" />
+      <ProjectReference Include="..\TranzrMoves.Notifications.Contracts\TranzrMoves.Notifications.Contracts.csproj" />
+      <ProjectReference Include="..\TranzrMoves.Notifications.Infrastructure\TranzrMoves.Notifications.Infrastructure.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Content Include="Services\EmailTemplates\Templates\**\*.hbs">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-      <Content Include="Services\EmailTemplates\Templates\**\*.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Watch Include="Services\EmailTemplates\Templates\**\*.hbs" />
-    </ItemGroup>
 
 </Project>

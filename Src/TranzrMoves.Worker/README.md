@@ -33,7 +33,6 @@ Worker__Role=Processor
 | `ConnectionStrings__rabbitmq` | ✓ | ✓ |
 | `ConnectionStrings__redis` | ✓ | — |
 | `STRIPE_API_KEY` | — | ✓ |
-| `COMMUNICATION_SERVICES_CONNECTION_STRING` | — | ✓ |
 | `CHECKOUT_SESSION_SUCCESS_URL` / `CHECKOUT_SESSION_CANCEL_URL` | — | ✓ |
 
 The Worker uses a slim DI registration (`AddPayLaterWorkerServices`) — it does **not** load the full API stack (Mapbox, Turnstile, MediatR handlers, etc.).

@@ -49,8 +49,15 @@ public static class WorkerHostConfiguration
         RegisterPayLaterHostedServices(builder.Services, role);
 
         builder.UseWolverine(opts =>
+        {
             opts.ConfigurePayLaterMessaging(
                 builder.Configuration,
-                includeConsumer: role is WorkerRole.Processor or WorkerRole.All));
+                includeConsumer: role is WorkerRole.Processor or WorkerRole.All);
+
+            if (role is WorkerRole.Processor or WorkerRole.All)
+            {
+                opts.ConfigureNotificationsPublisher(builder.Configuration);
+            }
+        });
     }
 }

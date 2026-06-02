@@ -153,8 +153,8 @@ public sealed class PayLaterEndToEndFixture : IAsyncLifetime
 
         TranzrMovesWorkerHost.Configure(builder, WorkerRole.All);
 
-        builder.Services.RemoveAll<IEmailService>();
-        builder.Services.AddSingleton<IEmailService, NoOpEmailService>();
+        builder.Services.RemoveAll<INotificationPublisher>();
+        builder.Services.AddSingleton<INotificationPublisher, RecordingNotificationPublisher>();
 
         builder.Services.RemoveAll<ICollectQuoteV2BalanceChargePublisher>();
         builder.Services.AddScoped<ICollectQuoteV2BalanceChargePublisher, InProcessCollectQuoteV2BalanceChargePublisher>();
@@ -185,9 +185,8 @@ public sealed class PayLaterEndToEndFixture : IAsyncLifetime
                 ["ConnectionStrings:rabbitmq"] = _rabbit.GetConnectionString(),
                 ["Worker:Role"] = nameof(WorkerRole.All),
                 ["PayLater:UseDurableMessaging"] = "false",
+                ["Notifications:UseDurableMessaging"] = "false",
                 ["PayLater:RecoveryIntervalMinutes"] = "1440",
-                ["COMMUNICATION_SERVICES_CONNECTION_STRING"] =
-                    "endpoint=https://test.communication.azure.com/;accesskey=dGVzdA==",
                 ["TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET_V2"] = "whsec_test"
             })
             .Build();

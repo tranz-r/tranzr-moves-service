@@ -1,11 +1,10 @@
 ﻿using Mediator;
 using Microsoft.Extensions.Logging;
-
 using NodaTime.Text;
-
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Interfaces;
+using TranzrMoves.Notifications.Contracts;
 
 namespace TranzrMoves.Application.Features.Contact.SendContactForm;
 
@@ -23,8 +22,7 @@ public record SendContactFormResponse(
     string Message);
 
 public class SendContactFormCommandHandler(
-    IEmailService emailService,
-    ITemplateService templateService,
+    Domain.Interfaces.INotificationPublisher notificationPublisher,
     ITurnstileService turnstileService,
     ITimeService timeService,
     ILogger<SendContactFormCommandHandler> logger)
@@ -59,17 +57,19 @@ public class SendContactFormCommandHandler(
                 currentYear = timeService.NowInUtc().Year
             };
 
-            // Generate HTML and text email content
-            var htmlContent = templateService.GenerateEmail("contact-form.html", templateData);
-            var textContent = templateService.GenerateEmail("contact-form-text.txt", templateData);
-
-            // Send email to TRANZR Group
-            await emailService.SendBookingConfirmationEmailAsync(
-                fromEmail: FromEmails.Group,
-                subject: $"Contact Form Submission: {command.Subject}",
-                toEmail: "info@tranzrgroup.com",
-                htmlEmail: htmlContent,
-                textEmail: textContent);
+            await notificationPublisher.PublishAsync(
+                new SendNotification(
+                    Guid.NewGuid(),
+                    $"contact-{command.Email}-{timeService.Now().ToUnixTimeTicks()}",
+                    NotificationCategory.Transactional,
+                    NotificationChannel.Email,
+                    "contact-form",
+                    "contact-form-text.txt",
+                    "info@tranzrgroup.com",
+                    FromEmails.Group,
+                    $"Contact Form Submission: {command.Subject}",
+                    NotificationTemplateData.FromObject(templateData)),
+                cancellationToken);
 
             logger.LogInformation("Contact form email sent successfully for {Email}", command.Email);
 

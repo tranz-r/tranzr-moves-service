@@ -24,7 +24,7 @@ namespace TranzrMoves.IntegrationTests.Fixtures;
 
 public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase($"testdb_{Guid.NewGuid()}")
         .WithUsername("postgres")
         .WithPassword("postgres")
@@ -62,10 +62,10 @@ public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
             configBuilder.AddEnvironmentVariables();
             configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
             {
+                ["ConnectionStrings:TranzrMovesDatabaseConnection"] = _postgres.GetConnectionString(),
                 ["ConnectionStrings:redis"] = "127.0.0.1:6379,abortConnect=false,connectTimeout=100",
-                ["COMMUNICATION_SERVICES_CONNECTION_STRING"] =
-                    "endpoint=https://test.communication.azure.com/;accesskey=dGVzdA==",
-                ["TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET_V2"] = "whsec_test"
+                ["TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET_V2"] = "whsec_test",
+                ["Notifications:UseDurableMessaging"] = "false"
             });
         });
 
@@ -77,13 +77,15 @@ public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
 
             services.RemoveAll<DbContextOptions<TranzrMovesDbContext>>();
             services.RemoveAll<DbConnection>();
-            services.RemoveAll<IEmailService>();
+            services.RemoveAll<INotificationPublisher>();
             services.RemoveAll<IConnectionMultiplexer>();
             services.RemoveAll<IBalanceChargeScheduler>();
             services.RemoveAll<ICollectQuoteV2BalanceChargePublisher>();
 
             services.AddScoped<AuditableInterceptor>();
-            services.AddScoped<IEmailService, LocalEmailService>();
+            services.AddSingleton<RecordingNotificationPublisher>();
+            services.AddScoped<INotificationPublisher>(sp =>
+                sp.GetRequiredService<RecordingNotificationPublisher>());
             services.AddSingleton<IBalanceChargeScheduler, NoOpBalanceChargeScheduler>();
             services.AddScoped<ICollectQuoteV2BalanceChargePublisher, DirectCollectQuoteV2BalanceChargePublisher>();
 

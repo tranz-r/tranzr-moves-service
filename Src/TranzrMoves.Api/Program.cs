@@ -17,6 +17,7 @@ using TranzrMoves.Domain.Constants;
 using TranzrMoves.Infrastructure.DependencyInjection;
 using TranzrMoves.Infrastructure.Helper;
 using TranzrMoves.Infrastructure.Services;
+using Wolverine;
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
@@ -83,8 +84,6 @@ try
     builder.Services.AddMemoryCache();
     builder.Services.AddSingleton(new StripeClient(builder.Configuration["STRIPE_API_KEY"]));
 
-    // Email service is handled by IAwsEmailService in Infrastructure layer
-
     //Find a way to move this registration to the application layer.
     builder.Services.AddHttpClient<IMapBoxService, MapBoxService>(
         client =>
@@ -95,6 +94,12 @@ try
     builder.Services.ConfigureTranzrMovesServices(builder.Configuration);
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
+
+    if (!builder.Environment.IsEnvironment("Testing"))
+    {
+        builder.Host.UseWolverine(opts =>
+            opts.ConfigureNotificationsPublisher(builder.Configuration));
+    }
 
     builder.Services.AddSingleton(_ =>
     {

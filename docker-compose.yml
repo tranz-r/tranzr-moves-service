@@ -1,10 +1,13 @@
-# Local infrastructure for TranzrMoves API and Worker.
-# Connection strings match appsettings defaults (API: postgres + redis; Worker: also rabbitmq).
+# Local infrastructure for TranzrMoves API, Worker, and Notifications.
+# Connection strings match appsettings defaults (same Postgres database `tranzr`).
 #
 # Usage:
 #   docker compose up -d
 #   dotnet ef database update --project Src/TranzrMoves.Infrastructure --startup-project Src/TranzrMoves.Api
-#   ASPNETCORE_ENVIRONMENT=Development dotnet run --project Src/TranzrMoves.Worker
+#   # Add secrets in shell or .env before starting containers:
+#   #   STRIPE_API_KEY=...
+#   #   COMMUNICATION_SERVICES_CONNECTION_STRING=...   # needed only for Notifications__EmailProvider=Acs
+#   docker compose up -d worker notifications
 
 services:
   postgres:
@@ -50,6 +53,74 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
+  smtp4dev:
+    image: rnwood/smtp4dev:latest
+    container_name: tranzr-smtp4dev
+    ports:
+      - "8025:80"
+      - "2525:25"
+
+  notifications-db-migrator:
+    build:
+      context: .
+      dockerfile: Src/NotificationsDbMigrator.Dockerfile
+    container_name: tranzr-notifications-db-migrator
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_CONNECTION_STRING: Server=postgres;Port=5432;Database=tranzr;User Id=tranzr;Password=tranzr;
+    restart: "no"
+
+  notifications:
+    build:
+      context: .
+      dockerfile: Src/TranzrMoves.Notifications/Dockerfile
+    container_name: tranzr-notifications
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      notifications-db-migrator:
+        condition: service_completed_successfully
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__TranzrMovesDatabaseConnection: Server=postgres;Port=5432;Database=tranzr;User Id=tranzr;Password=tranzr;
+      ConnectionStrings__rabbitmq: amqp://guest:guest@rabbitmq:5672
+      Notifications__EmailProvider: ${NOTIFICATIONS_EMAIL_PROVIDER:-Smtp}
+      Notifications__Smtp__Host: smtp4dev
+      Notifications__Smtp__Port: 25
+      Notifications__Smtp__UseSsl: false
+      COMMUNICATION_SERVICES_CONNECTION_STRING: ${COMMUNICATION_SERVICES_CONNECTION_STRING:-endpoint=https://test.communication.azure.com/;accesskey=dGVzdA==}
+    ports:
+      - "8081:8080"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Src/TranzrMoves.Worker/Dockerfile
+    container_name: tranzr-worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Development
+      Worker__Role: All
+      ConnectionStrings__TranzrMovesDatabaseConnection: Server=postgres;Port=5432;Database=tranzr;User Id=tranzr;Password=tranzr;
+      ConnectionStrings__rabbitmq: amqp://guest:guest@rabbitmq:5672
+      ConnectionStrings__redis: redis:6379
+      CHECKOUT_SESSION_SUCCESS_URL: http://localhost:3000/checkout/success
+      CHECKOUT_SESSION_CANCEL_URL: http://localhost:3000/checkout/cancel
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-}
 
 volumes:
   tranzr-postgres-data:

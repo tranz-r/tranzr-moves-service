@@ -4,7 +4,7 @@ Backend services for Tranzr Moves — HTTP API, pay-later background worker, and
 
 ## What you will run
 
-To test locally you need **four things running**:
+To test locally you need **four things running** (plus Notifications if you want real email delivery):
 
 | # | Component | How | Purpose |
 |---|-----------|-----|---------|
@@ -12,6 +12,9 @@ To test locally you need **four things running**:
 | 2 | **Worker** | `dotnet run --project Src/TranzrMoves.Worker` | Redis expiry → RabbitMQ → Stripe balance charge |
 | 3 | **API** | `dotnet run --project Src/TranzrMoves.Api` | Checkout, quotes, Stripe webhooks |
 | 4 | **Stripe CLI** (for webhook testing) | `stripe listen --forward-to ...` | Forwards Stripe events to your local API |
+| 5 | **Notifications** (optional) | `dotnet run --project Src/TranzrMoves.Notifications` | Consumes `notifications-send`, sends email via ACS |
+
+See [Notifications](documents/notifications/notifications.md) for queue, schemas, and configuration.
 
 **Pay-later flow:**
 
@@ -155,7 +158,6 @@ dotnet user-secrets set MAPBOX_TOKEN "pk.YOUR_TOKEN" --project Src/TranzrMoves.W
 
 # Azure Communication Services (email)
 dotnet user-secrets set COMMUNICATION_SERVICES_CONNECTION_STRING "endpoint=https://YOUR_RESOURCE.communication.azure.com/;accesskey=YOUR_KEY" --project Src/TranzrMoves.Api
-dotnet user-secrets set COMMUNICATION_SERVICES_CONNECTION_STRING "endpoint=https://YOUR_RESOURCE.communication.azure.com/;accesskey=YOUR_KEY" --project Src/TranzrMoves.Worker
 
 # Azure Blob Storage
 dotnet user-secrets set AZURE_STORAGE_CONNECTION_STRING "DefaultEndpointsProtocol=https;AccountName=YOUR_ACCOUNT;AccountKey=YOUR_KEY;EndpointSuffix=core.windows.net" --project Src/TranzrMoves.Api

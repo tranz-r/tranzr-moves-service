@@ -6,9 +6,9 @@ using Stripe;
 using Stripe.Checkout;
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Statics;
-using TranzrMoves.Domain.Constants;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
+using FromEmails = TranzrMoves.Domain.Constants.FromEmails;
 
 namespace TranzrMoves.Infrastructure.Services;
 
@@ -17,8 +17,7 @@ public sealed class CheckoutStripeWebhookV2Service(
     string webhookSigningSecretV2,
     IQuoteRepository quoteRepository,
     IQuoteProgressCalculator progressCalculator,
-    IEmailService emailService,
-    ITemplateService templateService,
+    INotificationPublisher notificationPublisher,
     ITimeService timeService,
     IBalanceChargeScheduler balanceChargeScheduler,
     ILogger<CheckoutStripeWebhookV2Service> logger) : ICheckoutStripeWebhookV2Service
@@ -117,13 +116,6 @@ public sealed class CheckoutStripeWebhookV2Service(
 
         RecalculateStepState(quote!, QuoteSteps.Payment, QuoteStepKeys.Payment);
 
-        var save = await quoteRepository.SaveChangesAsync(ct);
-        if (save.IsError)
-        {
-            logger.LogWarning("Save failed after setup intent for quote {QuoteId}", quoteId);
-            return;
-        }
-
         var setupInstant = timeService.Now();
         var totalCost = decimal.Parse(
             setupIntent.Metadata.GetValueOrDefault(nameof(PaymentMetadata.TotalCost), "0"),
@@ -149,12 +141,23 @@ public sealed class CheckoutStripeWebhookV2Service(
             currentYear = timeService.NowInUtc().Year
         };
 
-        var subject = $"Payment Setup Confirmation - #{quote.QuoteReference}";
-        var htmlEmail = templateService.GenerateEmail("setup-confirmation.html", templateData);
-        var textEmail = templateService.GenerateEmail("setup-confirmation.txt", templateData);
+        await notificationPublisher.PublishAsync(
+            NotificationPublishHelper.Create(
+                Guid.NewGuid(),
+                setupIntent.Id,
+                "setup-confirmation",
+                quote.Customer.Email,
+                FromEmails.Booking,
+                $"Payment Setup Confirmation - #{quote.QuoteReference}",
+                templateData),
+            ct);
 
-        await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, quote.Customer.Email,
-            htmlEmail, textEmail);
+        var save = await quoteRepository.SaveChangesAsync(ct);
+        if (save.IsError)
+        {
+            logger.LogWarning("Save failed after setup intent for quote {QuoteId}", quoteId);
+            return;
+        }
 
         if (payment.DueDate is { } dueDate)
         {
@@ -229,13 +232,6 @@ public sealed class CheckoutStripeWebhookV2Service(
 
         RecalculateStepState(quote!, QuoteSteps.Payment, QuoteStepKeys.Payment);
 
-        var save = await quoteRepository.SaveChangesAsync(ct);
-        if (save.IsError)
-        {
-            logger.LogWarning("Save failed after PI success for quote {QuoteId}", quoteId);
-            return;
-        }
-
         var orderInstant = timeService.Now();
         var customerName = $"{quote.Customer.FirstName?.Trim()} {quote.Customer.LastName?.Trim()}".Trim();
         if (string.IsNullOrEmpty(customerName))
@@ -259,10 +255,16 @@ public sealed class CheckoutStripeWebhookV2Service(
                 extraChargesDescription = (string?)null
             };
 
-            var subject = $"Balance Payment Confirmation - #{quote.QuoteReference}";
-            await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, quote.Customer.Email,
-                templateService.GenerateEmail("balance-confirmation.html", templateData),
-                templateService.GenerateEmail("balance-confirmation.txt", templateData));
+            await notificationPublisher.PublishAsync(
+                NotificationPublishHelper.Create(
+                    Guid.NewGuid(),
+                    paymentIntent.Id,
+                    "balance-confirmation",
+                    quote.Customer.Email,
+                    FromEmails.Booking,
+                    $"Balance Payment Confirmation - #{quote.QuoteReference}",
+                    templateData),
+                ct);
         }
         else if (paymentTypeStr == nameof(PaymentType.Deposit))
         {
@@ -281,23 +283,16 @@ public sealed class CheckoutStripeWebhookV2Service(
                 currentYear = timeService.NowInUtc().Year
             };
 
-            var subject = $"Deposit Confirmation - #{quote.QuoteReference}";
-            await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, quote.Customer.Email,
-                templateService.GenerateEmail("deposit-confirmation.html", templateData),
-                templateService.GenerateEmail("deposit-confirmation.txt", templateData));
-
-            var collectionDate = quote.Schedule?.CollectionDate?.InUtc().Date
-                                 ?? paymentRow.DueDate;
-            if (collectionDate is { } moveDate)
-            {
-                await balanceChargeScheduler.ScheduleDepositBalanceAsync(quote.Id, moveDate, quote.QuoteReference, ct);
-            }
-            else
-            {
-                logger.LogWarning(
-                    "Deposit paid for quote {QuoteId} but no collection date; deposit balance charge not scheduled",
-                    quoteId);
-            }
+            await notificationPublisher.PublishAsync(
+                NotificationPublishHelper.Create(
+                    Guid.NewGuid(),
+                    paymentIntent.Id,
+                    "deposit-confirmation",
+                    quote.Customer.Email,
+                    FromEmails.Booking,
+                    $"Deposit Confirmation - #{quote.QuoteReference}",
+                    templateData),
+                ct);
         }
         else
         {
@@ -312,10 +307,39 @@ public sealed class CheckoutStripeWebhookV2Service(
                 currentYear = timeService.NowInUtc().Year
             };
 
-            var subject = $"Order Confirmation - #{quote.QuoteReference}";
-            await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, quote.Customer.Email,
-                templateService.GenerateEmail("full-payment-confirmation.html", templateData),
-                templateService.GenerateEmail("full-payment-confirmation.txt", templateData));
+            await notificationPublisher.PublishAsync(
+                NotificationPublishHelper.Create(
+                    Guid.NewGuid(),
+                    paymentIntent.Id,
+                    "full-payment-confirmation",
+                    quote.Customer.Email,
+                    FromEmails.Booking,
+                    $"Order Confirmation - #{quote.QuoteReference}",
+                    templateData),
+                ct);
+        }
+
+        var save = await quoteRepository.SaveChangesAsync(ct);
+        if (save.IsError)
+        {
+            logger.LogWarning("Save failed after PI success for quote {QuoteId}", quoteId);
+            return;
+        }
+
+        if (paymentTypeStr == nameof(PaymentType.Deposit))
+        {
+            var collectionDate = quote.Schedule?.CollectionDate?.InUtc().Date
+                                 ?? paymentRow.DueDate;
+            if (collectionDate is { } moveDate)
+            {
+                await balanceChargeScheduler.ScheduleDepositBalanceAsync(quote.Id, moveDate, quote.QuoteReference, ct);
+            }
+            else
+            {
+                logger.LogWarning(
+                    "Deposit paid for quote {QuoteId} but no collection date; deposit balance charge not scheduled",
+                    quoteId);
+            }
         }
     }
 
@@ -404,13 +428,6 @@ public sealed class CheckoutStripeWebhookV2Service(
         paymentRow.ModifiedBy = nameof(CheckoutStripeWebhookV2Service);
         quote.PaymentStatus = PaymentStatus.Paid;
 
-        var save = await quoteRepository.SaveChangesAsync(ct);
-        if (save.IsError)
-        {
-            logger.LogWarning("Save failed after checkout session for quote {QuoteId}", quoteId);
-            return;
-        }
-
         var paymentInstant = timeService.Now();
         var user = quote.Customer;
         var customerName = $"{user!.FirstName?.Trim()} {user.LastName?.Trim()}".Trim();
@@ -435,9 +452,21 @@ public sealed class CheckoutStripeWebhookV2Service(
             currentYear = timeService.NowInUtc().Year
         };
 
-        var subject = $"Payment Confirmation - #{quote.QuoteReference}";
-        await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, customerEmail,
-            templateService.GenerateEmail("checkout-session-completed.html", templateData),
-            templateService.GenerateEmail("checkout-session-completed.txt", templateData));
+        await notificationPublisher.PublishAsync(
+            NotificationPublishHelper.Create(
+                Guid.NewGuid(),
+                session.Id,
+                "checkout-session-completed",
+                customerEmail,
+                FromEmails.Booking,
+                $"Payment Confirmation - #{quote.QuoteReference}",
+                templateData),
+            ct);
+
+        var save = await quoteRepository.SaveChangesAsync(ct);
+        if (save.IsError)
+        {
+            logger.LogWarning("Save failed after checkout session for quote {QuoteId}", quoteId);
+        }
     }
 }

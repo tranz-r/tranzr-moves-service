@@ -12,6 +12,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\TranzrMoves.Notifications.Contracts\TranzrMoves.Notifications.Contracts.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Folder Include="Dtos\" />
     </ItemGroup>
 

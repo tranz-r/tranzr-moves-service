@@ -4,7 +4,6 @@ using NodaTime;
 using Stripe;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.IntegrationTests.Fixtures;
-using TranzrMoves.IntegrationTests.Helpers;
 
 namespace TranzrMoves.IntegrationTests.CheckoutControllerTest;
 

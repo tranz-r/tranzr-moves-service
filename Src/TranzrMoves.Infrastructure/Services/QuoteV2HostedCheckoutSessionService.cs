@@ -16,8 +16,7 @@ public sealed class QuoteV2HostedCheckoutSessionService(
     StripeClient stripeClient,
     IConfiguration configuration,
     IQuoteRepository quoteRepository,
-    IEmailService emailService,
-    ITemplateService templateService,
+    INotificationPublisher notificationPublisher,
     ITimeService timeService,
     ILogger<QuoteV2HostedCheckoutSessionService> logger) : IQuoteV2HostedCheckoutSessionService
 {
@@ -87,44 +86,48 @@ public sealed class QuoteV2HostedCheckoutSessionService(
 
         selectedPayment.StripeSessionId = session.Id;
 
+        var customerName = $"{quote.Customer.FirstName?.Trim()} {quote.Customer.LastName?.Trim()}".Trim();
+        if (string.IsNullOrEmpty(customerName))
+        {
+            customerName = quote.Customer.Email;
+        }
+
+        var templateData = new
+        {
+            customerName,
+            paymentAmount = amount.ToString("N2", CultureInfo.InvariantCulture),
+            quoteReference = quote.QuoteReference,
+            checkoutUrl = session.Url,
+            description = string.IsNullOrWhiteSpace(description)
+                ? $"Payment for quote #{quote.QuoteReference}"
+                : description,
+            currentYear = timeService.NowInUtc().Year,
+            cardErrorReason
+        };
+
+        try
+        {
+            await notificationPublisher.PublishAsync(
+                NotificationPublishHelper.Create(
+                    Guid.NewGuid(),
+                    session.Id,
+                    emailTemplateBaseName,
+                    quote.Customer.Email,
+                    FromEmails.Booking,
+                    $"Checkout Link - #{quote.QuoteReference}",
+                    templateData,
+                    bcc: bccRecipients),
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to enqueue checkout session email for {Email}", quote.Customer.Email);
+        }
+
         var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
         if (saveResult.IsError)
         {
             return saveResult.Errors;
-        }
-
-        var emailSent = false;
-        try
-        {
-            var customerName = $"{quote.Customer.FirstName?.Trim()} {quote.Customer.LastName?.Trim()}".Trim();
-            if (string.IsNullOrEmpty(customerName))
-            {
-                customerName = quote.Customer.Email;
-            }
-
-            var templateData = new
-            {
-                customerName,
-                paymentAmount = amount.ToString("N2", CultureInfo.InvariantCulture),
-                quoteReference = quote.QuoteReference,
-                checkoutUrl = session.Url,
-                description = string.IsNullOrWhiteSpace(description)
-                    ? $"Payment for quote #{quote.QuoteReference}"
-                    : description,
-                currentYear = timeService.NowInUtc().Year,
-                cardErrorReason
-            };
-
-            var subject = $"Checkout Link - #{quote.QuoteReference}";
-            var htmlEmail = templateService.GenerateEmail($"{emailTemplateBaseName}.html", templateData);
-            var textEmail = templateService.GenerateEmail($"{emailTemplateBaseName}.txt", templateData);
-            await emailService.SendBookingConfirmationEmailAsync(FromEmails.Booking, subject, quote.Customer.Email,
-                htmlEmail, textEmail, bccRecipients?.ToList());
-            emailSent = true;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Failed to send checkout session email to {Email}", quote.Customer.Email);
         }
 
         return new QuoteV2HostedCheckoutSessionResult(
@@ -132,7 +135,7 @@ public sealed class QuoteV2HostedCheckoutSessionService(
             session.Url ?? string.Empty,
             quote.QuoteReference,
             amount,
-            emailSent);
+            EmailSent: true);
     }
 
     private Payment UpsertPaymentSelectionForHostedCheckout(QuoteV2 quote, PaymentType paymentType)

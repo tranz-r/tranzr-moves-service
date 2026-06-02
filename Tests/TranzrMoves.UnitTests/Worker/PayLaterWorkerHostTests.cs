@@ -27,7 +27,7 @@ public sealed class PayLaterWorkerHostTests
         services.Should().Contain(d => d.ServiceType == typeof(IQuoteRepository));
         services.Should().Contain(d => d.ServiceType == typeof(ICollectQuoteV2BalanceChargePublisher));
         services.Should().NotContain(d => d.ServiceType == typeof(IQuoteV2LaterBalanceCollectionService));
-        services.Should().NotContain(d => d.ServiceType == typeof(IEmailService));
+        services.Select(d => d.ServiceType).Should().NotContain(typeof(INotificationPublisher));
     }
 
     [Fact]
@@ -40,9 +40,9 @@ public sealed class PayLaterWorkerHostTests
 
         services.Should().Contain(d => d.ServiceType == typeof(IQuoteV2LaterBalanceCollectionService));
         services.Should().Contain(d => d.ServiceType == typeof(IQuoteV2DepositBalanceCollectionService));
-        services.Should().Contain(d => d.ServiceType == typeof(IQuoteV2HostedCheckoutSessionService));
-        services.Should().Contain(d => d.ServiceType == typeof(IEmailService));
-        services.Should().NotContain(d => d.ServiceType == typeof(IConnectionMultiplexer));
+        services.Select(d => d.ServiceType).Should().Contain(typeof(IQuoteV2HostedCheckoutSessionService));
+        services.Select(d => d.ServiceType).Should().Contain(typeof(INotificationPublisher));
+        services.Select(d => d.ServiceType).Should().NotContain(typeof(IConnectionMultiplexer));
     }
 
     [Fact]
@@ -106,8 +106,6 @@ public sealed class PayLaterWorkerHostTests
                 ["ConnectionStrings:redis"] = "localhost:6379",
                 ["ConnectionStrings:rabbitmq"] = "amqp://guest:guest@localhost:5672",
                 ["STRIPE_API_KEY"] = "sk_test_placeholder",
-                ["COMMUNICATION_SERVICES_CONNECTION_STRING"] =
-                    "endpoint=https://test.communication.azure.com/;accesskey=dGVzdA==",
                 ["CHECKOUT_SESSION_SUCCESS_URL"] = "http://localhost:3000/success",
                 ["CHECKOUT_SESSION_CANCEL_URL"] = "http://localhost:3000/cancel"
             })

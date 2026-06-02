@@ -49,7 +49,6 @@ Use `__` for nested config (e.g. `Worker__Role` → `Worker:Role`).
 | `ConnectionStrings__TranzrMovesDatabaseConnection` | Yes |
 | `ConnectionStrings__rabbitmq` | Yes |
 | `STRIPE_API_KEY` | Yes |
-| `COMMUNICATION_SERVICES_CONNECTION_STRING` | Yes |
 | `CHECKOUT_SESSION_SUCCESS_URL` | Yes |
 | `CHECKOUT_SESSION_CANCEL_URL` | Yes |
 
@@ -143,11 +142,6 @@ spec:
                 secretKeyRef:
                   name: tranzr-moves-worker-secrets
                   key: stripe-api-key
-            - name: COMMUNICATION_SERVICES_CONNECTION_STRING
-              valueFrom:
-                secretKeyRef:
-                  name: tranzr-moves-worker-secrets
-                  key: communication-services
             - name: CHECKOUT_SESSION_SUCCESS_URL
               value: "https://YOUR_APP/checkout/success?session_id={CHECKOUT_SESSION_ID}"
             - name: CHECKOUT_SESSION_CANCEL_URL

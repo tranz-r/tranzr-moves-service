@@ -1,64 +1,25 @@
-# Email Configuration for Tranzr Moves API
+# Email configuration (deprecated)
 
-This document explains how to configure email functionality using AWS Simple Email Service (SES) with MailKit.
+Email is no longer sent from the API or Worker. Use the **TranzrMoves.Notifications** service with a configurable provider:
+- `Notifications:EmailProvider=Acs` (Azure Communication Services)
+- `Notifications:EmailProvider=Smtp` (local smtp4dev)
 
-## Required Environment Variables
+See [documents/notifications/notifications.md](documents/notifications/notifications.md) for architecture, queue name, and environment variables.
 
-Add the following environment variables to your configuration:
+## Required secret (when Notifications provider is ACS)
 
 ```bash
-# AWS SES SMTP Configuration
-AWS_SES_SMTP_HOST=email-smtp.eu-west-1.amazonaws.com
-AWS_SES_SMTP_PORT=587
-AWS_SES_SMTP_USERNAME=your-ses-smtp-username
-AWS_SES_SMTP_PASSWORD=your-ses-smtp-password
-
-# Email Sender Configuration
-FROM_EMAIL=noreply@tranzrmoves.com
-FROM_NAME=Tranzr Moves
+COMMUNICATION_SERVICES_CONNECTION_STRING=endpoint=https://...;accesskey=...
 ```
 
-## AWS SES Setup
+The monolith publishes `SendNotification` to RabbitMQ (`notifications-send`); the Notifications host renders Handlebars templates and sends via ACS.
 
-1. **Create an AWS SES account** (if you don't have one)
-2. **Verify your domain** in AWS SES
-3. **Create SMTP credentials**:
-   - Go to AWS SES Console
-   - Navigate to "SMTP settings"
-   - Create SMTP credentials
-   - Use the provided username and password
+For local SMTP testing, run `rnwood/smtp4dev:latest` and set:
 
-## Email Functionality
+```bash
+NOTIFICATIONS_EMAIL_PROVIDER=Smtp
+```
 
-The email service will automatically send order confirmation emails when:
-- A payment is successfully processed via Stripe
-- The webhook receives a `payment_intent.succeeded` event
+## Legacy note
 
-## Email Template Features
-
-The order confirmation email includes:
-- Rich HTML styling with responsive design
-- Plain text fallback for better deliverability
-- Professional branding and company information
-- Order details (ID, date, amount, service)
-- Contact information with business hours
-- Mobile-friendly layout
-- Anti-spam headers and proper email structure
-- Company registration details for legitimacy
-
-## Testing
-
-To test the email functionality:
-1. Set up the environment variables
-2. Process a test payment through Stripe
-3. Check that the webhook receives the success event
-4. Verify the email is sent to the customer
-
-## Troubleshooting
-
-- Check logs for email service errors
-- Verify AWS SES credentials are correct
-- Ensure the FROM_EMAIL domain is verified in AWS SES
-- Check that the SMTP port (587) is not blocked by your network
-- If emails are going to spam, verify your domain's SPF, DKIM, and DMARC records
-- Ensure your AWS SES account is out of sandbox mode for production use 
+Older docs referred to AWS SES and MailKit. That stack has been removed from the monolith.

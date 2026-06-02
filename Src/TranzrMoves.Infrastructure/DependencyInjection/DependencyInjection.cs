@@ -1,5 +1,4 @@
-﻿using Azure.Communication.Email;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Stripe;
@@ -7,7 +6,6 @@ using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Domain.Interfaces;
 using TranzrMoves.Infrastructure.Respositories;
 using TranzrMoves.Infrastructure.Services;
-using TranzrMoves.Infrastructure.Services.EmailTemplates;
 
 namespace TranzrMoves.Infrastructure.DependencyInjection;
 
@@ -15,16 +13,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton(_ =>
-        {
-            var connectionString = configuration["COMMUNICATION_SERVICES_CONNECTION_STRING"];
-            return new EmailClient(connectionString);
-        });
-
-        services.AddSingleton<IEmailService, AzureEmailService>();
-        services.AddSingleton<ITemplateService, TemplateService>();
-        services.AddHostedService<EmailTemplatesFileWatcherHostedService>();
         services.AddSingleton<ITurnstileService, TurnstileService>();
+        services.AddScoped<INotificationPublisher, WolverineNotificationPublisher>();
 
         services.AddScoped<IQuoteV2HostedCheckoutSessionService, QuoteV2HostedCheckoutSessionService>();
         services.AddScoped<IQuoteV2LaterBalanceCollectionService, QuoteV2LaterBalanceCollectionService>();
@@ -37,8 +27,7 @@ public static class DependencyInjection
             configuration["TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET_V2"] ?? string.Empty,
             sp.GetRequiredService<IQuoteRepository>(),
             sp.GetRequiredService<IQuoteProgressCalculator>(),
-            sp.GetRequiredService<IEmailService>(),
-            sp.GetRequiredService<ITemplateService>(),
+            sp.GetRequiredService<INotificationPublisher>(),
             sp.GetRequiredService<ITimeService>(),
             sp.GetRequiredService<IBalanceChargeScheduler>(),
             sp.GetRequiredService<ILogger<CheckoutStripeWebhookV2Service>>()));
@@ -54,7 +43,6 @@ public static class DependencyInjection
         services.AddTransient<IAdditionalPriceRepository, AdditionalPriceRepository>();
         services.AddTransient<ILegalDocumentRepository, LegalDocumentRepository>();
 
-        // Azure Blob Storage Service
         services.AddTransient<IAzureBlobService, AzureBlobService>();
 
         services.AddTransient<IInventoryItemRepository, InventoryItemRepository>();

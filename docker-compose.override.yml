@@ -1,0 +1,14 @@
+services:
+  # Keep credentials outside compose files:
+  # - export variables in your shell, or
+  # - put them in a local .env file (gitignored)
+  # For Notifications, COMMUNICATION_SERVICES_CONNECTION_STRING is only required
+  # when NOTIFICATIONS_EMAIL_PROVIDER=Acs.
+  notifications:
+    environment:
+      NOTIFICATIONS_EMAIL_PROVIDER: ${NOTIFICATIONS_EMAIL_PROVIDER:-Smtp}
+      COMMUNICATION_SERVICES_CONNECTION_STRING: ${COMMUNICATION_SERVICES_CONNECTION_STRING:-}
+
+  worker:
+    environment:
+      STRIPE_API_KEY: ${STRIPE_API_KEY:?Set STRIPE_API_KEY in your shell or .env}
