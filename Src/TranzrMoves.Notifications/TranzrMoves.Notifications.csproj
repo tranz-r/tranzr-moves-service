@@ -22,6 +22,7 @@
     <ItemGroup>
         <ProjectReference Include="..\TranzrMoves.Notifications.Application\TranzrMoves.Notifications.Application.csproj" />
         <ProjectReference Include="..\TranzrMoves.Notifications.Infrastructure\TranzrMoves.Notifications.Infrastructure.csproj" />
+        <ProjectReference Include="..\TranzrMoves.Observability\TranzrMoves.Observability.csproj" />
     </ItemGroup>
 
 </Project>

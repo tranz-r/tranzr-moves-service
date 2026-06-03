@@ -10,6 +10,7 @@ COPY ["Src/TranzrMoves.Notifications/TranzrMoves.Notifications.csproj", "Src/Tra
 COPY ["Src/TranzrMoves.Notifications.Application/TranzrMoves.Notifications.Application.csproj", "Src/TranzrMoves.Notifications.Application/"]
 COPY ["Src/TranzrMoves.Notifications.Infrastructure/TranzrMoves.Notifications.Infrastructure.csproj", "Src/TranzrMoves.Notifications.Infrastructure/"]
 COPY ["Src/TranzrMoves.Notifications.Contracts/TranzrMoves.Notifications.Contracts.csproj", "Src/TranzrMoves.Notifications.Contracts/"]
+COPY ["Src/TranzrMoves.Observability/TranzrMoves.Observability.csproj", "Src/TranzrMoves.Observability/"]
 RUN dotnet restore "Src/TranzrMoves.Notifications/TranzrMoves.Notifications.csproj"
 COPY Src ./Src
 WORKDIR /workspace/Src/TranzrMoves.Notifications

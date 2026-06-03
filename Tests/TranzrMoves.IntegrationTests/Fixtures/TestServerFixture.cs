@@ -22,7 +22,7 @@ using WireMock.Server;
 
 namespace TranzrMoves.IntegrationTests.Fixtures;
 
-public class TestServerFixture : WebApplicationFactory<Program>, IAsyncLifetime
+public class TestServerFixture : WebApplicationFactory<TranzrMoves.Api.Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase($"testdb_{Guid.NewGuid()}")

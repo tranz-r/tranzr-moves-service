@@ -8,6 +8,15 @@ public static class WorkerHostConfiguration
 {
     public const string RoleConfigurationKey = "Worker:Role";
 
+    public static string GetObservabilityServiceName(WorkerRole role) =>
+        role switch
+        {
+            WorkerRole.Scheduler => "tranzr-moves-worker-scheduler",
+            WorkerRole.Processor => "tranzr-moves-worker-processor",
+            WorkerRole.All => "tranzr-moves-worker-all",
+            _ => "tranzr-moves-worker",
+        };
+
     public static WorkerRole GetWorkerRole(IConfiguration configuration, IHostEnvironment environment)
     {
         var roleValue = configuration[RoleConfigurationKey];
@@ -50,6 +59,7 @@ public static class WorkerHostConfiguration
 
         builder.UseWolverine(opts =>
         {
+            opts.ServiceName = GetObservabilityServiceName(role);
             opts.ConfigurePayLaterMessaging(
                 builder.Configuration,
                 includeConsumer: role is WorkerRole.Processor or WorkerRole.All);

@@ -37,6 +37,7 @@
     <ItemGroup>
       <ProjectReference Include="..\TranzrMoves.Application\TranzrMoves.Application.csproj" />
       <ProjectReference Include="..\TranzrMoves.Infrastructure\TranzrMoves.Infrastructure.csproj" />
+      <ProjectReference Include="..\TranzrMoves.Observability\TranzrMoves.Observability.csproj" />
     </ItemGroup>
 
     <ItemGroup>

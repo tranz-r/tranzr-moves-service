@@ -17,10 +17,12 @@ using TranzrMoves.Domain.Constants;
 using TranzrMoves.Infrastructure.DependencyInjection;
 using TranzrMoves.Infrastructure.Helper;
 using TranzrMoves.Infrastructure.Services;
+using TranzrMoves.Observability;
 using Wolverine;
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
+    .ConfigureTranzrMovesSerilog()
     .WriteTo.Console()
     .CreateLogger();
 
@@ -28,6 +30,13 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
     builder.Host.UseSerilog();
+
+    builder.AddTranzrMovesObservability(new TranzrObservabilityOptions
+    {
+        ServiceName = "tranzr-moves-api",
+        EnableAspNetCore = true,
+        EnableRabbitMq = true,
+    });
 
     // Add services to the container.
     builder.Services.AddCors(options =>
@@ -98,7 +107,10 @@ try
     if (!builder.Environment.IsEnvironment("Testing"))
     {
         builder.Host.UseWolverine(opts =>
-            opts.ConfigureNotificationsPublisher(builder.Configuration));
+        {
+            opts.ServiceName = "tranzr-moves-api";
+            opts.ConfigureNotificationsPublisher(builder.Configuration);
+        });
     }
 
     builder.Services.AddSingleton(_ =>

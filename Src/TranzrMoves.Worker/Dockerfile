@@ -10,6 +10,7 @@ COPY ["Src/TranzrMoves.Worker/TranzrMoves.Worker.csproj", "Src/TranzrMoves.Worke
 COPY ["Src/TranzrMoves.Application/TranzrMoves.Application.csproj", "Src/TranzrMoves.Application/"]
 COPY ["Src/TranzrMoves.Infrastructure/TranzrMoves.Infrastructure.csproj", "Src/TranzrMoves.Infrastructure/"]
 COPY ["Src/TranzrMoves.Domain/TranzrMoves.Domain.csproj", "Src/TranzrMoves.Domain/"]
+COPY ["Src/TranzrMoves.Observability/TranzrMoves.Observability.csproj", "Src/TranzrMoves.Observability/"]
 RUN dotnet restore "Src/TranzrMoves.Worker/TranzrMoves.Worker.csproj"
 COPY Src ./Src
 WORKDIR /workspace/Src/TranzrMoves.Worker

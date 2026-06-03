@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranzrMoves.Notifications.U
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranzrMoves.Notifications.IntegrationTests", "Tests\TranzrMoves.Notifications.IntegrationTests\TranzrMoves.Notifications.IntegrationTests.csproj", "{097F4FEE-EA17-42C7-86CA-6A22829387AB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranzrMoves.Observability", "Src\TranzrMoves.Observability\TranzrMoves.Observability.csproj", "{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -196,6 +198,18 @@ Global
 		{097F4FEE-EA17-42C7-86CA-6A22829387AB}.Release|x64.Build.0 = Release|Any CPU
 		{097F4FEE-EA17-42C7-86CA-6A22829387AB}.Release|x86.ActiveCfg = Release|Any CPU
 		{097F4FEE-EA17-42C7-86CA-6A22829387AB}.Release|x86.Build.0 = Release|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Debug|x64.Build.0 = Debug|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Debug|x86.Build.0 = Debug|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Release|x64.ActiveCfg = Release|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Release|x64.Build.0 = Release|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Release|x86.ActiveCfg = Release|Any CPU
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -214,5 +228,6 @@ Global
 		{FD59FADF-B426-406E-B654-7C4517B80E3A} = {477DB0CC-C38A-4420-BBB5-9F1767C648A1}
 		{82A2DC1D-51CF-4CBB-95B6-B5ECA9D514B0} = {FE37C392-E704-4139-8321-444C126C1614}
 		{097F4FEE-EA17-42C7-86CA-6A22829387AB} = {FE37C392-E704-4139-8321-444C126C1614}
+		{F7CA74B2-BC8F-4310-BCE7-4657A88FF037} = {477DB0CC-C38A-4420-BBB5-9F1767C648A1}
 	EndGlobalSection
 EndGlobal
