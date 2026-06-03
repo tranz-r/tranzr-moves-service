@@ -1,17 +1,17 @@
-# On changes under documents/ (not images/ alone): render all .puml, overwrite PNGs, chore commit.
+# On source doc / diagram changes (not PNG-only under documents/**/images/): render .puml, commit PNGs.
 name: Render documentation diagrams
 
 on:
   push:
     paths:
-      - "documents/**"
-    paths-ignore:
-      - "documents/**/images/**"
+      - "documents/**/*.puml"
+      - "documents/**/*.md"
+      - "scripts/render-plantuml.sh"
   pull_request:
     paths:
-      - "documents/**"
-    paths-ignore:
-      - "documents/**/images/**"
+      - "documents/**/*.puml"
+      - "documents/**/*.md"
+      - "scripts/render-plantuml.sh"
   workflow_dispatch:
 
 permissions:
