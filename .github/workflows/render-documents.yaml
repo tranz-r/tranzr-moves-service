@@ -27,8 +27,8 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.ref || github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
 
       - name: Start PlantUML server
         run: |
@@ -66,12 +66,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           find documents -type f -path '*/images/*.png' -print0 | xargs -0 git add -f
-          git commit -m "chore: update rendered PlantUML diagram PNGs" --allow-empty
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git push origin "HEAD:${{ github.head_ref }}"
-          else
-            git push
+          if git diff --staged --quiet; then
+            echo "No diagram PNG changes to commit."
+            exit 0
           fi
+          git commit -m "chore: update rendered PlantUML diagram PNGs"
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          git push origin "HEAD:${BRANCH}"
 
       - name: Stop PlantUML server
         if: always()
