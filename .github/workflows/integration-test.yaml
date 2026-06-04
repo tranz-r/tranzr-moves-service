@@ -2,10 +2,15 @@ name: "Integration Test"
 
 # Runs on every branch push and on pull requests targeting main.
 # Pushes to main that pass here trigger Release and Push to GHCR via workflow_run.
+# PNG-only commits under documents/**/images/ are ignored (diagram assets; no release).
 on:
   push:
+    paths-ignore:
+      - "documents/**/images/**"
   pull_request:
     branches: ["main"]
+    paths-ignore:
+      - "documents/**/images/**"
 
 env:
   DOTNET_VERSION: 10.0

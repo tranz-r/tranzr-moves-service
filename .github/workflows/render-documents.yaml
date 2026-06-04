@@ -1,8 +1,11 @@
-# On source doc / diagram changes (not PNG-only under documents/**/images/): render .puml, commit PNGs.
+# Render .puml → PNG under documents/**/images/ and commit. PNG-only pushes are paths-ignored
+# by Integration Test / commitlint so they do not trigger release (see integration-test.yaml).
 name: Render documentation diagrams
 
 on:
   push:
+    branches:
+      - "**"
     paths:
       - "documents/**/*.puml"
       - "documents/**/*.md"
@@ -19,7 +22,7 @@ permissions:
 
 jobs:
   render-plantuml:
-    name: Render PlantUML diagrams
+    name: Render and commit PlantUML diagram PNGs
     runs-on: ubuntu-latest
 
     steps:
@@ -59,20 +62,27 @@ jobs:
       - name: Commit and push diagram PNGs
         if: |
           github.event_name == 'workflow_dispatch' ||
-          github.event_name == 'push' ||
+          (github.event_name == 'push' && github.ref_type == 'branch') ||
           (github.event_name == 'pull_request' &&
             github.event.pull_request.head.repo.full_name == github.repository)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          find documents -type f -path '*/images/*.png' -print0 | xargs -0 git add -f
-          if git diff --staged --quiet; then
-            echo "No diagram PNG changes to commit."
+          if ! find documents -type f -path '*/images/*.png' -print -quit | grep -q .; then
+            echo "No PNG files under documents/**/images/."
             exit 0
           fi
-          git commit -m "chore: update rendered PlantUML diagram PNGs"
-          BRANCH="${{ github.head_ref || github.ref_name }}"
-          git push origin "HEAD:${BRANCH}"
+          find documents -type f -path '*/images/*.png' -print0 | xargs -0 git add -f
+          if git diff --staged --quiet; then
+            echo "Diagram PNGs already up to date."
+            exit 0
+          fi
+          git commit -m "chore: update rendered PlantUML diagram PNGs [skip ci]"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git push origin "HEAD:${{ github.head_ref }}"
+          else
+            git push origin "HEAD:${{ github.ref_name }}"
+          fi
 
       - name: Stop PlantUML server
         if: always()

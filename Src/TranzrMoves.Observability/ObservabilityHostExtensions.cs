@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpenTelemetry;
@@ -35,7 +36,8 @@ public static class ObservabilityHostExtensions
             {
                 if (options.EnableAspNetCore)
                 {
-                    tracing.AddAspNetCoreInstrumentation();
+                    tracing.AddAspNetCoreInstrumentation(aspNetCore =>
+                        aspNetCore.Filter = ExcludeHealthCheckRequests);
                 }
 
                 tracing.AddHttpClientInstrumentation();
@@ -81,7 +83,10 @@ public static class ObservabilityHostExtensions
 
     public static LoggerConfiguration ConfigureTranzrMovesSerilog(
         this LoggerConfiguration loggerConfiguration) =>
-        loggerConfiguration.Enrich.WithSpan();
+        loggerConfiguration
+            .Enrich.WithSpan()
+            .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", Serilog.Events.LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore.Routing.EndpointMiddleware", Serilog.Events.LogEventLevel.Warning);
 
     private static void ConfigureDefaultPropagators()
     {
@@ -91,6 +96,10 @@ public static class ObservabilityHostExtensions
             new BaggagePropagator()
         ]));
     }
+
+    private static bool ExcludeHealthCheckRequests(HttpContext context) =>
+        !context.Request.Path.StartsWithSegments("/healthz")
+        && !context.Request.Path.StartsWithSegments("/ready");
 
     private static bool IsOtlpExportEnabled(IConfiguration configuration)
     {

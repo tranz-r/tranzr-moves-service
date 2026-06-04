@@ -3,7 +3,11 @@ name: Conventional Commitlint
 on:
   push:
     branches: ['main']
+    paths-ignore:
+      - "documents/**/images/**"
   pull_request:
+    paths-ignore:
+      - "documents/**/images/**"
 
 jobs:
   commitlint:

@@ -88,7 +88,7 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
     builder.Services.AddSwaggerGen();
-    builder.Services.AddHttpLogging(o => o.CombineLogs = true);
+    builder.Services.AddTranzrHttpLogging();
     builder.Services.AddHealthChecks();
     builder.Services.AddMemoryCache();
     builder.Services.AddSingleton(new StripeClient(builder.Configuration["STRIPE_API_KEY"]));
@@ -158,7 +158,7 @@ try
         }
     });
 
-    app.UseHttpLogging();
+    app.UseTranzrHttpLogging();
     app.UseHttpsRedirection();
 
     app.MapHealthChecks("/healthz");
