@@ -51,7 +51,7 @@ public class PatchExtrasCommandHandler(
 
         try
         {
-            await CalculatePrice(quote, command.NumberOfItemsToAssemble, command.NumberOfItemsToDismantle, command.NumberOfSelectedVans, cancellationToken);
+            await CalculatePrice(quote, command.NumberOfItemsToDismantle, command.NumberOfItemsToAssemble, command.NumberOfSelectedVans, cancellationToken);
         }
         catch (Exception e)
         {

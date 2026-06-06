@@ -252,12 +252,16 @@ public static class PricingHelper
 
         var dismantleCost = numberOfItemsToDismantle * unitDismantlePrice;
         var assemblyCost = numberOfItemsToAssemble * unitAssemblePrice;
-        var totalCost = dismantleCost + assemblyCost;
+        var assemblyDismantleTotalCostWithout = dismantleCost + assemblyCost;
 
         var selectedPricing = quote.Pricings.First(p => p.IsSelected);
         selectedPricing.AssemblyCost = assemblyCost;
         selectedPricing.DismantleCost = dismantleCost;
-        selectedPricing.SubtotalWithoutVat += totalCost;
-        selectedPricing.TotalCostWithVat = selectedPricing.SubtotalWithoutVat + selectedPricing.SubtotalWithoutVat * VatRate;
+        selectedPricing.SubtotalWithoutVat += assemblyDismantleTotalCostWithout;
+
+        selectedPricing.VatAmount = selectedPricing.SubtotalWithoutVat * VatRate;
+
+        selectedPricing.TotalCostWithVat = selectedPricing.SubtotalWithoutVat + selectedPricing.VatAmount;
+        quote.TotalCost = selectedPricing.TotalCostWithVat;
     }
 }
