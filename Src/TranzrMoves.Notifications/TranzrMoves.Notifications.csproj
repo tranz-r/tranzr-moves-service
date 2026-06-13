@@ -20,6 +20,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\TranzrMoves.Application\TranzrMoves.Application.csproj" />
+        <ProjectReference Include="..\TranzrMoves.Infrastructure\TranzrMoves.Infrastructure.csproj" />
         <ProjectReference Include="..\TranzrMoves.Notifications.Application\TranzrMoves.Notifications.Application.csproj" />
         <ProjectReference Include="..\TranzrMoves.Notifications.Infrastructure\TranzrMoves.Notifications.Infrastructure.csproj" />
         <ProjectReference Include="..\TranzrMoves.Observability\TranzrMoves.Observability.csproj" />

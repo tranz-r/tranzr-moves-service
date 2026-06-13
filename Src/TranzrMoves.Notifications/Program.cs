@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
+using TranzrMoves.Notifications.Application.DependencyInjection;
 using TranzrMoves.Notifications.Application.Handlers;
+using TranzrMoves.Notifications.Application.Telemetry;
 using TranzrMoves.Notifications.Infrastructure.DependencyInjection;
 using TranzrMoves.Observability;
 using Wolverine;
@@ -21,9 +23,11 @@ try
         ServiceName = "tranzr-moves-notifications",
         EnableAspNetCore = true,
         EnableRabbitMq = true,
+        AdditionalMeters = [NotificationsMetrics.MeterName],
     });
 
     builder.Services.AddNotificationsInfrastructure(builder.Configuration);
+    builder.Services.AddNotificationsApplication();
     builder.Services.AddHealthChecks();
 
     builder.Host.UseWolverine(opts =>

@@ -12,7 +12,10 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="FluentAssertions" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="NSubstitute" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio">
             <PrivateAssets>all</PrivateAssets>
@@ -25,7 +28,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Src\TranzrMoves.Notifications\TranzrMoves.Notifications.csproj" />
+        <ProjectReference Include="..\..\Src\TranzrMoves.Notifications.Application\TranzrMoves.Notifications.Application.csproj" />
+        <ProjectReference Include="..\..\Src\TranzrMoves.Notifications.Infrastructure\TranzrMoves.Notifications.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

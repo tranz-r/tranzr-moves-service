@@ -44,18 +44,27 @@ public static class WorkerHostConfiguration
     public static bool RequiresStripe(WorkerRole role) =>
         role is WorkerRole.Processor or WorkerRole.All;
 
+    public static bool RequiresNotificationsPublisher(WorkerRole role) =>
+        role is WorkerRole.Scheduler or WorkerRole.Processor or WorkerRole.All;
+
     public static void RegisterPayLaterHostedServices(IServiceCollection services, WorkerRole role)
     {
         if (role is WorkerRole.Scheduler or WorkerRole.All)
         {
             services.AddHostedService<BalanceChargeExpiryListener>();
             services.AddHostedService<BalanceChargeRecoveryWorker>();
+            services.AddHostedService<QuoteReminderWorker>();
         }
     }
 
     public static void AddPayLaterWorkerRole(this IHostApplicationBuilder builder, WorkerRole role)
     {
         RegisterPayLaterHostedServices(builder.Services, role);
+
+        if (role is WorkerRole.Scheduler or WorkerRole.All)
+        {
+            builder.Services.AddQuoteReminderWorkerServices(builder.Configuration);
+        }
 
         builder.UseWolverine(opts =>
         {
@@ -64,7 +73,7 @@ public static class WorkerHostConfiguration
                 builder.Configuration,
                 includeConsumer: role is WorkerRole.Processor or WorkerRole.All);
 
-            if (role is WorkerRole.Processor or WorkerRole.All)
+            if (RequiresNotificationsPublisher(role))
             {
                 opts.ConfigureNotificationsPublisher(builder.Configuration);
             }

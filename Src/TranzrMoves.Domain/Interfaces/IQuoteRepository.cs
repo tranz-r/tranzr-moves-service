@@ -38,6 +38,15 @@ public interface IQuoteRepository
     /// </summary>
     Task<List<QuoteV2>> GetDepositQuoteV2sDueForBalanceCollectionAsync(LocalDate todayInLondon,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Incomplete quotes eligible for a transactional quote-reminder email.
+    /// </summary>
+    Task<List<QuoteV2>> GetQuotesDueForReminderAsync(
+        Instant idleBefore,
+        Instant cooldownBefore,
+        Instant now,
+        CancellationToken ct = default);
 }
 
 

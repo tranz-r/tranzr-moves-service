@@ -1,0 +1,33 @@
+@startuml notifications-sequence-quote-reminder
+title Quote reminder (transactional email)
+
+skinparam shadowing false
+skinparam arrowColor #546E7A
+
+participant "QuoteReminderWorker\n(Scheduler)" as Worker #FFF3E0
+database "tranzrmoves schema" as MonoDB #F3E5F5
+participant "NotificationPublisher" as Pub #FFF3E0
+queue "RabbitMQ" as RMQ #FFEBEE
+participant "SendNotificationHandler" as Handler #E8F5E9
+participant "Email provider" as Mail #ECEFF1
+actor Customer
+
+loop every ScanIntervalMinutes
+  Worker -> MonoDB : GetQuotesDueForReminderAsync\n(idle + cooldown)
+  alt eligible quote with customer email
+    Worker -> Worker : Create resume token + URL
+    Worker -> Pub : SendNotification\n**Category = Transactional**\ntemplate = quote-reminder
+    Pub -> RMQ : notifications-send
+    Worker -> MonoDB : Set LastResumeEmailSentAt
+  end
+end
+
+RMQ -> Handler : Handle(message)
+note over Handler
+  **No marketing consent check**
+  (transactional category)
+end note
+Handler -> Mail : quote-reminder email\n(resume link only)
+Mail -> Customer : Finish your quote
+
+@enduml

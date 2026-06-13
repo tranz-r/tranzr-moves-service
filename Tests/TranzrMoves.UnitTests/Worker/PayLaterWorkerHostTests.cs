@@ -57,6 +57,9 @@ public sealed class PayLaterWorkerHostTests
 
         builder.Services.Should().Contain(d =>
             d.ImplementationType == typeof(BalanceChargeExpiryListener));
+        builder.Services.Should().Contain(d =>
+            d.ImplementationType == typeof(QuoteReminderWorker));
+        builder.Services.Should().Contain(d => d.ServiceType == typeof(INotificationPublisher));
         builder.Services.Should().NotContain(d => d.ServiceType == typeof(StripeClient));
         builder.Services.Should().NotContain(d =>
             d.ServiceType == typeof(IQuoteV2LaterBalanceCollectionService));

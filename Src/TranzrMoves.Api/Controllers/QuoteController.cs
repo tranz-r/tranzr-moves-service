@@ -11,6 +11,7 @@ using TranzrMoves.Application.Features.Quote.Patch.CustomerInfo;
 using TranzrMoves.Application.Features.Quote.Patch.EmailAndPhoneNumber;
 using TranzrMoves.Application.Features.Quote.Patch.Extras;
 using TranzrMoves.Application.Features.Quote.Patch.Inventory;
+using TranzrMoves.Application.Features.Quote.Patch.MarketingPreferences;
 using TranzrMoves.Application.Features.Quote.Patch.MoveDateTime;
 using TranzrMoves.Application.Features.Quote.Patch.Pricing;
 using TranzrMoves.Application.Features.Quote.Patch.Summary;
@@ -405,6 +406,52 @@ public class QuoteController(
         };
         var response = await mediator.Send(command, ct);
         return response.Match(NoContentWithQuoteJourneyEtag, Problem);
+    }
+
+    [MapToApiVersion(2)]
+    [HttpPatch("{quoteId:guid}/marketing-preferences")]
+    [SwaggerOperation(
+        OperationId = "QuoteV2_PatchMarketingPreferences",
+        Summary = "Capture marketing consent preferences during the quote journey",
+        Description =
+            "Request JSON is `PatchQuoteMarketingPreferencesRequest` (`emailMarketingEnabled`, `smsMarketingEnabled`). " +
+            "Requires customer email to be saved first. **If-Match** (required): current `quote.version`.",
+        Tags = new[] { "Quote (v2)" })]
+    [Consumes("application/json")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(MarketingPreferencesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status412PreconditionFailed)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> PatchMarketingPreferencesAsync(
+        Guid quoteId,
+        [FromBody] PatchQuoteMarketingPreferencesRequest request,
+        [FromHeader(Name = "If-Match")] string? ifMatch,
+        CancellationToken ct)
+    {
+        if (!TryParseQuoteVersion(ifMatch, out var expectedVersion))
+        {
+            return IfMatchRequiredBadRequest();
+        }
+
+        var command = new PatchQuoteMarketingPreferencesCommand
+        {
+            QuoteId = quoteId,
+            ExpectedVersion = expectedVersion,
+            EmailMarketingEnabled = request.EmailMarketingEnabled,
+            SmsMarketingEnabled = request.SmsMarketingEnabled,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+            UserAgent = Request.Headers.UserAgent.ToString()
+        };
+
+        var response = await mediator.Send(command, ct);
+        return response.Match(
+            preferences => Ok(new MarketingPreferencesResponse
+            {
+                EmailMarketingEnabled = preferences.EmailMarketingEnabled,
+                SmsMarketingEnabled = preferences.SmsMarketingEnabled
+            }),
+            Problem);
     }
 
     [MapToApiVersion(2)]

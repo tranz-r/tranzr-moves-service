@@ -37,6 +37,7 @@
     <ItemGroup>
       <ProjectReference Include="..\TranzrMoves.Application\TranzrMoves.Application.csproj" />
       <ProjectReference Include="..\TranzrMoves.Domain\TranzrMoves.Domain.csproj" />
+      <ProjectReference Include="..\TranzrMoves.Notifications.Application\TranzrMoves.Notifications.Application.csproj" />
       <ProjectReference Include="..\TranzrMoves.Notifications.Contracts\TranzrMoves.Notifications.Contracts.csproj" />
       <ProjectReference Include="..\TranzrMoves.Notifications.Infrastructure\TranzrMoves.Notifications.Infrastructure.csproj" />
     </ItemGroup>

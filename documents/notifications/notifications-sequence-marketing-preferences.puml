@@ -1,0 +1,41 @@
+@startuml notifications-sequence-marketing-preferences
+title Marketing preferences (consent capture + gate)
+
+skinparam shadowing false
+skinparam arrowColor #546E7A
+
+actor Customer
+participant "Quote journey\n(frontend)" as UI #ECEFF1
+participant "TranzrMoves.Api" as Api #E3F2FD
+participant "IMarketingPreferenceService" as Pref #E8F5E9
+database "notifications schema" as DB #F3E5F5
+queue "RabbitMQ" as RMQ #FFEBEE
+participant "SendNotificationHandler" as Handler #E8F5E9
+
+== Quote journey opt-in (explicit) ==
+Customer -> UI : Check email / SMS marketing boxes
+UI -> Api : PATCH /api/v2/quote/{id}/marketing-preferences\nIf-Match + flags
+Api -> Pref : ApplyPreferencesAsync\n(source = QuoteJourney)
+Pref -> DB : Upsert CustomerMarketingPreferences\n+ append MarketingConsentEvents
+
+== Preference centre (signed token) ==
+Customer -> Api : GET /api/v2/marketing-preferences?token=
+Api -> Pref : GetById / ApplyPreferencesAsync\n(source = PreferenceCentre)
+Pref -> DB : Update flags + audit event
+
+== Marketing send (future templates — TODO) ==
+note over Api, Handler
+  True marketing emails use Category = Marketing.
+  Templates with preference footer: **TODO** (not quote-reminder).
+end note
+Api -> RMQ : SendNotification (Marketing)
+RMQ -> Handler : Handle(message)
+Handler -> Pref : IsChannelEnabledAsync(email, Email)
+Pref -> DB : Read CustomerMarketingPreferences
+alt EmailMarketingEnabled = false or missing
+  Handler -> DB : Record Skipped
+else consented
+  Handler -> Customer : Send marketing email
+end
+
+@enduml

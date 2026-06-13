@@ -12,7 +12,7 @@ To test locally you need **four things running** (plus Notifications if you want
 | 2 | **Worker** | `dotnet run --project Src/TranzrMoves.Worker` | Redis expiry → RabbitMQ → Stripe balance charge |
 | 3 | **API** | `dotnet run --project Src/TranzrMoves.Api` | Checkout, quotes, Stripe webhooks |
 | 4 | **Stripe CLI** (for webhook testing) | `stripe listen --forward-to ...` | Forwards Stripe events to your local API |
-| 5 | **Notifications** (optional) | `dotnet run --project Src/TranzrMoves.Notifications` | Consumes `notifications-send`, sends email via ACS |
+| 5 | **Notifications** (optional) | `dotnet run --project Src/TranzrMoves.Notifications` | Consumes `notifications-send` + `notifications-consent`; sends email via ACS/SMTP |
 
 See [Notifications](documents/notifications/notifications.md) for queue, schemas, and configuration.
 
@@ -285,6 +285,112 @@ If a quote has `DueDate <= today` and no paid balance yet, the Worker recovery s
 
 ---
 
+## Step 9 — Test the resume quote journey
+
+The resume flow lets a customer pick up an incomplete quote. It has three pieces:
+
+| Piece | What it does |
+|-------|----------------|
+| **Journey state** | `GET /api/v2/quote/{quoteId}/journey-state` — hydrate quote + step navigation on the same device/session |
+| **Resume token** | `POST /api/v2/quote/resume` — validate a signed token from a reminder email and return journey hints |
+| **Quote reminder email** | Worker publishes a transactional `quote-reminder` message; Notifications sends it with a resume link |
+
+See [Notifications](documents/notifications/notifications.md) and [Quote V2 frontend guide](QUOTE_V2_FRONTEND_GUIDE.md) for API contracts and client behaviour.
+
+### Extra services for the full email path
+
+Steps 1–6 are enough to test same-session resume. To test reminder emails end-to-end, also run:
+
+1. **Notifications migrations** (once), if you are not using the `notifications-db-migrator` container from Docker Compose:
+
+```bash
+dotnet ef database update \
+  --project Src/TranzrMoves.Notifications.Infrastructure \
+  --startup-project Src/TranzrMoves.Notifications
+```
+
+2. **Notifications host** (Terminal 4):
+
+```bash
+dotnet run --project Src/TranzrMoves.Notifications
+```
+
+**Success:** http://localhost:8081/healthz returns healthy.
+
+3. **SMTP UI** — `docker compose up -d` already starts **smtp4dev**. Open http://localhost:8025 to read captured emails (Notifications uses SMTP on port `2525` in Development).
+
+The Worker (Terminal 1) must stay running with role `All` or `Scheduler` — it hosts `QuoteReminderWorker`.
+
+### Test A — Same-session resume (no email)
+
+Use this to verify journey navigation without waiting for a reminder.
+
+1. In Swagger (http://localhost:5247/swagger), under **Quote (v2)**:
+   - `POST /api/v2/quote/ensure` — creates the `tranzr_guest` cookie
+   - `POST /api/v2/quote/init` with `{ "quoteType": "Send" }` — note `quote.id` and `quote.version`
+   - `PATCH /api/v2/quote/{quoteId}/customer-email-phone` with `{ "email": "you@example.com", "phoneNumber": "+447700900000" }` and header `If-Match: <quote.version>`
+   - Optionally PATCH one or two more steps, then stop before payment
+2. Call `GET /api/v2/quote/{quoteId}/journey-state`.
+3. **Success:** response includes `journey.isResumable = true`, a `journey.resumeStepKey`, and `journey.steps[]` with `complete` / `current` / `locked` statuses. Use `journey.resumeUrl` (or `resumeStepKey`) to know which screen to open next.
+
+### Test B — Reminder email + resume token (full pipeline)
+
+1. **Create an eligible quote** — same as Test A: guest cookie, init, save customer email, leave the quote incomplete (do not reach payment).
+2. **Fast-path the reminder scan** — defaults wait 24 idle hours and scan every 60 minutes. For local testing, restart the Worker with shorter intervals:
+
+```bash
+QuoteReminders__IdleHoursBeforeReminder=0 \
+QuoteReminders__ScanIntervalMinutes=1 \
+dotnet run --project Src/TranzrMoves.Worker
+```
+
+Alternatively, backdate the quote in Postgres (replace `YOUR_QUOTE_ID`):
+
+```bash
+docker exec tranzr-postgres psql -U tranzr -d tranzr -c \
+  "UPDATE tranzrmoves.\"QuotesV2\" SET \"ModifiedAt\" = NOW() - INTERVAL '25 hours' WHERE \"Id\" = 'YOUR_QUOTE_ID';"
+```
+
+3. **Wait for the Worker scan** (up to one interval). Terminal 1 should log:
+
+```
+Quote reminder worker published 1 reminders
+```
+
+4. **Check the email** — open http://localhost:8025. You should see **Finish your quote #…** with a **Continue Your Quote** link shaped like:
+
+```
+http://localhost:3000/<resume-path>?token=<signed-token>
+```
+
+5. **Call the resume API** — copy the `token` query value. Use the **same browser session** (or curl cookie jar) that created the quote, because `POST /api/v2/quote/resume` returns **401** when the `tranzr_guest` cookie does not match the quote session:
+
+```bash
+curl -b cookies.txt -X POST http://localhost:5247/api/v2/quote/resume \
+  -H "Content-Type: application/json" \
+  -d '{"token":"PASTE_TOKEN_HERE"}'
+```
+
+6. **Hydrate full state** — on **200**, call `GET /api/v2/quote/{quoteId}/journey-state` (use `quoteId` from the resume response) and confirm the quote loads at the correct step.
+
+### Test C — Frontend (optional)
+
+If the frontend runs on http://localhost:3000, open the resume link from smtp4dev directly. The app should call `POST /api/v2/quote/resume`, then `GET .../journey-state`, and navigate using `journey.resumeUrl` / `resumeStepKey`.
+
+### Confirm it worked
+
+| Check | What to look for |
+|-------|------------------|
+| Worker logs | `Quote reminder worker published … reminders` |
+| RabbitMQ UI | http://localhost:15672 → queue `notifications-send` message consumed |
+| smtp4dev | `quote-reminder` email with resume CTA |
+| Postgres | `LastResumeEmailSentAt` set on the quote row |
+| Resume API | **200** + `isResumable: true` with same guest cookie; **401** if cookie/session differs |
+
+Automated coverage: `Tests/TranzrMoves.UnitTests/Worker/QuoteReminderWorkerTests.cs` (message idempotency) and notification handler tests for the `quote-reminder` template.
+
+---
+
 ## Troubleshooting
 
 ### Port 5432 already in use
@@ -322,6 +428,17 @@ Run the Worker with `dotnet run --project Src/TranzrMoves.Worker` (launch settin
 - Confirm `stripe listen` is running (Terminal 3).
 - Confirm the API is on http://localhost:5247.
 - Update `TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET_V2` to match the secret Stripe CLI printed.
+
+### Quote reminder email never arrives
+
+- Confirm Notifications is running (http://localhost:8081/healthz) and smtp4dev is up (http://localhost:8025).
+- Quote must have customer email saved (`PATCH .../customer-email-phone`) and still be incomplete (`PaymentStatus` pending or null).
+- By default the quote must be idle for 24 hours — use the fast-path env vars or SQL backdate in [Step 9](#step-9--test-the-resume-quote-journey).
+- Check Worker logs for `Quote reminder worker published` or errors.
+
+### `POST /api/v2/quote/resume` returns 401
+
+The signed token is bound to the quote's guest session. Call resume with the same `tranzr_guest` cookie that created the quote (same browser tab or saved curl cookie jar).
 
 ---
 

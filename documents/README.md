@@ -7,7 +7,7 @@ Architecture and flow documentation for Tranzr Moves services. Each feature has 
 | Feature | Description |
 |---------|-------------|
 | [balance-charges](balance-charges/balance-charges.md) | Pay-later and deposit remaining balance collection |
-| [notifications](notifications/notifications.md) | Transactional email via Notifications worker + ACS |
+| [notifications](notifications/notifications.md) | Email (transactional + marketing), quote reminders, marketing preferences |
 
 ## Conventions
 

@@ -70,6 +70,11 @@ public static class ObservabilityHostExtensions
                 metrics.AddHttpClientInstrumentation();
                 metrics.AddRuntimeInstrumentation();
                 metrics.AddMeter("Wolverine*");
+
+                foreach (var meterName in options.AdditionalMeters)
+                {
+                    metrics.AddMeter(meterName);
+                }
             });
         }
 

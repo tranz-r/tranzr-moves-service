@@ -1,0 +1,90 @@
+@startuml notifications-component
+title Notifications service - component diagram
+
+skinparam shadowing false
+skinparam arrowColor #546E7A
+skinparam defaultFontName Helvetica
+skinparam packageStyle rectangle
+
+skinparam package<<api>> {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+}
+skinparam package<<worker>> {
+  BackgroundColor #FFF3E0
+  BorderColor #EF6C00
+}
+skinparam package<<notifications>> {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+}
+skinparam database {
+  BackgroundColor #F3E5F5
+  BorderColor #6A1B9A
+}
+skinparam queue {
+  BackgroundColor #FFEBEE
+  BorderColor #C62828
+}
+skinparam cloud {
+  BackgroundColor #ECEFF1
+  BorderColor #455A64
+}
+
+package "TranzrMoves.Api" <<api>> {
+  [Transactional publishers\n(checkout, payments, …)] as ApiTx
+  [MarketingPreferencesController] as PrefApi
+  [PATCH quote/.../marketing-preferences] as QuotePref
+  [IMarketingPreferenceService] as PrefSvc
+}
+
+package "Worker (Scheduler)" <<worker>> {
+  [QuoteReminderWorker] as Reminder
+}
+
+queue "RabbitMQ\nnotifications-send" as RMQ #FFEBEE
+
+package "TranzrMoves.Notifications" <<notifications>> {
+  [SendNotificationHandler] as SendHandler
+  [TemplateService\n(Handlebars)] as Templates
+  [Email sender\n(SMTP / ACS)] as Mailer
+}
+
+database "PostgreSQL" as PG {
+  frame "tranzrmoves" {
+    [Wolverine outbox]
+    [Quotes / payments]
+  }
+  frame "notifications" {
+    [NotificationDeliveries]
+    [CustomerMarketingPreferences]
+    [MarketingConsentEvents]
+  }
+}
+
+cloud "Email provider" as Provider
+
+ApiTx --> RMQ : SendNotification\n(Transactional)
+Reminder --> RMQ : SendNotification\n(Transactional, quote-reminder)
+QuotePref --> PrefSvc : sync
+PrefApi --> PrefSvc : sync
+PrefSvc --> PG : read / write preferences
+
+RMQ --> SendHandler
+SendHandler --> PG : idempotency + consent check\n(Marketing only)
+SendHandler --> Templates
+SendHandler --> Mailer
+Mailer --> Provider
+
+note right of Reminder
+  Quote reminders are **transactional**.
+  No marketing consent gate.
+end note
+
+note right of PrefSvc
+  Separate Email + SMS flags.
+  Append-only consent events.
+  Default deny for marketing sends.
+end note
+
+@enduml

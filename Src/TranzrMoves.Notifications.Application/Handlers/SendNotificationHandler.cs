@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NodaTime;
+using TranzrMoves.Notifications.Application.Services;
+using TranzrMoves.Notifications.Application.Telemetry;
 using TranzrMoves.Notifications.Contracts;
 using TranzrMoves.Notifications.Infrastructure;
 using TranzrMoves.Notifications.Infrastructure.Entities;
@@ -13,6 +15,8 @@ public sealed class SendNotificationHandler(
     NotificationsDbContext db,
     ITemplateService templateService,
     IEmailSender emailSender,
+    IMarketingPreferenceService marketingPreferenceService,
+    NotificationsMetrics metrics,
     IClock clock,
     ILogger<SendNotificationHandler> logger)
 {
@@ -26,6 +30,7 @@ public sealed class SendNotificationHandler(
         if (message.Channel != NotificationChannel.Email)
         {
             logger.LogWarning("Unsupported channel {Channel} for message {MessageId}", message.Channel, message.MessageId);
+            metrics.RecordDeliverySkipped(message.Category.ToString(), message.TemplateKey, "unsupported_channel");
             return;
         }
 
@@ -36,16 +41,24 @@ public sealed class SendNotificationHandler(
         if (existing?.Status == NotificationDeliveryStatus.Succeeded)
         {
             logger.LogInformation("Skipping duplicate notification {MessageId}", message.MessageId);
+            metrics.RecordDeliverySkipped(message.Category.ToString(), message.TemplateKey, "duplicate");
             return;
         }
 
-        if (message.Category == NotificationCategory.Marketing)
+        if (message.Category == NotificationCategory.Marketing
+            && !await marketingPreferenceService.IsChannelEnabledAsync(
+                message.ToEmail,
+                MarketingConsentChannel.Email,
+                cancellationToken))
         {
-            logger.LogWarning(
-                "Marketing notification {MessageId} skipped — consent tables not enabled (Phase 2)",
-                message.MessageId);
+            logger.LogInformation(
+                "Marketing notification {MessageId} skipped — no consent for {Email}",
+                message.MessageId,
+                message.ToEmail);
+            metrics.RecordMarketingBlocked(message.TemplateKey);
+            metrics.RecordDeliverySkipped(message.Category.ToString(), message.TemplateKey, "consent");
             await RecordDeliveryAsync(message, NotificationDeliveryStatus.Skipped, null,
-                "Marketing sends require Phase 2 consent", cancellationToken);
+                "Marketing consent not granted", cancellationToken);
             return;
         }
 
@@ -94,11 +107,18 @@ public sealed class SendNotificationHandler(
 
             await RecordDeliveryAsync(message, NotificationDeliveryStatus.Succeeded, providerId, null,
                 cancellationToken);
+
+            metrics.RecordDeliverySucceeded(message.Category.ToString(), message.TemplateKey);
+            if (message.Category == NotificationCategory.Marketing)
+            {
+                metrics.RecordMarketingSent(message.TemplateKey);
+            }
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to send notification {MessageId} to {Email}", message.MessageId,
                 message.ToEmail);
+            metrics.RecordDeliveryFailed(message.Category.ToString(), message.TemplateKey);
             await RecordDeliveryAsync(message, NotificationDeliveryStatus.Failed, null, ex.Message,
                 cancellationToken);
             throw;

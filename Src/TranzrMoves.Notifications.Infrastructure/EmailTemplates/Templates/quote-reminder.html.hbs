@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="date=no">
+    <meta name="format-detection" content="address=no">
+    <meta name="format-detection" content="email=no">
+    <title>Finish your quote - {{quoteReference}}</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style type="text/css">
+{{> shared-email-styles}}
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            {{> email-header-logo}}
+            <h1>Finish Your Quote</h1>
+            <p>Quote #{{quoteReference}}</p>
+        </div>
+        <div class="content">
+            <div class="greeting">Hello {{customerName}},</div>
+
+            <div class="main-text">
+                You started a quote with Tranzr Moves but did not finish. Pick up where you left off — your progress is saved.
+            </div>
+
+            <div class="cta-container">
+                <a href="{{resumeUrl}}" class="cta-button">Continue Your Quote</a>
+            </div>
+
+            <div class="main-text" style="margin-top: 24px; font-size: 13px; color: #666;">
+                You received this because you started a quote with Tranzr Moves.
+            </div>
+        </div>
+        {{> email-footer-html}}
+    </div>
+</body>
+</html>

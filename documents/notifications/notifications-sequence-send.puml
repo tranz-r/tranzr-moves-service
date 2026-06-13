@@ -1,0 +1,35 @@
+@startuml notifications-sequence-send
+title Send notification (core pipeline)
+
+skinparam shadowing false
+skinparam arrowColor #546E7A
+skinparam sequenceMessageAlign center
+
+participant "Publisher\n(Api or Worker)" as Pub #E3F2FD
+queue "RabbitMQ\nnotifications-send" as RMQ #FFEBEE
+participant "SendNotificationHandler" as Handler #E8F5E9
+database "notifications schema" as DB #F3E5F5
+participant "TemplateService" as Templates #E8F5E9
+participant "Email provider" as Mail #ECEFF1
+
+Pub -> RMQ : SendNotification\n(messageId, category, templateKey, …)
+RMQ -> Handler : Handle(message)
+
+Handler -> DB : Already succeeded?\n(by messageId)
+alt duplicate success
+  Handler --> Handler : skip (idempotent)
+else new or retry
+  alt category = Marketing
+    Handler -> DB : EmailMarketingEnabled\nfor recipient?
+    alt no consent
+      Handler -> DB : Record Skipped
+      Handler --> Handler : stop
+    end
+  end
+  Handler -> DB : Record Pending
+  Handler -> Templates : Render *.html.hbs + *.txt.hbs
+  Handler -> Mail : Send email
+  Handler -> DB : Record Succeeded / Failed
+end
+
+@enduml

@@ -1,46 +1,146 @@
 # Notifications service
 
-Transactional email is sent by **TranzrMoves.Notifications**, a separate deployable host in the same repository and solution as the API and Worker. The monolith does not call the email provider directly; it enqueues `SendNotification` messages through a durable Wolverine outbox.
+Email is sent by **TranzrMoves.Notifications**, a separate host in this solution. The Api and Worker **do not** call the email provider directly — they publish `SendNotification` messages through Wolverine (durable outbox) to RabbitMQ.
 
-## Flow
+## Email types
 
-```text
-API / Worker  →  Wolverine outbox (schema tranzrmoves)  →  RabbitMQ queue notifications-send
-       →  TranzrMoves.Notifications consumer  →  Handlebars templates  →  SMTP4DEV (local) or ACS
-       →  delivery log (schema notifications)
+| Type | `Category` | Consent required? | Examples |
+|------|------------|-------------------|----------|
+| **Transactional** | `Transactional` | No | Payment confirmations, checkout emails, **quote reminders** |
+| **Marketing** | `Marketing` | Yes (email channel) | Promotional campaigns — **templates TODO** |
+
+Quote reminders are **transactional**: they nudge the customer to finish an in-progress quote and do **not** include unsubscribe or preference-centre links.
+
+Marketing emails are blocked unless `CustomerMarketingPreferences.EmailMarketingEnabled = true` for the recipient (default deny).
+
+---
+
+## Diagrams
+
+### Component diagram
+
+![Notifications component diagram](images/notifications-component.png)
+
+Source: [notifications-component.puml](notifications-component.puml)
+
+### Sequence diagrams
+
+**Core send pipeline**
+
+![Send notification sequence](images/notifications-sequence-send.png)
+
+Source: [notifications-sequence-send.puml](notifications-sequence-send.puml)
+
+**Quote reminder**
+
+![Quote reminder sequence](images/notifications-sequence-quote-reminder.png)
+
+Source: [notifications-sequence-quote-reminder.puml](notifications-sequence-quote-reminder.puml)
+
+**Marketing preferences**
+
+![Marketing preferences sequence](images/notifications-sequence-marketing-preferences.png)
+
+Source: [notifications-sequence-marketing-preferences.puml](notifications-sequence-marketing-preferences.puml)
+
+---
+
+## Core pipeline
+
+```
+Api / Worker  →  Wolverine outbox (tranzrmoves)  →  RabbitMQ notifications-send
+       →  SendNotificationHandler  →  Handlebars templates  →  SMTP (local) or ACS
+       →  NotificationDeliveries audit log
 ```
 
-| Component | Responsibility |
-|-----------|----------------|
-| Monolith (`TranzrMoves.Api`, `TranzrMoves.Worker`) | Build `SendNotification` with template key + data; publish before `SaveChanges` where possible |
-| RabbitMQ | Queue `notifications-send` |
-| `TranzrMoves.Notifications` | Idempotent send, template render, provider send (ACS/SMTP), `NotificationDeliveries` audit |
+| Piece | Role |
+|-------|------|
+| **Publishers** (Api, Worker) | Build `SendNotification`; stable `MessageId` for idempotency |
+| **RabbitMQ** | Queue `notifications-send` |
+| **Notifications host** | Consent gate (marketing only), render template, send, record delivery |
+
+### `SendNotification` contract
+
+| Field | Purpose |
+|-------|---------|
+| `MessageId` | Idempotency key (caller-generated, stable across retries) |
+| `CorrelationId` | Business id (quote id, payment id, …) |
+| `Category` | `Transactional` or `Marketing` |
+| `TemplateKey` | Maps to `*.html.hbs` / `*.txt.hbs` under Notifications.Infrastructure |
+
+---
+
+## Quote reminders
+
+The Worker **Scheduler** role runs [`QuoteReminderWorker`](../../Src/TranzrMoves.Worker/HostedServices/QuoteReminderWorker.cs):
+
+1. Find incomplete quotes idle longer than `IdleHoursBeforeReminder` and outside `ReminderCooldownDays`.
+2. Build a resume URL (signed token → frontend).
+3. Publish **transactional** `quote-reminder` to `notifications-send`.
+4. Set `QuoteV2.LastResumeEmailSentAt`.
+
+No marketing preference check. Template: `quote-reminder` (resume CTA only).
+
+| Setting (`QuoteReminders`) | Default |
+|----------------------------|---------|
+| `Enabled` | `true` |
+| `ScanIntervalMinutes` | `60` |
+| `IdleHoursBeforeReminder` | `24` |
+| `ReminderCooldownDays` | `7` |
+| `FrontendBaseUrl` | `http://localhost:3000` |
+| `ResumeTokenLifetimeDays` | `30` |
+
+---
+
+## Marketing preferences
+
+Consent lives in the **notifications** schema (not the monolith). The Api calls [`IMarketingPreferenceService`](../../Src/TranzrMoves.Notifications.Application/Services/IMarketingPreferenceService.cs) synchronously — there is no consent queue.
+
+### Data model
+
+| Table | Purpose |
+|-------|---------|
+| `CustomerMarketingPreferences` | Current Email / SMS flags per normalized email (default `false`) |
+| `MarketingConsentEvents` | Append-only audit (`Granted` / `Withdrawn`, channel, source) |
+
+### How consent is captured
+
+| Source | Entry point |
+|--------|-------------|
+| Quote journey | `PATCH /api/v2/quote/{quoteId}/marketing-preferences` (explicit opt-in; **not** on email capture alone) |
+| Preference centre | `GET/PUT /api/v2/marketing-preferences` with signed token (`X-Preference-Token` on PUT) |
+| One-click unsubscribe | `GET /api/v2/marketing-preferences/unsubscribe/email?token=` (email channel only) |
+
+Saving email/phone on a quote does **not** opt the customer into marketing.
+
+### Marketing send gate
+
+When `Category = Marketing`, `SendNotificationHandler` calls `IsChannelEnabledAsync` before sending. Missing row or disabled flag → delivery recorded as **Skipped**.
+
+> **TODO:** Add dedicated marketing email templates with a shared footer partial (Manage preferences + Unsubscribe). `quote-reminder` is transactional and will not use that footer.
+
+---
 
 ## Database
 
-Same Postgres database as the monolith (`tranzr` locally). Separate schemas:
+Same Postgres database (`tranzr` locally). Separate schemas:
 
 | Schema | Owner | Contents |
 |--------|--------|----------|
 | `tranzrmoves` | Monolith | Quotes, payments, Wolverine **outbox** |
-| `notifications` | Notifications host | `NotificationDeliveries`, Wolverine **inbox** |
+| `notifications` | Notifications host | Deliveries, marketing preferences + events, Wolverine **inbox** |
 
 Connection string: `ConnectionStrings:TranzrMovesDatabaseConnection` (shared).
 
-Apply migrations manually (optional when running `docker compose up`, because `notifications-db-migrator` applies notifications migrations automatically):
-
 ```bash
-dotnet ef database update --project Src/TranzrMoves.Notifications.Infrastructure --startup-project Src/TranzrMoves.Notifications
+dotnet ef database update \
+  --project Src/TranzrMoves.Notifications.Infrastructure \
+  --startup-project Src/TranzrMoves.Notifications
 ```
 
-## Contract
+(`docker compose up` can apply notifications migrations via `notifications-db-migrator`.)
 
-Message type: `TranzrMoves.Notifications.Contracts.SendNotification`
-
-- `MessageId` — caller-generated idempotency key (stable across retries)
-- `CorrelationId` — business id (payment intent, session id, contact submission, etc.)
-- `Category` — `Transactional` (v1) or `Marketing` (Phase 2; currently skipped by consumer)
-- `TemplateKey` — maps to `*.html.hbs` / `*.txt.hbs` under Notifications.Infrastructure
+---
 
 ## Configuration
 
@@ -49,9 +149,26 @@ Message type: `TranzrMoves.Notifications.Contracts.SendNotification`
 | `ConnectionStrings:TranzrMovesDatabaseConnection` | Api, Worker, Notifications |
 | `ConnectionStrings:rabbitmq` | Api, Worker, Notifications |
 | `Notifications:EmailProvider` | Notifications (`Acs` or `Smtp`) |
-| `Notifications:Smtp:*` | Notifications (when provider is `Smtp`) |
-| `COMMUNICATION_SERVICES_CONNECTION_STRING` | Notifications (when provider is `Acs`) |
 | `Notifications:UseDurableMessaging` | `true` in prod; `false` in tests |
+| `QuoteReminders:*` | Worker Scheduler |
+
+---
+
+## Observability
+
+Meter: `TranzrMoves.Notifications`
+
+| Metric | Meaning |
+|--------|---------|
+| `notifications.delivery.succeeded` | Email sent |
+| `notifications.delivery.failed` | Send failed (retry / DLQ) |
+| `notifications.delivery.skipped` | Duplicate, consent block, unsupported channel |
+| `notifications.marketing.sent` | Marketing email sent |
+| `notifications.marketing.blocked` | Marketing blocked by consent |
+
+Monitor the `notifications-send` dead-letter queue in RabbitMQ.
+
+---
 
 ## Local development
 
@@ -61,11 +178,9 @@ dotnet ef database update --project Src/TranzrMoves.Infrastructure --startup-pro
 dotnet run --project Src/TranzrMoves.Notifications
 ```
 
-Health: `GET http://localhost:8081/healthz` when using docker-compose `notifications` service.
-SMTP UI (local): `http://localhost:8025` when using docker-compose `smtp4dev` service.
+| Service | URL |
+|---------|-----|
+| Notifications health | `http://localhost:8081/healthz` |
+| SMTP UI (local) | `http://localhost:8025` |
 
-## Phase 2 (not yet implemented)
-
-- `Marketing` category with consent tables
-- Quote reminder publisher from Worker
-- Admin resend API (optional)
+Worker Scheduler (quote reminders): `Worker:Role=Scheduler` or `All` in Development.

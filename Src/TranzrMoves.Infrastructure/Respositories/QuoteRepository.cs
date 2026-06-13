@@ -187,4 +187,25 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
                     p.Status == StripePaymentStatus.Paid))
             .ToListAsync(ct);
     }
+
+    public Task<List<QuoteV2>> GetQuotesDueForReminderAsync(
+        Instant idleBefore,
+        Instant cooldownBefore,
+        Instant now,
+        CancellationToken ct = default)
+    {
+        return db.Set<QuoteV2>()
+            .AsTracking()
+            .Include(x => x.Customer)
+            .Where(q =>
+                q.Customer != null &&
+                q.Customer.Email != null &&
+                q.Customer.Email != "" &&
+                (q.ExpiresAt == null || q.ExpiresAt > now) &&
+                (q.PaymentStatus == null || q.PaymentStatus == PaymentStatus.Pending) &&
+                (q.StepsCompleted & QuoteSteps.CustomerEmailAndPhoneNumber) == QuoteSteps.CustomerEmailAndPhoneNumber &&
+                q.ModifiedAt <= idleBefore &&
+                (q.LastResumeEmailSentAt == null || q.LastResumeEmailSentAt <= cooldownBefore))
+            .ToListAsync(ct);
+    }
 }

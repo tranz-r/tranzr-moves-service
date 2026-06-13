@@ -8,6 +8,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\TranzrMoves.Domain\TranzrMoves.Domain.csproj"/>
+        <ProjectReference Include="..\TranzrMoves.Notifications.Application\TranzrMoves.Notifications.Application.csproj"/>
+        <ProjectReference Include="..\TranzrMoves.Notifications.Contracts\TranzrMoves.Notifications.Contracts.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

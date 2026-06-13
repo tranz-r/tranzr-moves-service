@@ -15,4 +15,6 @@ public sealed class TranzrObservabilityOptions
     public bool ExportMetrics { get; init; } = true;
 
     public bool ExportTraces { get; init; } = true;
+
+    public IReadOnlyList<string> AdditionalMeters { get; init; } = [];
 }

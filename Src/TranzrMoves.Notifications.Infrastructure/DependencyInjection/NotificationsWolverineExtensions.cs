@@ -44,10 +44,10 @@ public static class NotificationsWolverineExtensions
         {
             options.UseEntityFrameworkCoreTransactions();
 
-            var listener = options.ListenToRabbitQueue(NotificationsQueueName);
+            var sendListener = options.ListenToRabbitQueue(NotificationsQueueName);
             if (notificationsOptions.UseDurableMessaging)
             {
-                listener.UseDurableInbox();
+                sendListener.UseDurableInbox();
             }
         }
 

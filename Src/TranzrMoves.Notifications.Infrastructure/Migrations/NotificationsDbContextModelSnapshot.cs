@@ -24,6 +24,99 @@ namespace TranzrMoves.Notifications.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("TranzrMoves.Notifications.Infrastructure.Entities.CustomerMarketingPreference", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Instant>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<Instant?>("EmailMarketingConsentedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("EmailMarketingEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<Instant?>("SmsMarketingConsentedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("SmsMarketingEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<Instant>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("CustomerMarketingPreferences", "notifications");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Notifications.Infrastructure.Entities.MarketingConsentEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("CustomerMarketingPreferenceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)");
+
+                    b.Property<Instant>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerMarketingPreferenceId");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.ToTable("MarketingConsentEvents", "notifications");
+                });
+
             modelBuilder.Entity("TranzrMoves.Notifications.Infrastructure.Entities.NotificationDelivery", b =>
                 {
                     b.Property<Guid>("MessageId")
@@ -74,6 +167,22 @@ namespace TranzrMoves.Notifications.Infrastructure.Migrations
                     b.HasIndex("Status", "CreatedAt");
 
                     b.ToTable("NotificationDeliveries", "notifications");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Notifications.Infrastructure.Entities.MarketingConsentEvent", b =>
+                {
+                    b.HasOne("TranzrMoves.Notifications.Infrastructure.Entities.CustomerMarketingPreference", "Preference")
+                        .WithMany("Events")
+                        .HasForeignKey("CustomerMarketingPreferenceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Preference");
+                });
+
+            modelBuilder.Entity("TranzrMoves.Notifications.Infrastructure.Entities.CustomerMarketingPreference", b =>
+                {
+                    b.Navigation("Events");
                 });
 #pragma warning restore 612, 618
         }
