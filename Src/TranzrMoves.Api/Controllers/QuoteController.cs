@@ -495,9 +495,11 @@ public class QuoteController(
         Summary = "Evaluate resume token and return journey decision",
         Description =
             "Accepts a signed resume `token` (from email/link flows). " +
+            "Call `POST .../ensure` first so the `tranzr_guest` cookie exists. " +
+            "When the cookie differs from the quote session, the quote is rebound to the current guest (cross-device resume). " +
             "On success when resumable, returns **`QuoteJourneyState`** (not the full `QuoteJourneyResponse`). " +
             "Use `GET .../journey-state` with the returned `quoteId` to hydrate the full quote + journey. " +
-            "Returns **400** for invalid/expired token, **401** when session does not match token, **404** if quote missing.",
+            "Returns **400** for invalid/expired token or non-resumable quote, **401** when the guest cookie is missing or the token session is stale, **404** if quote missing.",
         Tags = new[] { "Quote (v2)" })]
     [Consumes("application/json")]
     [Produces("application/json")]
@@ -509,6 +511,12 @@ public class QuoteController(
         [FromBody] ResumeQuoteRequest request,
         CancellationToken ct)
     {
+        var guestId = Request.Cookies[CookieName];
+        if (string.IsNullOrWhiteSpace(guestId))
+        {
+            return Unauthorized();
+        }
+
         QuoteResumeTokenPayload payload;
         try
         {
@@ -520,12 +528,27 @@ public class QuoteController(
             return BadRequest(new { message = "Invalid or expired resume token." });
         }
 
-        var quote = await quoteRepository.GetQuoteByIdAsync(payload.QuoteId, ct);
+        var quote = await quoteRepository.GetQuoteByIdAsync(payload.QuoteId, ct, asTracking: true);
         if (quote is null)
             return NotFound();
 
         if (!string.Equals(quote.SessionId, payload.SessionId, StringComparison.Ordinal))
+        {
+            logger.LogWarning(
+                "Quote resume token session mismatch for quote {QuoteId}. Token may have been superseded by a newer session.",
+                quote.Id);
             return Unauthorized();
+        }
+
+        if (!string.Equals(quote.SessionId, guestId, StringComparison.Ordinal))
+        {
+            quote.SessionId = guestId;
+            var saveResult = await quoteRepository.SaveChangesAsync(ct);
+            if (saveResult.IsError)
+            {
+                return Problem(saveResult.Errors);
+            }
+        }
 
         var decision = quoteResumeResolver.Resolve(quote);
 

@@ -363,9 +363,10 @@ Quote reminder worker published 1 reminders
 http://localhost:3000/<resume-path>?token=<signed-token>
 ```
 
-5. **Call the resume API** — copy the `token` query value. Use the **same browser session** (or curl cookie jar) that created the quote, because `POST /api/v2/quote/resume` returns **401** when the `tranzr_guest` cookie does not match the quote session:
+5. **Call the resume API** — copy the `token` query value. Call `POST /api/v2/quote/resume` with the guest cookie from step 2 (`ensure` sets `tranzr_guest`). The API **rebinds** the quote to that cookie when it differs from the original device, so the same link works on another phone or laptop.
 
 ```bash
+curl -c cookies.txt -b cookies.txt -X POST http://localhost:5247/api/v2/quote/ensure
 curl -b cookies.txt -X POST http://localhost:5247/api/v2/quote/resume \
   -H "Content-Type: application/json" \
   -d '{"token":"PASTE_TOKEN_HERE"}'
@@ -385,7 +386,7 @@ If the frontend runs on http://localhost:3000, open the resume link from smtp4de
 | RabbitMQ UI | http://localhost:15672 → queue `notifications-send` message consumed |
 | smtp4dev | `quote-reminder` email with resume CTA |
 | Postgres | `LastResumeEmailSentAt` set on the quote row |
-| Resume API | **200** + `isResumable: true` with same guest cookie; **401** if cookie/session differs |
+| Resume API | **200** + `isResumable: true`; quote `SessionId` rebound to current guest cookie when needed |
 
 Automated coverage: `Tests/TranzrMoves.UnitTests/Worker/QuoteReminderWorkerTests.cs` (message idempotency) and notification handler tests for the `quote-reminder` template.
 
@@ -438,7 +439,8 @@ Run the Worker with `dotnet run --project Src/TranzrMoves.Worker` (launch settin
 
 ### `POST /api/v2/quote/resume` returns 401
 
-The signed token is bound to the quote's guest session. Call resume with the same `tranzr_guest` cookie that created the quote (same browser tab or saved curl cookie jar).
+- Call `POST /api/v2/quote/ensure` first so the `tranzr_guest` cookie is present.
+- A token issued before a successful rebind on another device is stale (session mismatch) — use the latest email link or start a new quote.
 
 ---
 

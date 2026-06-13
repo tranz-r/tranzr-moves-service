@@ -87,9 +87,13 @@ Use **`/api/v2/quote/...`**, **`credentials: "include"`** (guest cookie), and tr
 ## 6. Resume
 
 - **Same device / session:** use stored **`quoteId`** + **`GET .../journey-state`** to hydrate and then follow **`journey`**.
-- **Token link:** **`POST /api/v2/quote/resume`** with `{ token }`; handle **`isResumable`**, **`reasonIfNotResumable`**, and navigate using returned journey hints when the API provides them.
+- **Token link (email):**
+  1. Call **`POST /api/v2/quote/ensure`** so the guest cookie exists.
+  2. Call **`POST /api/v2/quote/resume`** with `{ token }` (from the link query string).
+  3. On **200**, call **`GET /api/v2/quote/{quoteId}/journey-state`** to hydrate the full quote.
+  4. Navigate using **`journey.resumeUrl`** / **`resumeStepKey`**; strip `token` from the URL.
 
-(Concurrency on resume **POST** follows whatever the API contract is; all **mutating** journey updates go through **PATCH** + **`If-Match`**.)
+The API **rebinds** the quote to the current `tranzr_guest` cookie when it differs from the original session (cross-device resume). **401** means the guest cookie is missing or the token session is stale (e.g. after a successful rebind on another device). Handle **`isResumable`**, **`reasonIfNotResumable`**, and non-resumable **400** responses in the UI.
 
 ---
 

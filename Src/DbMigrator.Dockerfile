@@ -10,6 +10,7 @@ COPY Directory.Packages.props .
 COPY Src/TranzrMoves.Domain Src/TranzrMoves.Domain
 COPY Src/TranzrMoves.Application Src/TranzrMoves.Application
 COPY Src/TranzrMoves.Notifications.Contracts Src/TranzrMoves.Notifications.Contracts
+COPY Src/TranzrMoves.Notifications.Application Src/TranzrMoves.Notifications.Application
 COPY Src/TranzrMoves.Notifications.Infrastructure Src/TranzrMoves.Notifications.Infrastructure
 COPY Src/TranzrMoves.Infrastructure Src/TranzrMoves.Infrastructure
 
