@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using NodaTime;
 using TranzrMoves.Application.Services;
 using TranzrMoves.Application.Statics;
