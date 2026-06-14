@@ -14,6 +14,8 @@ public sealed class QuoteReminderWorker(
     IOptions<QuoteRemindersOptions> options,
     ILogger<QuoteReminderWorker> logger) : BackgroundService
 {
+    public const string QuoteResumeFrontendPath = "/moves/quote";
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (!options.Value.Enabled)
@@ -77,7 +79,10 @@ public sealed class QuoteReminderWorker(
             var resumeToken = resumeTokenService.Create(
                 quote,
                 TimeSpan.FromDays(reminderOptions.ResumeTokenLifetimeDays));
-            var resumeUrl = BuildResumeUrl(reminderOptions.FrontendBaseUrl, journey.ResumeUrl, resumeToken);
+            var resumeUrl = BuildResumeUrl(
+                reminderOptions.FrontendBaseUrl,
+                QuoteResumeFrontendPath,
+                resumeToken);
 
             var customerName = $"{quote.Customer.FirstName?.Trim()} {quote.Customer.LastName?.Trim()}".Trim();
             if (string.IsNullOrWhiteSpace(customerName))
@@ -105,8 +110,7 @@ public sealed class QuoteReminderWorker(
                     templateData),
                 cancellationToken);
 
-            quote.LastResumeEmailSentAt = now;
-            var saveResult = await quoteRepository.SaveChangesAsync(cancellationToken);
+            var saveResult = await quoteRepository.MarkQuoteResumeEmailSentAsync(quote.Id, now, cancellationToken);
             if (saveResult.IsError)
             {
                 logger.LogWarning(
@@ -133,7 +137,7 @@ public sealed class QuoteReminderWorker(
         return new Guid(hash.AsSpan(0, 16));
     }
 
-    private static string BuildResumeUrl(string frontendBaseUrl, string resumePath, string token)
+    public static string BuildResumeUrl(string frontendBaseUrl, string resumePath, string token)
     {
         var baseUrl = frontendBaseUrl.TrimEnd('/');
         var path = resumePath.StartsWith('/') ? resumePath : $"/{resumePath}";

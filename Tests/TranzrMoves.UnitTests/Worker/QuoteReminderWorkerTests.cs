@@ -19,6 +19,17 @@ public sealed class QuoteReminderWorkerTests
     }
 
     [Fact]
+    public void BuildResumeUrl_UsesQuoteResumeEntryPath()
+    {
+        var url = QuoteReminderWorker.BuildResumeUrl(
+            "http://localhost:3000/",
+            QuoteReminderWorker.QuoteResumeFrontendPath,
+            "token/with+special=chars");
+
+        url.Should().Be("http://localhost:3000/moves/quote?token=token%2Fwith%2Bspecial%3Dchars");
+    }
+
+    [Fact]
     public void CreateReminderMessageId_ChangesAcrossCooldownWindows()
     {
         var quoteId = Guid.Parse("11111111-1111-1111-1111-111111111111");

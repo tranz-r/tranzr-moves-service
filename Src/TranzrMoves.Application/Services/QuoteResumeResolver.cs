@@ -44,12 +44,12 @@ public sealed class QuoteResumeResolver : IQuoteResumeResolver
 
         var journey = _journeyProvider.Get(quote.Type);
 
-        quote.StepsCompleted = _progressCalculator.CalculateCompletedSteps(quote);
+        var stepsCompleted = _progressCalculator.CalculateCompletedSteps(quote);
 
         var firstIncomplete = journey.Steps
             .FirstOrDefault(x => x.Required && !IsEffectivelyComplete(quote, x));
 
-        var resumeStep = firstIncomplete ?? journey.Steps.Last();
+        var resumeStep = ResolveResumeStep(journey, quote.LastCompletedStepKey, firstIncomplete);
 
         var steps = journey.Steps
             .Select(step => new QuoteStepStateDto
@@ -61,7 +61,7 @@ public sealed class QuoteResumeResolver : IQuoteResumeResolver
             .ToArray();
 
         var completedSteps = journey.Steps
-            .Where(step => (quote.StepsCompleted & step.Flag) == step.Flag)
+            .Where(step => (stepsCompleted & step.Flag) == step.Flag)
             .Select(step => step.Key)
             .ToArray();
 
@@ -75,6 +75,23 @@ public sealed class QuoteResumeResolver : IQuoteResumeResolver
             steps);
     }
 
+    private static QuoteJourneyStep ResolveResumeStep(
+        QuoteJourney journey,
+        string? lastCompletedStepKey,
+        QuoteJourneyStep? firstIncomplete)
+    {
+        if (!string.IsNullOrWhiteSpace(lastCompletedStepKey))
+        {
+            var lastCompletedIndex = journey.Steps.FindIndex(x => x.Key == lastCompletedStepKey);
+            if (lastCompletedIndex >= 0 && lastCompletedIndex < journey.Steps.Count - 1)
+            {
+                return journey.Steps[lastCompletedIndex + 1];
+            }
+        }
+
+        return firstIncomplete ?? journey.Steps.Last();
+    }
+
     private static bool IsEffectivelyComplete(QuoteV2 quote, QuoteJourneyStep step)
     {
         var isDirty = (quote.StepsDirty & step.Flag) == step.Flag;
@@ -85,11 +102,11 @@ public sealed class QuoteResumeResolver : IQuoteResumeResolver
 
     private static string BuildStatus(QuoteJourneyStep step, QuoteJourneyStep resumeStep, QuoteV2 quote)
     {
-        if (IsEffectivelyComplete(quote, step))
-            return "complete";
-
         if (step.Key == resumeStep.Key)
             return "current";
+
+        if (IsEffectivelyComplete(quote, step))
+            return "complete";
 
         if ((quote.StepsDirty & step.Flag) == step.Flag)
             return "stale";

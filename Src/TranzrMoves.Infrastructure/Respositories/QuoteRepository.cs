@@ -195,7 +195,7 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
         CancellationToken ct = default)
     {
         return db.Set<QuoteV2>()
-            .AsTracking()
+            .AsNoTracking()
             .Include(x => x.Customer)
             .Where(q =>
                 q.Customer != null &&
@@ -203,9 +203,28 @@ public class QuoteRepository(TranzrMovesDbContext db, ITimeService timeService, 
                 q.Customer.Email != "" &&
                 (q.ExpiresAt == null || q.ExpiresAt > now) &&
                 (q.PaymentStatus == null || q.PaymentStatus == PaymentStatus.Pending) &&
-                (q.StepsCompleted & QuoteSteps.CustomerEmailAndPhoneNumber) == QuoteSteps.CustomerEmailAndPhoneNumber &&
+                q.Customer!.PhoneNumber != null &&
+                q.Customer.PhoneNumber != "" &&
                 q.ModifiedAt <= idleBefore &&
                 (q.LastResumeEmailSentAt == null || q.LastResumeEmailSentAt <= cooldownBefore))
             .ToListAsync(ct);
+    }
+
+    public async Task<ErrorOr<bool>> MarkQuoteResumeEmailSentAsync(
+        Guid quoteId,
+        Instant sentAt,
+        CancellationToken ct = default)
+    {
+        var updated = await db.Set<QuoteV2>()
+            .Where(q => q.Id == quoteId)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(q => q.LastResumeEmailSentAt, sentAt)
+                    .SetProperty(q => q.ModifiedAt, sentAt),
+                ct);
+
+        return updated == 1
+            ? true
+            : Error.NotFound($"No quote found for id {quoteId}");
     }
 }

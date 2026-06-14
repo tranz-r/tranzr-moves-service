@@ -47,6 +47,8 @@ public interface IQuoteRepository
         Instant cooldownBefore,
         Instant now,
         CancellationToken ct = default);
+
+    Task<ErrorOr<bool>> MarkQuoteResumeEmailSentAsync(Guid quoteId, Instant sentAt, CancellationToken ct = default);
 }
 
 

@@ -119,8 +119,9 @@ services:
       CHECKOUT_SESSION_SUCCESS_URL: http://localhost:3000/checkout/success
       CHECKOUT_SESSION_CANCEL_URL: http://localhost:3000/checkout/cancel
       QuoteReminders__FrontendBaseUrl: http://localhost:3000
-      QuoteReminders__NotificationsBaseUrl: http://localhost:8081
       STRIPE_API_KEY: ${STRIPE_API_KEY:-}
+      QuoteReminders__IdleHoursBeforeReminder: 0
+      QuoteReminders__ScanIntervalMinutes: 30
 
 volumes:
   tranzr-postgres-data:
