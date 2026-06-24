@@ -8,6 +8,7 @@ Architecture and flow documentation for Tranzr Moves services. Each feature has 
 |---------|-------------|
 | [balance-charges](balance-charges/balance-charges.md) | Pay-later and deposit remaining balance collection |
 | [notifications](notifications/notifications.md) | Email (transactional + marketing), quote reminders, marketing preferences |
+| [business-account](business-account/business-account.md) | Business tenant registration, JWT auth, owner portal by account id |
 
 ## Conventions
 

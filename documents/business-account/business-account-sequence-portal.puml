@@ -1,0 +1,33 @@
+@startuml business-account-sequence-portal
+title Business account portal sequence
+
+actor Owner
+participant "Frontend\n(Business Portal)" as FE
+participant "TranzrMoves.Api\nBusinessAccountsController" as API
+participant "JwtBearer\nmiddleware" as Jwt
+participant "ICurrentBusinessUserContext" as Context
+participant "Authorization\n(BusinessUser / BusinessOwner)" as Authz
+participant "Get / Update\nhandlers" as Handler
+database "PostgreSQL" as PG
+
+Owner -> FE : Open account settings
+FE -> API : GET or PUT /api/v1/BusinessAccounts/{id}\nBearer JWT
+
+API -> Jwt : Validate access token (OIDC / JWKS)
+Jwt --> API : Claims (sub, email)
+
+API -> Context : Resolve BusinessUser from sub
+Context -> PG : Load UserV2 by SupabaseId\n→ BusinessUser
+PG --> Context : membership
+
+API -> Authz : BusinessUser or BusinessOwner policy
+Authz --> API : authorized
+
+API -> Handler : GetBusinessAccountQuery\nor UpdateBusinessAccountCommand
+Handler -> PG : Read / update BusinessAccount\n(scoped by BusinessAccountId)
+PG --> Handler : account
+Handler --> API : BusinessAccountDto
+API --> FE : 200 OK
+FE -> Owner : Display / confirm update
+
+@enduml

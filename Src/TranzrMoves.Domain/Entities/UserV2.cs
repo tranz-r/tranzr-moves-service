@@ -10,6 +10,7 @@ public class UserV2 : IAuditable
     public string? LastName { get; set; }
     public string? Email { get; set; }
     public string? PhoneNumber { get; set; }
+    public Guid? SupabaseId { get; set; }
 
     /// <summary>Profile addresses for this user (billing, residential, commercial), keyed by <see cref="AddressType"/>.</summary>
     public ICollection<AddressV2> Addresses { get; set; } = new List<AddressV2>();

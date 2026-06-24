@@ -1,5 +1,6 @@
 ﻿using System.Data.Common;
 using AutoBogus;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -65,7 +66,9 @@ public class TestServerFixture : WebApplicationFactory<TranzrMoves.Api.Program>,
                 ["ConnectionStrings:TranzrMovesDatabaseConnection"] = _postgres.GetConnectionString(),
                 ["ConnectionStrings:redis"] = "127.0.0.1:6379,abortConnect=false,connectTimeout=100",
                 ["TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET_V2"] = "whsec_test",
-                ["Notifications:UseDurableMessaging"] = "false"
+                ["Notifications:UseDurableMessaging"] = "false",
+                ["SUPABASE_URL"] = "https://supabase.example.test",
+                ["SUPABASE_SERVICE_ROLE_KEY"] = "test-service-role-key",
             });
         });
 
@@ -75,13 +78,19 @@ public class TestServerFixture : WebApplicationFactory<TranzrMoves.Api.Program>,
             services.RemoveAll<StripeClient>();
             services.AddSingleton(_ => new StripeClient(stripeApiKey));
 
+            services.RemoveAll<ISupabaseAuthAdminService>();
+            services.AddAuthentication(TestAuthDefaults.Scheme)
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthDefaults.Scheme, _ => { });
             services.RemoveAll<DbContextOptions<TranzrMovesDbContext>>();
             services.RemoveAll<DbConnection>();
             services.RemoveAll<INotificationPublisher>();
             services.RemoveAll<IConnectionMultiplexer>();
             services.RemoveAll<IBalanceChargeScheduler>();
             services.RemoveAll<ICollectQuoteV2BalanceChargePublisher>();
+            services.RemoveAll<ITurnstileService>();
 
+            services.AddSingleton<ISupabaseAuthAdminService, NoOpSupabaseAuthAdminService>();
+            services.AddSingleton<ITurnstileService, NoOpTurnstileService>();
             services.AddScoped<AuditableInterceptor>();
             services.AddSingleton<RecordingNotificationPublisher>();
             services.AddScoped<INotificationPublisher>(sp =>

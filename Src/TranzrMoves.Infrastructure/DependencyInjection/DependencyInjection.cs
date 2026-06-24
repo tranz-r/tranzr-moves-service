@@ -14,6 +14,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<ITurnstileService, TurnstileService>();
+        services.AddSingleton<ISupabaseAuthAdminService, SupabaseAuthAdminService>();
         services.AddScoped<INotificationPublisher, WolverineNotificationPublisher>();
 
         services.AddScoped<IQuoteV2HostedCheckoutSessionService, QuoteV2HostedCheckoutSessionService>();
@@ -35,6 +36,8 @@ public static class DependencyInjection
         services.AddPayLaterInfrastructure(configuration);
 
         services.AddTransient<IUserV2Repository, UserV2Repository>();
+        services.AddTransient<IBusinessAccountRepository, BusinessAccountRepository>();
+        services.AddTransient<IBusinessUserRepository, BusinessUserRepository>();
         services.AddTransient<IQuoteRepository, QuoteRepository>();
 
         services.AddTransient<IRemovalPricingRepository, RemovalPricingRepository>();

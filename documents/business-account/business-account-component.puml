@@ -1,0 +1,49 @@
+@startuml business-account-component
+title Business account - component diagram
+
+skinparam componentStyle rectangle
+
+package "Business Portal (frontend)" {
+  [Registration wizard] as Wizard
+}
+
+cloud "Cloudflare Turnstile" as Turnstile
+cloud "Supabase Auth" as Supabase
+
+package "TranzrMoves.Api" {
+  [BusinessAccountsController] as Controller
+  [JwtBearer middleware] as Jwt
+  [TurnstileService] as TurnstileSvc
+}
+
+package "Application" {
+  [RegisterBusinessAccountCommandHandler] as Register
+  [GetBusinessAccountQueryHandler] as Get
+  [UpdateBusinessAccountCommandHandler] as Update
+  [ICurrentBusinessUserContext] as Context
+}
+
+database "PostgreSQL" as PG {
+  [BusinessAccounts]
+  [BusinessUsers]
+  [UsersV2]
+}
+
+Wizard --> Turnstile : widget / token
+Wizard --> Supabase : signInWithOtp / verifyOtp
+Wizard --> Controller : POST register\nBearer JWT + turnstileToken
+Wizard --> Controller : GET/PUT /{id}\nBearer JWT
+
+Controller --> TurnstileSvc : validate (register)
+Controller --> Jwt : validate token
+Controller --> Register
+Controller --> Get
+Controller --> Update
+
+Register --> PG : RegisterAsync transaction
+Get --> Context : resolve BusinessUser
+Update --> Context : resolve BusinessUser (Owner)
+Get --> PG
+Update --> PG
+
+@enduml

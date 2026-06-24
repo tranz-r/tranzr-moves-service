@@ -149,3 +149,27 @@ public enum QuoteAddressKind
     Destination,
     Base
 }
+
+public enum BusinessAccountStatus
+{
+    Active = 0,
+    Suspended,
+    Closed
+}
+
+public enum BusinessUserStatus
+{
+    Active = 0,
+    Invited,
+    Suspended,
+    Deactivated
+}
+
+public enum BusinessUserRole
+{
+    Owner = 0,
+    Admin,
+    Finance,
+    Member,
+    Viewer
+}

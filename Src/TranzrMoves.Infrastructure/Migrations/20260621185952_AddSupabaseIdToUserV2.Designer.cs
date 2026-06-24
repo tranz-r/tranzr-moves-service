@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using TranzrMoves.Infrastructure;
 namespace TranzrMoves.Infrastructure.Migrations
 {
     [DbContext(typeof(TranzrMovesDbContext))]
-    partial class TranzrMovesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260621185952_AddSupabaseIdToUserV2")]
+    partial class AddSupabaseIdToUserV2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -188,111 +191,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .HasDatabaseName("IX_AddressesV2_UserId_Type");
 
                     b.ToTable("AddressesV2", "tranzrmoves");
-                });
-
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.BusinessAccount", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("BusinessEmail")
-                        .IsRequired()
-                        .HasMaxLength(320)
-                        .HasColumnType("character varying(320)");
-
-                    b.Property<string>("BusinessName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("BusinessPhone")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<string>("CompanyRegistrationNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<Instant>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Instant>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("TradingName")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("VatNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BusinessEmail")
-                        .IsUnique()
-                        .HasDatabaseName("IX_BusinessAccounts_BusinessEmail");
-
-                    b.ToTable("BusinessAccounts", "tranzrmoves");
-                });
-
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.BusinessUser", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("BusinessAccountId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Instant>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Instant>("ModifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ModifiedBy")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BusinessAccountId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_BusinessUsers_UserId");
-
-                    b.ToTable("BusinessUsers", "tranzrmoves");
                 });
 
             modelBuilder.Entity("TranzrMoves.Domain.Entities.InventoryCategory", b =>
@@ -1159,126 +1057,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.BusinessAccount", b =>
-                {
-                    b.OwnsOne("TranzrMoves.Domain.Entities.BillingAddress", "BillingAddress", b1 =>
-                        {
-                            b1.Property<Guid>("BusinessAccountId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Accuracy")
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)");
-
-                            b1.Property<string>("AddressNumber")
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)");
-
-                            b1.Property<string>("City")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
-
-                            b1.Property<string>("Country")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
-
-                            b1.Property<string>("CountryCode")
-                                .HasMaxLength(10)
-                                .HasColumnType("character varying(10)");
-
-                            b1.Property<string>("County")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
-
-                            b1.Property<string>("District")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
-
-                            b1.Property<int?>("Floor")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("FullAddress")
-                                .HasMaxLength(1000)
-                                .HasColumnType("character varying(1000)");
-
-                            b1.Property<bool?>("HasElevator")
-                                .HasColumnType("boolean");
-
-                            b1.Property<double?>("Latitude")
-                                .HasColumnType("double precision");
-
-                            b1.Property<string>("Line1")
-                                .IsRequired()
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)");
-
-                            b1.Property<string>("Line2")
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)");
-
-                            b1.Property<double?>("Longitude")
-                                .HasColumnType("double precision");
-
-                            b1.Property<string>("MapboxId")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
-
-                            b1.Property<string>("Neighborhood")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
-
-                            b1.Property<string>("PlaceName")
-                                .HasMaxLength(1000)
-                                .HasColumnType("character varying(1000)");
-
-                            b1.Property<string>("PostCode")
-                                .IsRequired()
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)");
-
-                            b1.Property<string>("Region")
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
-
-                            b1.Property<string>("RegionCode")
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)");
-
-                            b1.Property<string>("Street")
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)");
-
-                            b1.HasKey("BusinessAccountId");
-
-                            b1.ToTable("BusinessAccounts", "tranzrmoves");
-
-                            b1.WithOwner()
-                                .HasForeignKey("BusinessAccountId");
-                        });
-
-                    b.Navigation("BillingAddress")
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.BusinessUser", b =>
-                {
-                    b.HasOne("TranzrMoves.Domain.Entities.BusinessAccount", "BusinessAccount")
-                        .WithMany("BusinessUsers")
-                        .HasForeignKey("BusinessAccountId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("TranzrMoves.Domain.Entities.UserV2", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("BusinessAccount");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("TranzrMoves.Domain.Entities.InventoryGood", b =>
                 {
                     b.HasOne("TranzrMoves.Domain.Entities.InventoryCategory", "Category")
@@ -1440,11 +1218,6 @@ namespace TranzrMoves.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Quote");
-                });
-
-            modelBuilder.Entity("TranzrMoves.Domain.Entities.BusinessAccount", b =>
-                {
-                    b.Navigation("BusinessUsers");
                 });
 
             modelBuilder.Entity("TranzrMoves.Domain.Entities.InventoryCategory", b =>

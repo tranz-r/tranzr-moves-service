@@ -19,5 +19,10 @@ public sealed class UserV2Configuration : IEntityTypeConfiguration<UserV2>
 
         builder.HasIndex(x => x.Email)
             .HasDatabaseName("IX_UsersV2_Email").IsUnique();
+
+        builder.HasIndex(x => x.SupabaseId)
+            .HasDatabaseName("IX_UsersV2_SupabaseId")
+            .IsUnique()
+            .HasFilter("\"SupabaseId\" IS NOT NULL");
     }
 }

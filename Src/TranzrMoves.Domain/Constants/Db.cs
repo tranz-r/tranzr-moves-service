@@ -27,5 +27,7 @@ public static class Db
         public const string LegalDocuments = nameof(LegalDocuments);
         public const string InventoryCategories = nameof(InventoryCategories);
         public const string InventoryGoods = nameof(InventoryGoods);
+        public const string BusinessAccounts = nameof(BusinessAccounts);
+        public const string BusinessUsers = nameof(BusinessUsers);
     }
 }

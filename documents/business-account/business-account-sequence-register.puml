@@ -1,0 +1,36 @@
+@startuml business-account-sequence-register
+title Business account registration sequence
+
+actor User
+participant "Frontend\n(Business Portal)" as FE
+participant "Cloudflare\nTurnstile" as TS
+participant "Supabase Auth" as SB
+participant "TranzrMoves.Api\nBusinessAccountsController" as API
+participant "TurnstileService" as TurnstileSvc
+participant "RegisterBusinessAccount\nCommandHandler" as Handler
+database "PostgreSQL" as PG
+
+User -> FE : Business + owner details
+FE -> TS : Render widget / get token
+TS --> FE : turnstileToken
+FE -> SB : signInWithOtp(owner.email)
+SB --> FE : OTP sent
+User -> FE : Enter OTP
+FE -> SB : verifyOtp(email, token, email)
+SB --> FE : session.access_token + user
+
+FE -> API : POST /api/v1/BusinessAccounts/register\nBearer JWT + turnstileToken + payload
+API -> TurnstileSvc : ValidateTokenAsync(turnstileToken)
+TurnstileSvc --> API : success
+API -> Handler : RegisterBusinessAccountCommand
+note over Handler
+  JWT sub → UserV2.SupabaseId
+  owner.email must match JWT email
+end note
+Handler -> PG : Transaction:\nUserV2 + BusinessAccount + BusinessUser (Owner)
+PG --> Handler : committed
+Handler --> API : 201 Created
+API --> FE : RegisterBusinessAccountResponse
+FE -> User : Business Dashboard
+
+@enduml

@@ -51,6 +51,10 @@ public class UserV2Repository(TranzrMovesDbContext dbContext, ILogger<UserV2Repo
         => await dbContext.Set<UserV2>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.Email == emailAddress, cancellationToken);
 
+    public async Task<UserV2?> GetUserBySupabaseIdAsync(Guid supabaseId, CancellationToken cancellationToken)
+        => await dbContext.Set<UserV2>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.SupabaseId == supabaseId, cancellationToken);
+
     public async Task<ErrorOr<UserV2>> UpdateUserAsync(UserV2 user,
         CancellationToken cancellationToken)
     {

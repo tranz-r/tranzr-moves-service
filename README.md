@@ -135,12 +135,11 @@ Get values from a teammate, then run **every command below**. Each secret must b
 Replace the placeholder values (`YOUR_...`, `sk_test_...`, etc.) with real values.
 
 ```bash
-# Supabase (API will not start without these)
-dotnet user-secrets set SUPABASE_URL "https://YOUR_PROJECT.supabase.co" --project Src/TranzrMoves.Api
-dotnet user-secrets set SUPABASE_URL "https://YOUR_PROJECT.supabase.co" --project Src/TranzrMoves.Worker
-
-dotnet user-secrets set SUPABASE_KEY "YOUR_SUPABASE_KEY" --project Src/TranzrMoves.Api
-dotnet user-secrets set SUPABASE_KEY "YOUR_SUPABASE_KEY" --project Src/TranzrMoves.Worker
+# Supabase Auth (API will not start without these — service role key is backend-only)
+dotnet user-secrets set SUPABASE_URL "https://supabase.labgrid.net" --project Src/TranzrMoves.Api
+dotnet user-secrets set SUPABASE_SERVICE_ROLE_KEY "YOUR_SERVICE_ROLE_KEY" --project Src/TranzrMoves.Api
+# Optional when SUPABASE_URL is set — must match GoTrue JWT issuer (e.g. https://supabase.labgrid.net/auth/v1)
+dotnet user-secrets set SUPABASE_JWT_ISSUER "https://supabase.labgrid.net/auth/v1" --project Src/TranzrMoves.Api
 
 # Stripe (use a test key: sk_test_...)
 dotnet user-secrets set STRIPE_API_KEY "sk_test_YOUR_KEY" --project Src/TranzrMoves.Api
@@ -403,7 +402,21 @@ Docker cannot start Postgres because another Postgres is bound to 5432.
 
 ### `Missing configuration for supabase` (API)
 
-Set `SUPABASE_URL` and `SUPABASE_KEY` on the Api project (Step 4).
+Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on the Api project (Step 4). Optionally set `SUPABASE_JWT_ISSUER` when it differs from `{SUPABASE_URL}/auth/v1`. The service role key must never be exposed to frontend clients; frontend OTP sign-in uses the anon/publishable key directly against Supabase Auth. The API validates Supabase access tokens via OIDC discovery and JWKS (asymmetric ES256), matching the API gateway.
+
+### Business account registration
+
+Business portal registration is a two-layer flow. See [documents/business-account/business-account.md](documents/business-account/business-account.md) for architecture, diagrams, and code map.
+
+1. **Frontend (Supabase OTP):** Collect business + owner details, obtain a Cloudflare Turnstile token, then `signInWithOtp` / `verifyOtp` with the anon key. Supabase creates the auth user (if new) and returns a JWT `access_token`.
+2. **Backend (Tranzr tenant):** `POST /api/v1/BusinessAccounts/register` with `Authorization: Bearer <jwt>`, `turnstileToken`, and the business/owner payload. The API validates Turnstile, validates the JWT, and atomically creates `UserV2`, `BusinessAccount`, and `BusinessUser` (Owner, Active).
+
+Authenticated business users can then call:
+
+- `GET /api/v1/BusinessAccounts/{id}` — any active business user (tenant-scoped)
+- `PUT /api/v1/BusinessAccounts/{id}` — owner only
+
+Set `TURNSTILE_SECRET_KEY` on the API for register bot protection (same as the contact form).
 
 ### `MAPBOX_BASE_URL is required` (Worker)
 

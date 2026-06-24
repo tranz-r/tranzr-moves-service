@@ -11,6 +11,8 @@ public interface IUserV2Repository
     Task<UserV2?> GetUserAsync(Guid userId, CancellationToken cancellationToken);
     Task<UserV2?> GetUserByEmailAsync(string? emailAddress, CancellationToken cancellationToken);
 
+    Task<UserV2?> GetUserBySupabaseIdAsync(Guid supabaseId, CancellationToken cancellationToken);
+
     Task<ErrorOr<UserV2>> UpdateUserAsync(UserV2 user,
         CancellationToken cancellationToken);
 

@@ -4,5 +4,7 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 
+
+projects_inbox
 .idea
 .env

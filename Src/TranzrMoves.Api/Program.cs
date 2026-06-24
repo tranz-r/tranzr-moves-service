@@ -8,12 +8,12 @@ using NodaTime;
 using NodaTime.Serialization.SystemTextJson;
 using Serilog;
 using Stripe;
-using Supabase;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using TranzrMoves.Api.Configuration;
 using TranzrMoves.Application.DependencyInjection;
 using TranzrMoves.Application.Services;
 using TranzrMoves.Domain.Constants;
+using TranzrMoves.Infrastructure.Authentication;
 using TranzrMoves.Infrastructure.DependencyInjection;
 using TranzrMoves.Infrastructure.Helper;
 using TranzrMoves.Infrastructure.Services;
@@ -103,6 +103,18 @@ try
     builder.Services.ConfigureTranzrMovesServices(builder.Configuration);
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddSupabaseJwtAuthentication(builder.Configuration, builder.Environment);
+
+    if (!builder.Environment.IsEnvironment("Testing"))
+    {
+        var supabaseUrl = builder.Configuration["SUPABASE_URL"];
+        var supabaseServiceRoleKey = builder.Configuration["SUPABASE_SERVICE_ROLE_KEY"];
+        if (string.IsNullOrWhiteSpace(supabaseUrl) || string.IsNullOrWhiteSpace(supabaseServiceRoleKey))
+        {
+            Log.Fatal("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY configuration");
+            throw new InvalidOperationException("Missing Supabase auth configuration.");
+        }
+    }
 
     if (!builder.Environment.IsEnvironment("Testing"))
     {
@@ -112,33 +124,6 @@ try
             opts.ConfigureNotificationsPublisher(builder.Configuration);
         });
     }
-
-    builder.Services.AddSingleton(_ =>
-    {
-        var url = builder.Configuration["SUPABASE_URL"];
-        var key = builder.Configuration["SUPABASE_KEY"];
-
-        var loggerFactory = LoggerFactory.Create(logging =>
-        {
-            logging.AddConsole();
-        });
-
-        var logger = loggerFactory.CreateLogger<Program>();
-
-        if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(key))
-        {
-            logger.LogCritical("Missing configuration for supabase url or key");
-            throw new ArgumentException("Missing configuration for superbase");
-        }
-
-        var options = new SupabaseOptions
-        {
-            AutoRefreshToken = true,
-            AutoConnectRealtime = true,
-        };
-
-        return new Client(url, key, options);
-    });
 
     var app = builder.Build();
     var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
@@ -164,6 +149,7 @@ try
     app.MapHealthChecks("/healthz");
     app.MapHealthChecks("/ready");
     app.UseCors(Cors.TranzrMovesCorsPolicy);
+    app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapControllers();

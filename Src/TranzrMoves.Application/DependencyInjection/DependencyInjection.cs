@@ -6,6 +6,7 @@ using TranzrMoves.Application.Common.Behaviors;
 using TranzrMoves.Application.Common.Strategy;
 using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Features.Quote.Journey.Init;
+using TranzrMoves.Application.Mapper;
 using TranzrMoves.Application.Services;
 using TranzrMoves.Domain.Interfaces;
 
@@ -36,6 +37,8 @@ public static class DependencyInjection
         services.AddScoped<IQuoteResumeResolver, QuoteResumeResolver>();
         services.AddScoped<IQuoteResumeTokenService, QuoteResumeTokenService>();
         services.AddScoped<IQuoteStepInvalidationService, QuoteStepInvalidationService>();
+
+        services.AddSingleton<BusinessAccountMapper>();
 
         services.AddTransient<IPricingStrategy, PickAndDropPricingStrategy>();
         services.AddTransient<IPricingStrategy, RemovalPricingStrategy>();
