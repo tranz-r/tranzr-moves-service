@@ -36,11 +36,11 @@ public static class SupabaseJwtAuthenticationExtensions
             return services;
         }
 
-        var issuer = ResolveJwtIssuer(configuration);
+        var issuer = configuration["SUPABASE_JWT_ISSUER"]?.TrimEnd('/');
         if (string.IsNullOrWhiteSpace(issuer))
         {
             throw new InvalidOperationException(
-                "Missing JWT issuer configuration. Set SUPABASE_JWT_ISSUER or SUPABASE_URL.");
+                "Missing JWT issuer configuration. Set SUPABASE_JWT_ISSUER.");
         }
 
         const string audience = "authenticated";
@@ -71,28 +71,5 @@ public static class SupabaseJwtAuthenticationExtensions
             });
 
         return services;
-    }
-
-    private static string? ResolveJwtIssuer(IConfiguration configuration)
-    {
-        var issuer = configuration["SUPABASE_JWT_ISSUER"]?.TrimEnd('/');
-        if (!string.IsNullOrWhiteSpace(issuer))
-        {
-            return issuer;
-        }
-
-        var supabaseUrl = configuration["SUPABASE_URL"]?.TrimEnd('/');
-        if (!string.IsNullOrWhiteSpace(supabaseUrl))
-        {
-            return $"{supabaseUrl}/auth/v1";
-        }
-
-        var projectId = configuration["SUPER_BASE_PROJECT_ID"];
-        if (!string.IsNullOrWhiteSpace(projectId))
-        {
-            return $"https://{projectId}.supabase.co/auth/v1";
-        }
-
-        return null;
     }
 }
