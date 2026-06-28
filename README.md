@@ -140,6 +140,11 @@ dotnet user-secrets set SUPABASE_URL "https://supabase.labgrid.net" --project Sr
 dotnet user-secrets set SUPABASE_SERVICE_ROLE_KEY "YOUR_SERVICE_ROLE_KEY" --project Src/TranzrMoves.Api
 # Optional when SUPABASE_URL is set — must match GoTrue JWT issuer (e.g. https://supabase.labgrid.net/auth/v1)
 dotnet user-secrets set SUPABASE_JWT_ISSUER "https://supabase.labgrid.net/auth/v1" --project Src/TranzrMoves.Api
+# Where Supabase sends invited business users after they click the invite link.
+# Must point to the Business Portal accept-invite page and fall under the GoTrue
+# redirect allow-list (GOTRUE_URI_ALLOW_LIST = .../auth/**), e.g.
+# https://portal.tranzrmoves.com/auth/accept-invite
+dotnet user-secrets set BUSINESS_PORTAL_INVITE_REDIRECT_URL "http://localhost:3002/auth/accept-invite" --project Src/TranzrMoves.Api
 
 # Stripe (use a test key: sk_test_...)
 dotnet user-secrets set STRIPE_API_KEY "sk_test_YOUR_KEY" --project Src/TranzrMoves.Api

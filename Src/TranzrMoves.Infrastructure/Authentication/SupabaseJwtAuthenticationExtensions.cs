@@ -19,6 +19,8 @@ public static class SupabaseJwtAuthenticationExtensions
         services.AddScoped<ICurrentBusinessUserContext, CurrentBusinessUserContext>();
         services.AddScoped<IAuthorizationHandler, BusinessUserAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, BusinessOwnerAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, BusinessAdminAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, BusinessFinanceAuthorizationHandler>();
 
         services.AddAuthorization(options =>
         {
@@ -29,6 +31,14 @@ public static class SupabaseJwtAuthenticationExtensions
             options.AddPolicy(AuthorizationPolicies.BusinessOwner, policy =>
                 policy.RequireAuthenticatedUser()
                     .AddRequirements(new BusinessOwnerRequirement()));
+
+            options.AddPolicy(AuthorizationPolicies.BusinessAdmin, policy =>
+                policy.RequireAuthenticatedUser()
+                    .AddRequirements(new BusinessAdminRequirement()));
+
+            options.AddPolicy(AuthorizationPolicies.BusinessFinance, policy =>
+                policy.RequireAuthenticatedUser()
+                    .AddRequirements(new BusinessFinanceRequirement()));
         });
 
         if (environment.IsEnvironment("Testing"))

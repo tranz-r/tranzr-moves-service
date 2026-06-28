@@ -39,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<IQuoteStepInvalidationService, QuoteStepInvalidationService>();
 
         services.AddSingleton<BusinessAccountMapper>();
+        services.AddSingleton<BusinessUserMapper>();
 
         services.AddTransient<IPricingStrategy, PickAndDropPricingStrategy>();
         services.AddTransient<IPricingStrategy, RemovalPricingStrategy>();

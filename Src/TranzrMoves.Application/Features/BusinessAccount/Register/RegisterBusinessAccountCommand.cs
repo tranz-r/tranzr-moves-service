@@ -137,7 +137,7 @@ public sealed class RegisterBusinessAccountCommandHandler(
             BillingAddress = mapper.ToBillingAddress(command.BillingAddress),
         };
 
-        var businessUser = new BusinessUser
+        var businessUser = new Domain.Entities.BusinessUser
         {
             Id = businessUserId,
             BusinessAccountId = businessAccountId,

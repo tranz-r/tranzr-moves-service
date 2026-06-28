@@ -24,6 +24,8 @@ public sealed class BusinessUserConfiguration : IEntityTypeConfiguration<Busines
                 v => v.ToString(),
                 v => (BusinessUserStatus)Enum.Parse(typeof(BusinessUserStatus), v));
 
+        builder.Property(x => x.CreatedByBusinessUserId);
+
         builder.HasIndex(x => x.UserId)
             .IsUnique()
             .HasDatabaseName("IX_BusinessUsers_UserId");

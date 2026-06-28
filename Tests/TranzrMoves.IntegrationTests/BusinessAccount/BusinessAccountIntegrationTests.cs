@@ -153,7 +153,7 @@ public sealed class BusinessAccountIntegrationTests(TestServerFixture fixture)
             .SingleAsync(x => x.Id == registered.BusinessAccountId, ct);
         account.Status.Should().Be(BusinessAccountStatus.Active);
 
-        var businessUser = await db.Set<BusinessUser>().SingleAsync(x => x.Id == registered.BusinessUserId, ct);
+        var businessUser = await db.Set<Domain.Entities.BusinessUser>().SingleAsync(x => x.Id == registered.BusinessUserId, ct);
         businessUser.Role.Should().Be(BusinessUserRole.Owner);
         businessUser.UserId.Should().Be(registered.UserId);
         businessUser.BusinessAccountId.Should().Be(registered.BusinessAccountId);

@@ -1,7 +1,12 @@
 ﻿using Mediator;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
+using TranzrMoves.Application.Contracts;
+using TranzrMoves.Application.Features.Auth.AcceptInvitation;
+using TranzrMoves.Application.Features.Auth.Context;
 using TranzrMoves.Application.Features.Auth.Register;
+using TranzrMoves.Infrastructure.Authentication;
 
 namespace TranzrMoves.Api.Controllers;
 
@@ -27,5 +32,39 @@ public sealed class AuthController(IMediator mediator, ILogger<AuthController> l
         return result.Match(
             response => Created($"/api/v1/auth/users/{response.UserId}", response),
             Problem);
+    }
+
+    [HttpGet("context")]
+    [Authorize(Policy = AuthorizationPolicies.BusinessUser)]
+    [SwaggerOperation(
+        OperationId = "Auth_GetContext",
+        Summary = "Get the authenticated business user's context",
+        Description = "Resolves UserId, BusinessUserId, BusinessAccountId, Email, and Role from the Supabase JWT. Requires an Active business user.",
+        Tags = ["Auth (v1)"])]
+    [ProducesResponseType(typeof(AuthContextDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetContext(CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new GetAuthContextQuery(), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+
+    [HttpPost("accept-invitation")]
+    [Authorize]
+    [SwaggerOperation(
+        OperationId = "Auth_AcceptInvitation",
+        Summary = "Accept a business invitation",
+        Description = "Links the authenticated Supabase identity to the invited app user and activates the membership (Invited -> Active). Returns the resolved auth context.",
+        Tags = ["Auth (v1)"])]
+    [ProducesResponseType(typeof(AuthContextDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> AcceptInvitation(CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new AcceptInvitationCommand(), cancellationToken);
+        return result.Match(Ok, Problem);
     }
 }

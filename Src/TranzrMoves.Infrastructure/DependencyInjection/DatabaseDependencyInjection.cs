@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TranzrMoves.Domain.Constants;
+using TranzrMoves.Domain.Interfaces;
+using TranzrMoves.Infrastructure.Authentication;
 using TranzrMoves.Infrastructure.Interceptors;
 
 namespace TranzrMoves.Infrastructure.DependencyInjection;
@@ -13,6 +15,7 @@ public static class DatabaseDependencyInjection
         IConfiguration configuration)
     {
         services.AddScoped<AuditableInterceptor>();
+        services.AddScoped<ITenantProvider, TenantProvider>();
 
         var dbConnectionString = configuration.GetConnectionString(Db.CONNECTION_STRING_NAME);
         if (string.IsNullOrWhiteSpace(dbConnectionString))

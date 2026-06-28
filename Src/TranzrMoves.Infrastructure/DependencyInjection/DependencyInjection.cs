@@ -14,6 +14,12 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<ITurnstileService, TurnstileService>();
+        services.Configure<SupabaseAuthOptions>(o =>
+        {
+            o.Url = configuration["SUPABASE_URL"];
+            o.ServiceRoleKey = configuration["SUPABASE_SERVICE_ROLE_KEY"];
+            o.InviteRedirectUrl = configuration["BUSINESS_PORTAL_INVITE_REDIRECT_URL"];
+        });
         services.AddSingleton<ISupabaseAuthAdminService, SupabaseAuthAdminService>();
         services.AddScoped<INotificationPublisher, WolverineNotificationPublisher>();
 

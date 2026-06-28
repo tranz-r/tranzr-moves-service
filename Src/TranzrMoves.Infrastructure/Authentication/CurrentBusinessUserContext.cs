@@ -7,7 +7,8 @@ namespace TranzrMoves.Infrastructure.Authentication;
 
 public sealed class CurrentBusinessUserContext(
     IHttpContextAccessor httpContextAccessor,
-    IBusinessUserRepository businessUserRepository) : ICurrentBusinessUserContext
+    IBusinessUserRepository businessUserRepository,
+    ITenantProvider tenantProvider) : ICurrentBusinessUserContext
 {
     private BusinessUser? _cachedBusinessUser;
 
@@ -52,6 +53,11 @@ public sealed class CurrentBusinessUserContext(
         }
 
         _cachedBusinessUser = await businessUserRepository.GetBySupabaseIdAsync(supabaseId.Value, cancellationToken);
+        if (_cachedBusinessUser is not null)
+        {
+            tenantProvider.SetBusinessAccount(_cachedBusinessUser.BusinessAccountId);
+        }
+
         return _cachedBusinessUser;
     }
 }
