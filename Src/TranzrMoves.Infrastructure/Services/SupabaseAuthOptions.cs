@@ -1,4 +1,4 @@
-namespace TranzrMoves.Infrastructure.Services;
+﻿namespace TranzrMoves.Infrastructure.Services;
 
 public sealed class SupabaseAuthOptions
 {
