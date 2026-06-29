@@ -47,6 +47,7 @@ public sealed class RegisterBusinessAccountCommandHandler(
     IBusinessUserRepository businessUserRepository,
     IBusinessAccountRepository businessAccountRepository,
     ITurnstileService turnstileService,
+    ISupabaseAuthAdminService supabaseAuthAdminService,
     BusinessAccountMapper mapper,
     ILogger<RegisterBusinessAccountCommandHandler> logger)
     : IRequestHandler<RegisterBusinessAccountCommand, ErrorOr<RegisterBusinessAccountResponse>>
@@ -162,6 +163,24 @@ public sealed class RegisterBusinessAccountCommandHandler(
             "Registered business account {BusinessAccountId} with owner {BusinessUserId}",
             registration.BusinessAccountId,
             registration.BusinessUserId);
+
+        // Capture the owner's name in Supabase user_metadata so GoTrue email templates can render
+        // it uniformly (same first_name/last_name keys as invited users). The owner's auth account
+        // was created passwordlessly (OTP) and may not carry the name yet. Best-effort: a failure
+        // here must not fail the already-committed registration.
+        var metadataSync = await supabaseAuthAdminService.UpdateUserNameAsync(
+            supabaseId.Value,
+            user.FirstName,
+            user.LastName,
+            cancellationToken);
+        if (metadataSync.IsError)
+        {
+            logger.LogWarning(
+                "Registered business account {BusinessAccountId} but failed to sync owner name to Supabase metadata for {SupabaseId}: {Error}",
+                registration.BusinessAccountId,
+                supabaseId.Value,
+                metadataSync.FirstError.Description);
+        }
 
         return new RegisterBusinessAccountResponse
         {

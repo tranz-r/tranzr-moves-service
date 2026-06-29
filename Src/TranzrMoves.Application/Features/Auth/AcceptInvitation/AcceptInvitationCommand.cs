@@ -1,5 +1,6 @@
 ﻿using Mediator;
 using Microsoft.Extensions.Logging;
+using TranzrMoves.Application.Common.Time;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
@@ -12,6 +13,7 @@ public sealed class AcceptInvitationCommandHandler(
     ICurrentBusinessUserContext currentBusinessUserContext,
     IUserV2Repository userV2Repository,
     IBusinessUserRepository businessUserRepository,
+    ITimeService timeService,
     ILogger<AcceptInvitationCommandHandler> logger)
     : IRequestHandler<AcceptInvitationCommand, ErrorOr<AuthContextDto>>
 {
@@ -61,11 +63,27 @@ public sealed class AcceptInvitationCommandHandler(
                     code: "Auth.MembershipInactive",
                     description: "This membership is not eligible to access the Business Portal.");
 
+            case BusinessUserStatus.Revoked:
+                // AC-010: revoked invitations cannot be accepted.
+                return Error.Forbidden(
+                    code: "Auth.InvitationRevoked",
+                    description: "This invitation has been revoked. Please contact your administrator.");
+
             case BusinessUserStatus.Active:
                 // Already accepted: idempotent success.
                 return ToAuthContext(businessUser, user, email);
 
             case BusinessUserStatus.Invited:
+                // AC-009: expired invitations cannot be accepted.
+                if (businessUser.InvitationExpiresAt is { } expiry && expiry < timeService.Now())
+                {
+                    return Error.Forbidden(
+                        code: "Auth.InvitationExpired",
+                        description: "This invitation has expired. Please ask your administrator to resend it.");
+                }
+
+                break;
+
             default:
                 break;
         }

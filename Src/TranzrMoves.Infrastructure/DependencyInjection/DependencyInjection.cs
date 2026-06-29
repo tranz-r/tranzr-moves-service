@@ -17,7 +17,9 @@ public static class DependencyInjection
         services.Configure<SupabaseAuthOptions>(o =>
         {
             o.Url = configuration["SUPABASE_URL"];
-            o.ServiceRoleKey = configuration["SUPABASE_SERVICE_ROLE_KEY"];
+            // SUPABASE_SECRET_KEY is the new secret key (sb_secret_…). Falls back to the legacy
+            // SUPABASE_SERVICE_ROLE_KEY name for backward compatibility with existing deployments.
+            o.SecretKey = configuration["SUPABASE_SECRET_KEY"] ?? configuration["SUPABASE_SERVICE_ROLE_KEY"];
             o.InviteRedirectUrl = configuration["BUSINESS_PORTAL_INVITE_REDIRECT_URL"];
         });
         services.AddSingleton<ISupabaseAuthAdminService, SupabaseAuthAdminService>();

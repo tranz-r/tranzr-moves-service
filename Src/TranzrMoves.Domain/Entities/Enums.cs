@@ -162,7 +162,8 @@ public enum BusinessUserStatus
     Active = 0,
     Invited,
     Suspended,
-    Deactivated
+    Deactivated,
+    Revoked
 }
 
 public enum BusinessUserRole

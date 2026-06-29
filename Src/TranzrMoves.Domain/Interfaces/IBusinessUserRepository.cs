@@ -37,6 +37,18 @@ public interface IBusinessUserRepository
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// Updates an invitation's role, status and expiry in one operation. Used to resend a
+    /// pending/expired invitation (resetting expiry) and to re-issue a previously revoked one.
+    /// Tenant-scoped: only resolves memberships in the caller's business account.
+    /// </summary>
+    Task<ErrorOr<BusinessUser>> UpdateInvitationAsync(
+        Guid businessUserId,
+        BusinessUserRole role,
+        BusinessUserStatus status,
+        Instant? expiresAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// Atomically completes an invitation: links the invited UserV2 to its Supabase identity
     /// and transitions the membership from Invited to Active in a single transaction.
     /// </summary>

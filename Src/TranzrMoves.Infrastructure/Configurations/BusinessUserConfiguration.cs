@@ -26,6 +26,8 @@ public sealed class BusinessUserConfiguration : IEntityTypeConfiguration<Busines
 
         builder.Property(x => x.CreatedByBusinessUserId);
 
+        builder.Property(x => x.InvitationExpiresAt);
+
         builder.HasIndex(x => x.UserId)
             .IsUnique()
             .HasDatabaseName("IX_BusinessUsers_UserId");

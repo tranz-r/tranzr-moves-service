@@ -2,6 +2,7 @@
 using ErrorOr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using NodaTime;
 using TranzrMoves.Domain.Entities;
 using TranzrMoves.Domain.Interfaces;
 
@@ -135,6 +136,42 @@ public class BusinessUserRepository(
         catch (DbUpdateConcurrencyException ex)
         {
             logger.LogError(ex, "Concurrency exception updating business user {BusinessUserId}", businessUserId);
+            return Error.Conflict();
+        }
+
+        return tracked;
+    }
+
+    public async Task<ErrorOr<BusinessUser>> UpdateInvitationAsync(
+        Guid businessUserId,
+        BusinessUserRole role,
+        BusinessUserStatus status,
+        Instant? expiresAt,
+        CancellationToken cancellationToken)
+    {
+        // Tenant-scoped (no IgnoreQueryFilters): only the caller's own invitations resolve.
+        var tracked = await dbContext.Set<BusinessUser>()
+            .AsTracking()
+            .FirstOrDefaultAsync(x => x.Id == businessUserId, cancellationToken);
+
+        if (tracked is null)
+        {
+            return Error.NotFound(
+                code: "BusinessUser.NotFound",
+                description: "Business user not found.");
+        }
+
+        tracked.Role = role;
+        tracked.Status = status;
+        tracked.InvitationExpiresAt = expiresAt;
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            logger.LogError(ex, "Concurrency exception updating invitation {BusinessUserId}", businessUserId);
             return Error.Conflict();
         }
 

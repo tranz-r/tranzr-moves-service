@@ -6,6 +6,7 @@ using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.BusinessUser.Activate;
 using TranzrMoves.Application.Features.BusinessUser.Deactivate;
 using TranzrMoves.Application.Features.BusinessUser.Get;
+using TranzrMoves.Application.Features.BusinessUser.Invitations;
 using TranzrMoves.Application.Features.BusinessUser.Invite;
 using TranzrMoves.Application.Features.BusinessUser.List;
 using TranzrMoves.Application.Features.BusinessUser.Suspend;
@@ -72,6 +73,58 @@ public sealed class BusinessUsersController(IMediator mediator, ILogger<Business
         return result.Match(
             response => CreatedAtAction(nameof(Get), new { id = response.BusinessUserId }, response),
             Problem);
+    }
+
+    [HttpGet("invitations")]
+    [Authorize(Policy = AuthorizationPolicies.BusinessAdmin)]
+    [SwaggerOperation(
+        OperationId = "BusinessUser_ListInvitations",
+        Summary = "List pending invitations in the caller's tenant",
+        Description = "Returns pending (invited) team invitations for the authenticated user's business account. Requires Owner or Admin.",
+        Tags = ["Business Users (v1)"])]
+    [ProducesResponseType(typeof(IReadOnlyList<InvitationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListInvitations(CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new ListInvitationsQuery(), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+
+    [HttpPost("invitations/{id:guid}/revoke")]
+    [Authorize(Policy = AuthorizationPolicies.BusinessAdmin)]
+    [SwaggerOperation(
+        OperationId = "BusinessUser_RevokeInvitation",
+        Summary = "Revoke a pending invitation",
+        Description = "Cancels a pending invitation so its link can no longer be accepted. Requires Owner or Admin.",
+        Tags = ["Business Users (v1)"])]
+    [ProducesResponseType(typeof(InvitationActionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> RevokeInvitation(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new RevokeInvitationCommand(id), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+
+    [HttpPost("invitations/{id:guid}/resend")]
+    [Authorize(Policy = AuthorizationPolicies.BusinessAdmin)]
+    [SwaggerOperation(
+        OperationId = "BusinessUser_ResendInvitation",
+        Summary = "Resend a pending invitation",
+        Description = "Issues a fresh Supabase invite link and resets the expiry for a pending or expired invitation. Requires Owner or Admin.",
+        Tags = ["Business Users (v1)"])]
+    [ProducesResponseType(typeof(InvitationActionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ResendInvitation(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new ResendInvitationCommand(id), cancellationToken);
+        return result.Match(Ok, Problem);
     }
 
     [HttpPost("{id:guid}/suspend")]

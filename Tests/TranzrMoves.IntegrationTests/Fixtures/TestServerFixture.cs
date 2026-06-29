@@ -68,7 +68,7 @@ public class TestServerFixture : WebApplicationFactory<TranzrMoves.Api.Program>,
                 ["TRANZR_STRIPE_WEBHOOK_SIGNING_SECRET_V2"] = "whsec_test",
                 ["Notifications:UseDurableMessaging"] = "false",
                 ["SUPABASE_URL"] = "https://supabase.example.test",
-                ["SUPABASE_SERVICE_ROLE_KEY"] = "test-service-role-key",
+                ["SUPABASE_SECRET_KEY"] = "sb_secret_test",
             });
         });
 

@@ -135,9 +135,12 @@ Get values from a teammate, then run **every command below**. Each secret must b
 Replace the placeholder values (`YOUR_...`, `sk_test_...`, etc.) with real values.
 
 ```bash
-# Supabase Auth (API will not start without these — service role key is backend-only)
+# Supabase Auth (API will not start without these — the secret key is backend-only)
 dotnet user-secrets set SUPABASE_URL "https://supabase.labgrid.net" --project Src/TranzrMoves.Api
-dotnet user-secrets set SUPABASE_SERVICE_ROLE_KEY "YOUR_SERVICE_ROLE_KEY" --project Src/TranzrMoves.Api
+# Elevated/admin key for server-side admin calls (invite/create user). Use the new secret key
+# (sb_secret_…) from Project Settings → API Keys. The legacy SUPABASE_SERVICE_ROLE_KEY name is still
+# read as a fallback for older deployments.
+dotnet user-secrets set SUPABASE_SECRET_KEY "YOUR_SUPABASE_SECRET_KEY" --project Src/TranzrMoves.Api
 # Optional when SUPABASE_URL is set — must match GoTrue JWT issuer (e.g. https://supabase.labgrid.net/auth/v1)
 dotnet user-secrets set SUPABASE_JWT_ISSUER "https://supabase.labgrid.net/auth/v1" --project Src/TranzrMoves.Api
 # Where Supabase sends invited business users after they click the invite link.
@@ -407,7 +410,7 @@ Docker cannot start Postgres because another Postgres is bound to 5432.
 
 ### `Missing configuration for supabase` (API)
 
-Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on the Api project (Step 4). Optionally set `SUPABASE_JWT_ISSUER` when it differs from `{SUPABASE_URL}/auth/v1`. The service role key must never be exposed to frontend clients; frontend OTP sign-in uses the anon/publishable key directly against Supabase Auth. The API validates Supabase access tokens via OIDC discovery and JWKS (asymmetric ES256), matching the API gateway.
+Set `SUPABASE_URL` and `SUPABASE_SECRET_KEY` on the Api project (Step 4) — the legacy `SUPABASE_SERVICE_ROLE_KEY` name is still accepted as a fallback. Optionally set `SUPABASE_JWT_ISSUER` when it differs from `{SUPABASE_URL}/auth/v1`. The secret key must never be exposed to frontend clients; frontend OTP sign-in uses the anon/publishable key directly against Supabase Auth. The API validates Supabase access tokens via OIDC discovery and JWKS (asymmetric ES256), matching the API gateway.
 
 ### Business account registration
 

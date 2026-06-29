@@ -108,10 +108,11 @@ try
     if (!builder.Environment.IsEnvironment("Testing"))
     {
         var supabaseUrl = builder.Configuration["SUPABASE_URL"];
-        var supabaseServiceRoleKey = builder.Configuration["SUPABASE_SERVICE_ROLE_KEY"];
-        if (string.IsNullOrWhiteSpace(supabaseUrl) || string.IsNullOrWhiteSpace(supabaseServiceRoleKey))
+        var supabaseSecretKey = builder.Configuration["SUPABASE_SECRET_KEY"]
+            ?? builder.Configuration["SUPABASE_SERVICE_ROLE_KEY"];
+        if (string.IsNullOrWhiteSpace(supabaseUrl) || string.IsNullOrWhiteSpace(supabaseSecretKey))
         {
-            Log.Fatal("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY configuration");
+            Log.Fatal("Missing SUPABASE_URL or SUPABASE_SECRET_KEY configuration");
             throw new InvalidOperationException("Missing Supabase auth configuration.");
         }
     }

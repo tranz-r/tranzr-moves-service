@@ -21,6 +21,7 @@ public sealed class RegisterBusinessAccountCommandHandlerTests
     private readonly IBusinessUserRepository _businessUserRepository = Substitute.For<IBusinessUserRepository>();
     private readonly IBusinessAccountRepository _businessAccountRepository = Substitute.For<IBusinessAccountRepository>();
     private readonly ITurnstileService _turnstileService = Substitute.For<ITurnstileService>();
+    private readonly ISupabaseAuthAdminService _supabaseAuthAdminService = Substitute.For<ISupabaseAuthAdminService>();
     private readonly BusinessAccountMapper _mapper = new();
     private readonly RegisterBusinessAccountCommandHandler _handler;
 
@@ -29,12 +30,17 @@ public sealed class RegisterBusinessAccountCommandHandlerTests
         _turnstileService.ValidateTokenAsync(Arg.Any<string>(), remoteIp: null, Arg.Any<CancellationToken>())
             .Returns(true);
 
+        _supabaseAuthAdminService
+            .UpdateUserNameAsync(Arg.Any<Guid>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success);
+
         _handler = new RegisterBusinessAccountCommandHandler(
             _currentUserContext,
             _userRepository,
             _businessUserRepository,
             _businessAccountRepository,
             _turnstileService,
+            _supabaseAuthAdminService,
             _mapper,
             NullLogger<RegisterBusinessAccountCommandHandler>.Instance);
     }
@@ -115,6 +121,9 @@ public sealed class RegisterBusinessAccountCommandHandlerTests
         result.Value.BusinessAccountId.Should().Be(businessAccountId);
         result.Value.Role.Should().Be(BusinessUserRole.Owner);
         result.Value.Status.Should().Be(BusinessUserStatus.Active);
+
+        await _supabaseAuthAdminService.Received(1)
+            .UpdateUserNameAsync(supabaseId, "Jane", "Owner", Arg.Any<CancellationToken>());
     }
 
     private static RegisterBusinessAccountCommand CreateCommand(string ownerEmail = "owner@example.com") =>

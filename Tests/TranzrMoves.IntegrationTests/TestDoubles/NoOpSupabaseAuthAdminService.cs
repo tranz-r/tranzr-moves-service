@@ -15,4 +15,16 @@ internal sealed class NoOpSupabaseAuthAdminService : ISupabaseAuthAdminService
         SupabaseInviteUserRequest request,
         CancellationToken cancellationToken) =>
         Task.FromResult<ErrorOr<Success>>(Result.Success);
+
+    public Task<ErrorOr<Success>> ResendInvitationAsync(
+        SupabaseInviteUserRequest request,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<ErrorOr<Success>>(Result.Success);
+
+    public Task<ErrorOr<Success>> UpdateUserNameAsync(
+        Guid supabaseId,
+        string? firstName,
+        string? lastName,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<ErrorOr<Success>>(Result.Success);
 }
