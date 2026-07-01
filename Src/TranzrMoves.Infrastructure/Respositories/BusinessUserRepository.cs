@@ -244,4 +244,139 @@ public class BusinessUserRepository(
                 description: "Failed to accept the invitation.");
         }
     }
+
+    public async Task<ErrorOr<BusinessUser>> ChangeRoleAsync(
+        Guid businessUserId,
+        BusinessUserRole newRole,
+        Guid changedByBusinessUserId,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            // Tenant-scoped (no IgnoreQueryFilters): only the caller's own members resolve.
+            var target = await dbContext.Set<BusinessUser>()
+                .AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == businessUserId, cancellationToken);
+
+            if (target is null)
+            {
+                return Error.NotFound(
+                    code: "BusinessUser.NotFound",
+                    description: "Business user not found.");
+            }
+
+            var fromRole = target.Role;
+            target.Role = newRole;
+            target.UpdatedByBusinessUserId = changedByBusinessUserId;
+
+            dbContext.Set<BusinessUserRoleChange>().Add(new BusinessUserRoleChange
+            {
+                Id = Guid.NewGuid(),
+                BusinessAccountId = target.BusinessAccountId,
+                TargetBusinessUserId = target.Id,
+                ChangedByBusinessUserId = changedByBusinessUserId,
+                FromRole = fromRole,
+                ToRole = newRole,
+                ChangeType = RoleChangeType.RoleChange,
+            });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return target;
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Concurrency exception changing role for business user {BusinessUserId}", businessUserId);
+            return Error.Conflict();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Failed to change role for business user {BusinessUserId}", businessUserId);
+            return Error.Failure(
+                code: "BusinessUser.ChangeRoleFailed",
+                description: "Failed to change the business user's role.");
+        }
+    }
+
+    public async Task<ErrorOr<BusinessUser>> TransferOwnershipAsync(
+        Guid currentOwnerBusinessUserId,
+        Guid targetBusinessUserId,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+            // Tenant-scoped: both memberships must belong to the caller's business account.
+            var currentOwner = await dbContext.Set<BusinessUser>()
+                .AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == currentOwnerBusinessUserId, cancellationToken);
+
+            var target = await dbContext.Set<BusinessUser>()
+                .AsTracking()
+                .FirstOrDefaultAsync(x => x.Id == targetBusinessUserId, cancellationToken);
+
+            if (currentOwner is null || target is null)
+            {
+                return Error.NotFound(
+                    code: "BusinessUser.NotFound",
+                    description: "Business user not found.");
+            }
+
+            var ownerFromRole = currentOwner.Role;
+            var targetFromRole = target.Role;
+
+            currentOwner.Role = BusinessUserRole.Admin;
+            currentOwner.UpdatedByBusinessUserId = currentOwnerBusinessUserId;
+
+            target.Role = BusinessUserRole.Owner;
+            target.UpdatedByBusinessUserId = currentOwnerBusinessUserId;
+
+            dbContext.Set<BusinessUserRoleChange>().AddRange(
+                new BusinessUserRoleChange
+                {
+                    Id = Guid.NewGuid(),
+                    BusinessAccountId = currentOwner.BusinessAccountId,
+                    TargetBusinessUserId = currentOwner.Id,
+                    ChangedByBusinessUserId = currentOwnerBusinessUserId,
+                    FromRole = ownerFromRole,
+                    ToRole = BusinessUserRole.Admin,
+                    ChangeType = RoleChangeType.OwnershipTransfer,
+                },
+                new BusinessUserRoleChange
+                {
+                    Id = Guid.NewGuid(),
+                    BusinessAccountId = target.BusinessAccountId,
+                    TargetBusinessUserId = target.Id,
+                    ChangedByBusinessUserId = currentOwnerBusinessUserId,
+                    FromRole = targetFromRole,
+                    ToRole = BusinessUserRole.Owner,
+                    ChangeType = RoleChangeType.OwnershipTransfer,
+                });
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return target;
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Concurrency exception transferring ownership to business user {BusinessUserId}", targetBusinessUserId);
+            return Error.Conflict();
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Failed to transfer ownership to business user {BusinessUserId}", targetBusinessUserId);
+            return Error.Failure(
+                code: "BusinessUser.TransferOwnershipFailed",
+                description: "Failed to transfer ownership.");
+        }
+    }
 }

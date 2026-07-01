@@ -13,6 +13,9 @@ public class BusinessUser : IAuditable, ITenantOwned
     /// <summary>The BusinessUser who created this membership. Null for the Owner created during account registration.</summary>
     public Guid? CreatedByBusinessUserId { get; set; }
 
+    /// <summary>The BusinessUser who last updated this membership's role (role change or ownership transfer).</summary>
+    public Guid? UpdatedByBusinessUserId { get; set; }
+
     /// <summary>
     /// When a pending invitation (Status = Invited) expires. Matches the Supabase invite-link
     /// lifetime (24h). Null once accepted or for memberships not created via invitation.

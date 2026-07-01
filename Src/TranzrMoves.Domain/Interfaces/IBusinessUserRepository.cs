@@ -57,4 +57,23 @@ public interface IBusinessUserRepository
         Guid supabaseId,
         Guid businessUserId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Changes a membership's role and records an audit row in a single transaction.
+    /// Tenant-scoped: only resolves memberships in the caller's business account.
+    /// </summary>
+    Task<ErrorOr<BusinessUser>> ChangeRoleAsync(
+        Guid businessUserId,
+        BusinessUserRole newRole,
+        Guid changedByBusinessUserId,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Transfers ownership in a single transaction: demotes the current Owner to Admin,
+    /// promotes the target to Owner, and writes two audit rows. Tenant-scoped.
+    /// </summary>
+    Task<ErrorOr<BusinessUser>> TransferOwnershipAsync(
+        Guid currentOwnerBusinessUserId,
+        Guid targetBusinessUserId,
+        CancellationToken cancellationToken);
 }

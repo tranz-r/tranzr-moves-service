@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using TranzrMoves.Application.Contracts;
 using TranzrMoves.Application.Features.BusinessUser.Activate;
+using TranzrMoves.Application.Features.BusinessUser.ChangeRole;
 using TranzrMoves.Application.Features.BusinessUser.Deactivate;
 using TranzrMoves.Application.Features.BusinessUser.Get;
 using TranzrMoves.Application.Features.BusinessUser.Invitations;
 using TranzrMoves.Application.Features.BusinessUser.Invite;
 using TranzrMoves.Application.Features.BusinessUser.List;
 using TranzrMoves.Application.Features.BusinessUser.Suspend;
+using TranzrMoves.Application.Features.BusinessUser.TransferOwnership;
 using TranzrMoves.Infrastructure.Authentication;
 
 namespace TranzrMoves.Api.Controllers;
@@ -124,6 +126,45 @@ public sealed class BusinessUsersController(IMediator mediator, ILogger<Business
     public async Task<IActionResult> ResendInvitation(Guid id, CancellationToken cancellationToken)
     {
         var result = await mediator.Send(new ResendInvitationCommand(id), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+
+    [HttpPut("{id:guid}/role")]
+    [Authorize(Policy = AuthorizationPolicies.BusinessAdmin)]
+    [SwaggerOperation(
+        OperationId = "BusinessUser_ChangeRole",
+        Summary = "Change a business user's role",
+        Description = "Updates a member's role. Owners may assign any role except Owner; Admins may assign only Member, Finance or Viewer and cannot modify the Owner. Ownership is transferred via a dedicated endpoint.",
+        Tags = ["Business Users (v1)"])]
+    [ProducesResponseType(typeof(BusinessUserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangeRole(
+        Guid id,
+        [FromBody] ChangeRoleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new ChangeRoleCommand(id, request.Role), cancellationToken);
+        return result.Match(Ok, Problem);
+    }
+
+    [HttpPost("{id:guid}/transfer-ownership")]
+    [Authorize(Policy = AuthorizationPolicies.BusinessOwner)]
+    [SwaggerOperation(
+        OperationId = "BusinessUser_TransferOwnership",
+        Summary = "Transfer account ownership",
+        Description = "Transfers ownership to another active member: the current Owner becomes Admin and the target becomes Owner. Requires Owner.",
+        Tags = ["Business Users (v1)"])]
+    [ProducesResponseType(typeof(TransferOwnershipResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> TransferOwnership(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await mediator.Send(new TransferOwnershipCommand(id), cancellationToken);
         return result.Match(Ok, Problem);
     }
 

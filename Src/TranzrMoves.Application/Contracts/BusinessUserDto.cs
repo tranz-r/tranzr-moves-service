@@ -27,6 +27,19 @@ public sealed class InvitationActionResponse
     public Instant? ExpiresAtUtc { get; init; }
 }
 
+/// <summary>Request body for changing a business user's role.</summary>
+public sealed class ChangeRoleRequest
+{
+    public BusinessUserRole Role { get; init; }
+}
+
+/// <summary>Result of an ownership transfer: the caller's new role and the target's new role.</summary>
+public sealed class TransferOwnershipResponse
+{
+    public BusinessUserRole PreviousOwnerRole { get; init; }
+    public BusinessUserRole NewOwnerRole { get; init; }
+}
+
 /// <summary>
 /// A pending team invitation (a <c>BusinessUser</c> with <c>Status = Invited</c>), surfaced
 /// on the Team page's "Pending invitations" table.

@@ -18,6 +18,7 @@ public class TranzrMovesDbContext(
 
     // DbSets
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
+    public DbSet<BusinessUserRoleChange> BusinessUserRoleChanges => Set<BusinessUserRoleChange>();
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     // Read by the tenant query filter at query-execution time. When no tenant is

@@ -174,3 +174,9 @@ public enum BusinessUserRole
     Member,
     Viewer
 }
+
+public enum RoleChangeType
+{
+    RoleChange = 0,
+    OwnershipTransfer
+}
